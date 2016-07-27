@@ -1,0 +1,2365 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"isr_callbacks.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.global _printf_float
+  19              		.thumb
+  20              		.section	.text.isr_t1_Interrupt_InterruptCallback,"ax",%progbits
+  21              		.align	2
+  22              		.global	isr_t1_Interrupt_InterruptCallback
+  23              		.thumb
+  24              		.thumb_func
+  25              		.type	isr_t1_Interrupt_InterruptCallback, %function
+  26              	isr_t1_Interrupt_InterruptCallback:
+  27              	.LFB63:
+  28              		.file 1 "..\\src\\isr_callbacks.c"
+   1:..\src/isr_callbacks.c **** //****************************************************************************
+   2:..\src/isr_callbacks.c **** // MIT Media Lab - Biomechatronics
+   3:..\src/isr_callbacks.c **** // Jean-Francois (Jeff) Duval
+   4:..\src/isr_callbacks.c **** // jfduval@media.mit.edu
+   5:..\src/isr_callbacks.c **** // 02/2016
+   6:..\src/isr_callbacks.c **** //****************************************************************************
+   7:..\src/isr_callbacks.c **** // isr_callbacks: Implementation of the ISR functions
+   8:..\src/isr_callbacks.c **** //****************************************************************************
+   9:..\src/isr_callbacks.c **** 
+  10:..\src/isr_callbacks.c **** //Important: this files goes with "cyapicallbacks.h". PSoC Creator 3.3 doesn't 
+  11:..\src/isr_callbacks.c **** //include "cyapicallbacks.h" if I place it in /inc/... or I'm doing something
+  12:..\src/isr_callbacks.c **** //wrong. Solution was to place it in /execute_1_0.cydsn/.
+  13:..\src/isr_callbacks.c **** 
+  14:..\src/isr_callbacks.c **** //****************************************************************************
+  15:..\src/isr_callbacks.c **** // Include(s)
+  16:..\src/isr_callbacks.c **** //****************************************************************************
+  17:..\src/isr_callbacks.c **** 
+  18:..\src/isr_callbacks.c **** #include "main.h"
+  19:..\src/isr_callbacks.c **** #include "cyapicallbacks.h"
+  20:..\src/isr_callbacks.c **** 
+  21:..\src/isr_callbacks.c **** //****************************************************************************
+  22:..\src/isr_callbacks.c **** // Public Function(s)
+  23:..\src/isr_callbacks.c **** //****************************************************************************
+  24:..\src/isr_callbacks.c **** 
+  25:..\src/isr_callbacks.c **** void isr_t1_Interrupt_InterruptCallback()
+  26:..\src/isr_callbacks.c **** {
+  29              		.loc 1 26 0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 2
+
+
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 08B5     		push	{r3, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 3, -8
+  36              		.cfi_offset 14, -4
+  27:..\src/isr_callbacks.c **** 	//Timer 1: 100us
+  28:..\src/isr_callbacks.c **** 	
+  29:..\src/isr_callbacks.c **** 	//Clear interrupt
+  30:..\src/isr_callbacks.c **** 	Timer_1_ReadStatusRegister();
+  37              		.loc 1 30 0
+  38 0002 FFF7FEFF 		bl	Timer_1_ReadStatusRegister
+  39              	.LVL0:
+  31:..\src/isr_callbacks.c **** 	isr_t1_ClearPending();
+  40              		.loc 1 31 0
+  41 0006 FFF7FEFF 		bl	isr_t1_ClearPending
+  42              	.LVL1:
+  32:..\src/isr_callbacks.c **** 	
+  33:..\src/isr_callbacks.c **** 	//All the timings are based on 100us slots
+  34:..\src/isr_callbacks.c **** 	//10 slots form the original 1ms timebase
+  35:..\src/isr_callbacks.c **** 	//'t1_time_share' is from 0 to 9, it controls the main FSM
+  36:..\src/isr_callbacks.c **** 	
+  37:..\src/isr_callbacks.c **** 	//Increment value, limits to 0-9
+  38:..\src/isr_callbacks.c **** 	t1_time_share++;
+  43              		.loc 1 38 0
+  44 000a 0B49     		ldr	r1, .L3
+  45 000c 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+  46 000e 0133     		adds	r3, r3, #1
+  47 0010 DBB2     		uxtb	r3, r3
+  48 0012 0B70     		strb	r3, [r1]
+  39:..\src/isr_callbacks.c **** 	t1_time_share %= 10;
+  49              		.loc 1 39 0
+  50 0014 0A78     		ldrb	r2, [r1]	@ zero_extendqisi2
+  51 0016 D2B2     		uxtb	r2, r2
+  52 0018 084B     		ldr	r3, .L3+4
+  53 001a A3FB0203 		umull	r0, r3, r3, r2
+  54 001e DB08     		lsrs	r3, r3, #3
+  55 0020 03EB8303 		add	r3, r3, r3, lsl #2
+  56 0024 5B00     		lsls	r3, r3, #1
+  57 0026 D31A     		subs	r3, r2, r3
+  58 0028 DBB2     		uxtb	r3, r3
+  59 002a 0B70     		strb	r3, [r1]
+  40:..\src/isr_callbacks.c **** 	t1_new_value = 1;
+  60              		.loc 1 40 0
+  61 002c 0123     		movs	r3, #1
+  62 002e 044A     		ldr	r2, .L3+8
+  63 0030 1370     		strb	r3, [r2]
+  41:..\src/isr_callbacks.c **** 	
+  42:..\src/isr_callbacks.c **** 	//Flag for the main code
+  43:..\src/isr_callbacks.c **** 	t1_100us_flag = 1;	
+  64              		.loc 1 43 0
+  65 0032 044A     		ldr	r2, .L3+12
+  66 0034 1370     		strb	r3, [r2]
+  67 0036 08BD     		pop	{r3, pc}
+  68              	.L4:
+  69              		.align	2
+  70              	.L3:
+  71 0038 00000000 		.word	t1_time_share
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 3
+
+
+  72 003c CDCCCCCC 		.word	-858993459
+  73 0040 00000000 		.word	t1_new_value
+  74 0044 00000000 		.word	t1_100us_flag
+  75              		.cfi_endproc
+  76              	.LFE63:
+  77              		.size	isr_t1_Interrupt_InterruptCallback, .-isr_t1_Interrupt_InterruptCallback
+  78              		.section	.text.isr_t2_Interrupt_InterruptCallback,"ax",%progbits
+  79              		.align	2
+  80              		.global	isr_t2_Interrupt_InterruptCallback
+  81              		.thumb
+  82              		.thumb_func
+  83              		.type	isr_t2_Interrupt_InterruptCallback, %function
+  84              	isr_t2_Interrupt_InterruptCallback:
+  85              	.LFB64:
+  44:..\src/isr_callbacks.c **** }
+  45:..\src/isr_callbacks.c **** 
+  46:..\src/isr_callbacks.c **** void isr_t2_Interrupt_InterruptCallback()
+  47:..\src/isr_callbacks.c **** {
+  86              		.loc 1 47 0
+  87              		.cfi_startproc
+  88              		@ args = 0, pretend = 0, frame = 0
+  89              		@ frame_needed = 0, uses_anonymous_args = 0
+  90 0000 08B5     		push	{r3, lr}
+  91              		.cfi_def_cfa_offset 8
+  92              		.cfi_offset 3, -8
+  93              		.cfi_offset 14, -4
+  48:..\src/isr_callbacks.c **** 	//Timer 2: 10us delay. RS-485 transceiver.
+  49:..\src/isr_callbacks.c **** 	
+  50:..\src/isr_callbacks.c **** 	//Clear interrupt
+  51:..\src/isr_callbacks.c **** 	Timer_2_ReadStatusRegister();
+  94              		.loc 1 51 0
+  95 0002 FFF7FEFF 		bl	Timer_2_ReadStatusRegister
+  96              	.LVL2:
+  52:..\src/isr_callbacks.c **** 	isr_t2_ClearPending();	
+  97              		.loc 1 52 0
+  98 0006 FFF7FEFF 		bl	isr_t2_ClearPending
+  99              	.LVL3:
+  53:..\src/isr_callbacks.c **** 	
+  54:..\src/isr_callbacks.c **** 	//Transfer is over, enable Receiver & disable Emitter
+  55:..\src/isr_callbacks.c **** 	UART_DMA_XMIT_Write(0);		//No transmission
+ 100              		.loc 1 55 0
+ 101 000a 0020     		movs	r0, #0
+ 102 000c FFF7FEFF 		bl	UART_DMA_XMIT_Write
+ 103              	.LVL4:
+  56:..\src/isr_callbacks.c **** 	DE_Write(0);
+ 104              		.loc 1 56 0
+ 105 0010 0020     		movs	r0, #0
+ 106 0012 FFF7FEFF 		bl	DE_Write
+ 107              	.LVL5:
+  57:..\src/isr_callbacks.c **** 	//CyDelayUs(1);
+  58:..\src/isr_callbacks.c **** 	NOT_RE_Write(0);
+ 108              		.loc 1 58 0
+ 109 0016 0020     		movs	r0, #0
+ 110 0018 FFF7FEFF 		bl	NOT_RE_Write
+ 111              	.LVL6:
+  59:..\src/isr_callbacks.c **** 	
+  60:..\src/isr_callbacks.c **** 	T2_RESET_Write(1);	
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 4
+
+
+ 112              		.loc 1 60 0
+ 113 001c 0120     		movs	r0, #1
+ 114 001e FFF7FEFF 		bl	T2_RESET_Write
+ 115              	.LVL7:
+ 116 0022 08BD     		pop	{r3, pc}
+ 117              		.cfi_endproc
+ 118              	.LFE64:
+ 119              		.size	isr_t2_Interrupt_InterruptCallback, .-isr_t2_Interrupt_InterruptCallback
+ 120              		.section	.text.isr_sar1_dma_Interrupt_InterruptCallback,"ax",%progbits
+ 121              		.align	2
+ 122              		.global	isr_sar1_dma_Interrupt_InterruptCallback
+ 123              		.thumb
+ 124              		.thumb_func
+ 125              		.type	isr_sar1_dma_Interrupt_InterruptCallback, %function
+ 126              	isr_sar1_dma_Interrupt_InterruptCallback:
+ 127              	.LFB65:
+  61:..\src/isr_callbacks.c **** }
+  62:..\src/isr_callbacks.c **** 
+  63:..\src/isr_callbacks.c **** //General ADC - we get here after 8 samples have been taken
+  64:..\src/isr_callbacks.c **** void isr_sar1_dma_Interrupt_InterruptCallback()
+  65:..\src/isr_callbacks.c **** {
+ 128              		.loc 1 65 0
+ 129              		.cfi_startproc
+ 130              		@ args = 0, pretend = 0, frame = 0
+ 131              		@ frame_needed = 0, uses_anonymous_args = 0
+ 132 0000 08B5     		push	{r3, lr}
+ 133              		.cfi_def_cfa_offset 8
+ 134              		.cfi_offset 3, -8
+ 135              		.cfi_offset 14, -4
+ 136              	.LVL8:
+  66:..\src/isr_callbacks.c **** 	static unsigned char ch = 0;
+  67:..\src/isr_callbacks.c **** 	int i = 0;
+  68:..\src/isr_callbacks.c **** 	
+  69:..\src/isr_callbacks.c **** 	//Stop conversion
+  70:..\src/isr_callbacks.c **** 	ADC_SAR_1_StopConvert();
+ 137              		.loc 1 70 0
+ 138 0002 FFF7FEFF 		bl	ADC_SAR_1_StopConvert
+ 139              	.LVL9:
+  71:..\src/isr_callbacks.c **** 
+  72:..\src/isr_callbacks.c **** 	//Copy the last DMA buffer to our 2D array:
+  73:..\src/isr_callbacks.c **** 	for(i = 0; i < ADC1_BUF_LEN; i++)
+ 140              		.loc 1 73 0
+ 141 0006 0023     		movs	r3, #0
+ 142 0008 0BE0     		b	.L8
+ 143              	.LVL10:
+ 144              	.L9:
+  74:..\src/isr_callbacks.c **** 	{
+  75:..\src/isr_callbacks.c **** 		adc1_res[ch][i] = adc_sar1_dma_array[i+1];
+ 145              		.loc 1 75 0 discriminator 3
+ 146 000a 154A     		ldr	r2, .L12
+ 147 000c 1178     		ldrb	r1, [r2]	@ zero_extendqisi2
+ 148 000e 5A1C     		adds	r2, r3, #1
+ 149 0010 1448     		ldr	r0, .L12+4
+ 150 0012 30F81200 		ldrh	r0, [r0, r2, lsl #1]
+ 151 0016 03EBC103 		add	r3, r3, r1, lsl #3
+ 152              	.LVL11:
+ 153 001a 1349     		ldr	r1, .L12+8
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 5
+
+
+ 154 001c 21F81300 		strh	r0, [r1, r3, lsl #1]	@ movhi
+ 155              	.LVL12:
+  73:..\src/isr_callbacks.c **** 	{
+ 156              		.loc 1 73 0 discriminator 3
+ 157 0020 1346     		mov	r3, r2
+ 158              	.LVL13:
+ 159              	.L8:
+  73:..\src/isr_callbacks.c **** 	{
+ 160              		.loc 1 73 0 is_stmt 0 discriminator 1
+ 161 0022 072B     		cmp	r3, #7
+ 162 0024 F1DD     		ble	.L9
+  76:..\src/isr_callbacks.c **** 	}	
+  77:..\src/isr_callbacks.c **** 
+  78:..\src/isr_callbacks.c **** 	//Next channel:
+  79:..\src/isr_callbacks.c **** 	ch++;
+ 163              		.loc 1 79 0 is_stmt 1
+ 164 0026 0E49     		ldr	r1, .L12
+ 165 0028 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 166              	.LVL14:
+ 167 002a 0133     		adds	r3, r3, #1
+ 168 002c DBB2     		uxtb	r3, r3
+  80:..\src/isr_callbacks.c **** 	ch %= ADC1_CHANNELS;
+ 169              		.loc 1 80 0
+ 170 002e 0F4A     		ldr	r2, .L12+12
+ 171 0030 A2FB0302 		umull	r0, r2, r2, r3
+ 172 0034 9208     		lsrs	r2, r2, #2
+ 173 0036 02EB4202 		add	r2, r2, r2, lsl #1
+ 174 003a A3EB4203 		sub	r3, r3, r2, lsl #1
+ 175 003e 0B70     		strb	r3, [r1]
+  81:..\src/isr_callbacks.c **** 	
+  82:..\src/isr_callbacks.c **** 	//Once we have all the channels we copy the buffer:
+  83:..\src/isr_callbacks.c **** 	if(!adc_sar1_flag)
+ 176              		.loc 1 83 0
+ 177 0040 0B4B     		ldr	r3, .L12+16
+ 178 0042 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 179 0044 0BB9     		cbnz	r3, .L10
+  84:..\src/isr_callbacks.c **** 	{
+  85:..\src/isr_callbacks.c **** 		double_buffer_adc();
+ 180              		.loc 1 85 0
+ 181 0046 FFF7FEFF 		bl	double_buffer_adc
+ 182              	.LVL15:
+ 183              	.L10:
+  86:..\src/isr_callbacks.c **** 	}
+  87:..\src/isr_callbacks.c **** 	adc_sar1_flag = 1;
+ 184              		.loc 1 87 0
+ 185 004a 0122     		movs	r2, #1
+ 186 004c 084B     		ldr	r3, .L12+16
+ 187 004e 1A70     		strb	r2, [r3]
+  88:..\src/isr_callbacks.c **** 
+  89:..\src/isr_callbacks.c **** 	//Refresh MUX:
+  90:..\src/isr_callbacks.c **** 	AMux_1_Select(ch);	
+ 188              		.loc 1 90 0
+ 189 0050 034B     		ldr	r3, .L12
+ 190 0052 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 191 0054 FFF7FEFF 		bl	AMux_1_Select
+ 192              	.LVL16:
+  91:..\src/isr_callbacks.c **** 	
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 6
+
+
+  92:..\src/isr_callbacks.c **** 	ADC_SAR_1_StartConvert();		
+ 193              		.loc 1 92 0
+ 194 0058 FFF7FEFF 		bl	ADC_SAR_1_StartConvert
+ 195              	.LVL17:
+ 196 005c 08BD     		pop	{r3, pc}
+ 197              	.L13:
+ 198 005e 00BF     		.align	2
+ 199              	.L12:
+ 200 0060 00000000 		.word	.LANCHOR0
+ 201 0064 00000000 		.word	adc_sar1_dma_array
+ 202 0068 00000000 		.word	adc1_res
+ 203 006c ABAAAAAA 		.word	-1431655765
+ 204 0070 00000000 		.word	adc_sar1_flag
+ 205              		.cfi_endproc
+ 206              	.LFE65:
+ 207              		.size	isr_sar1_dma_Interrupt_InterruptCallback, .-isr_sar1_dma_Interrupt_InterruptCallback
+ 208              		.section	.text.isr_sar2_dma_Interrupt_InterruptCallback,"ax",%progbits
+ 209              		.align	2
+ 210              		.global	isr_sar2_dma_Interrupt_InterruptCallback
+ 211              		.thumb
+ 212              		.thumb_func
+ 213              		.type	isr_sar2_dma_Interrupt_InterruptCallback, %function
+ 214              	isr_sar2_dma_Interrupt_InterruptCallback:
+ 215              	.LFB66:
+  93:..\src/isr_callbacks.c **** }
+  94:..\src/isr_callbacks.c **** 
+  95:..\src/isr_callbacks.c **** //Current sensing:
+  96:..\src/isr_callbacks.c **** void isr_sar2_dma_Interrupt_InterruptCallback()
+  97:..\src/isr_callbacks.c **** {
+ 216              		.loc 1 97 0
+ 217              		.cfi_startproc
+ 218              		@ args = 0, pretend = 0, frame = 8
+ 219              		@ frame_needed = 0, uses_anonymous_args = 0
+ 220 0000 00B5     		push	{lr}
+ 221              		.cfi_def_cfa_offset 4
+ 222              		.cfi_offset 14, -4
+ 223 0002 83B0     		sub	sp, sp, #12
+ 224              		.cfi_def_cfa_offset 16
+  98:..\src/isr_callbacks.c **** 	volatile int32 adc_sum = 0;
+ 225              		.loc 1 98 0
+ 226 0004 0023     		movs	r3, #0
+ 227 0006 0193     		str	r3, [sp, #4]
+  99:..\src/isr_callbacks.c **** 	volatile int32 adc_avg = 0;
+ 228              		.loc 1 99 0
+ 229 0008 0093     		str	r3, [sp]
+ 100:..\src/isr_callbacks.c **** 	
+ 101:..\src/isr_callbacks.c **** 	//Read last ADC value
+ 102:..\src/isr_callbacks.c **** 	adc_sum = (int32)(adc_dma_array[0] + adc_dma_array[1] + adc_dma_array[2] + \
+ 230              		.loc 1 102 0
+ 231 000a 164B     		ldr	r3, .L18
+ 232 000c B3F90010 		ldrsh	r1, [r3]
+ 233 0010 B3F90220 		ldrsh	r2, [r3, #2]
+ 234 0014 0A44     		add	r2, r2, r1
+ 235 0016 B3F90410 		ldrsh	r1, [r3, #4]
+ 236 001a 1144     		add	r1, r1, r2
+ 237 001c B3F90620 		ldrsh	r2, [r3, #6]
+ 238 0020 0A44     		add	r2, r2, r1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 7
+
+
+ 239 0022 B3F90830 		ldrsh	r3, [r3, #8]
+ 103:..\src/isr_callbacks.c **** 				adc_dma_array[3] + adc_dma_array[4]);
+ 240              		.loc 1 103 0
+ 241 0026 1344     		add	r3, r3, r2
+ 102:..\src/isr_callbacks.c **** 				adc_dma_array[3] + adc_dma_array[4]);
+ 242              		.loc 1 102 0
+ 243 0028 0193     		str	r3, [sp, #4]
+ 104:..\src/isr_callbacks.c **** 	adc_avg = (adc_sum / 5);
+ 244              		.loc 1 104 0
+ 245 002a 019B     		ldr	r3, [sp, #4]
+ 246 002c 0E4A     		ldr	r2, .L18+4
+ 247 002e 82FB0312 		smull	r1, r2, r2, r3
+ 248 0032 DB17     		asrs	r3, r3, #31
+ 249 0034 C3EB6203 		rsb	r3, r3, r2, asr #1
+ 250 0038 0093     		str	r3, [sp]
+ 105:..\src/isr_callbacks.c **** 	
+ 106:..\src/isr_callbacks.c **** 	ctrl.current.actual_val = (int32)(adc_avg - CURRENT_ZERO);	
+ 251              		.loc 1 106 0
+ 252 003a 009B     		ldr	r3, [sp]
+ 253 003c A3F61B03 		subw	r3, r3, #2075
+ 254 0040 0A4A     		ldr	r2, .L18+8
+ 255 0042 5363     		str	r3, [r2, #52]
+ 107:..\src/isr_callbacks.c **** 	//Used by the current controller, 0 centered.
+ 108:..\src/isr_callbacks.c **** 		
+ 109:..\src/isr_callbacks.c **** 	if((ctrl.active_ctrl == CTRL_CURRENT) || (ctrl.active_ctrl == CTRL_IMPEDANCE))
+ 256              		.loc 1 109 0
+ 257 0044 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 258 0046 DBB2     		uxtb	r3, r3
+ 259 0048 032B     		cmp	r3, #3
+ 260 004a 03D0     		beq	.L15
+ 261              		.loc 1 109 0 is_stmt 0 discriminator 1
+ 262 004c 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 263 004e DBB2     		uxtb	r3, r3
+ 264 0050 042B     		cmp	r3, #4
+ 265 0052 04D1     		bne	.L14
+ 266              	.L15:
+ 110:..\src/isr_callbacks.c **** 	{
+ 111:..\src/isr_callbacks.c **** 		//Current controller
+ 112:..\src/isr_callbacks.c **** 		motor_current_pid_2(ctrl.current.setpoint_val, ctrl.current.actual_val);
+ 267              		.loc 1 112 0 is_stmt 1
+ 268 0054 054B     		ldr	r3, .L18+8
+ 269 0056 986B     		ldr	r0, [r3, #56]
+ 270 0058 596B     		ldr	r1, [r3, #52]
+ 271 005a FFF7FEFF 		bl	motor_current_pid_2
+ 272              	.LVL18:
+ 273              	.L14:
+ 113:..\src/isr_callbacks.c **** 	}
+ 114:..\src/isr_callbacks.c **** }
+ 274              		.loc 1 114 0
+ 275 005e 03B0     		add	sp, sp, #12
+ 276              		.cfi_def_cfa_offset 4
+ 277              		@ sp needed
+ 278 0060 5DF804FB 		ldr	pc, [sp], #4
+ 279              	.L19:
+ 280              		.align	2
+ 281              	.L18:
+ 282 0064 00000000 		.word	adc_dma_array
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 8
+
+
+ 283 0068 67666666 		.word	1717986919
+ 284 006c 00000000 		.word	ctrl
+ 285              		.cfi_endproc
+ 286              	.LFE66:
+ 287              		.size	isr_sar2_dma_Interrupt_InterruptCallback, .-isr_sar2_dma_Interrupt_InterruptCallback
+ 288              		.section	.text.isr_dma_uart_rx_Interrupt_InterruptCallback,"ax",%progbits
+ 289              		.align	2
+ 290              		.global	isr_dma_uart_rx_Interrupt_InterruptCallback
+ 291              		.thumb
+ 292              		.thumb_func
+ 293              		.type	isr_dma_uart_rx_Interrupt_InterruptCallback, %function
+ 294              	isr_dma_uart_rx_Interrupt_InterruptCallback:
+ 295              	.LFB67:
+ 115:..\src/isr_callbacks.c **** 
+ 116:..\src/isr_callbacks.c **** void isr_dma_uart_rx_Interrupt_InterruptCallback()
+ 117:..\src/isr_callbacks.c **** {
+ 296              		.loc 1 117 0
+ 297              		.cfi_startproc
+ 298              		@ args = 0, pretend = 0, frame = 0
+ 299              		@ frame_needed = 0, uses_anonymous_args = 0
+ 300 0000 10B5     		push	{r4, lr}
+ 301              		.cfi_def_cfa_offset 8
+ 302              		.cfi_offset 4, -8
+ 303              		.cfi_offset 14, -4
+ 118:..\src/isr_callbacks.c **** 	//static uint8 toggle = 0;
+ 119:..\src/isr_callbacks.c **** 	
+ 120:..\src/isr_callbacks.c **** 	//Update rx_buf with the latest DMA data:
+ 121:..\src/isr_callbacks.c **** 	unwrap_buffer(uart_dma_rx_buf, uart_dma_rx_buf_unwrapped, 48);
+ 304              		.loc 1 121 0
+ 305 0002 084C     		ldr	r4, .L22
+ 306 0004 0848     		ldr	r0, .L22+4
+ 307 0006 2146     		mov	r1, r4
+ 308 0008 3022     		movs	r2, #48
+ 309 000a FFF7FEFF 		bl	unwrap_buffer
+ 310              	.LVL19:
+ 122:..\src/isr_callbacks.c **** 	update_rx_buf_array_485(uart_dma_rx_buf_unwrapped, 48);		//ToDo shouldn't be harcoded. Buffer name
+ 311              		.loc 1 122 0
+ 312 000e 2046     		mov	r0, r4
+ 313 0010 3021     		movs	r1, #48
+ 314 0012 FFF7FEFF 		bl	update_rx_buf_array_1
+ 315              	.LVL20:
+ 123:..\src/isr_callbacks.c **** 	data_ready_485++;
+ 316              		.loc 1 123 0
+ 317 0016 054A     		ldr	r2, .L22+8
+ 318 0018 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 319 001a 0133     		adds	r3, r3, #1
+ 320 001c DBB2     		uxtb	r3, r3
+ 321 001e 1370     		strb	r3, [r2]
+ 322 0020 10BD     		pop	{r4, pc}
+ 323              	.L23:
+ 324 0022 00BF     		.align	2
+ 325              	.L22:
+ 326 0024 00000000 		.word	uart_dma_rx_buf_unwrapped
+ 327 0028 00000000 		.word	uart_dma_rx_buf
+ 328 002c 00000000 		.word	data_ready_485
+ 329              		.cfi_endproc
+ 330              	.LFE67:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 9
+
+
+ 331              		.size	isr_dma_uart_rx_Interrupt_InterruptCallback, .-isr_dma_uart_rx_Interrupt_InterruptCallback
+ 332              		.section	.text.isr_dma_uart_tx_Interrupt_InterruptCallback,"ax",%progbits
+ 333              		.align	2
+ 334              		.global	isr_dma_uart_tx_Interrupt_InterruptCallback
+ 335              		.thumb
+ 336              		.thumb_func
+ 337              		.type	isr_dma_uart_tx_Interrupt_InterruptCallback, %function
+ 338              	isr_dma_uart_tx_Interrupt_InterruptCallback:
+ 339              	.LFB68:
+ 124:..\src/isr_callbacks.c **** 	
+ 125:..\src/isr_callbacks.c **** 	//toggle ^= 1;
+ 126:..\src/isr_callbacks.c **** 	//EXP10_Write(toggle);	
+ 127:..\src/isr_callbacks.c **** }
+ 128:..\src/isr_callbacks.c **** 
+ 129:..\src/isr_callbacks.c **** void isr_dma_uart_tx_Interrupt_InterruptCallback()
+ 130:..\src/isr_callbacks.c **** {
+ 340              		.loc 1 130 0
+ 341              		.cfi_startproc
+ 342              		@ args = 0, pretend = 0, frame = 0
+ 343              		@ frame_needed = 0, uses_anonymous_args = 0
+ 344 0000 08B5     		push	{r3, lr}
+ 345              		.cfi_def_cfa_offset 8
+ 346              		.cfi_offset 3, -8
+ 347              		.cfi_offset 14, -4
+ 131:..\src/isr_callbacks.c **** 	T2_RESET_Write(0);
+ 348              		.loc 1 131 0
+ 349 0002 0020     		movs	r0, #0
+ 350 0004 FFF7FEFF 		bl	T2_RESET_Write
+ 351              	.LVL21:
+ 132:..\src/isr_callbacks.c **** 	Timer_2_Start();		
+ 352              		.loc 1 132 0
+ 353 0008 FFF7FEFF 		bl	Timer_2_Start
+ 354              	.LVL22:
+ 355 000c 08BD     		pop	{r3, pc}
+ 356              		.cfi_endproc
+ 357              	.LFE68:
+ 358              		.size	isr_dma_uart_tx_Interrupt_InterruptCallback, .-isr_dma_uart_tx_Interrupt_InterruptCallback
+ 359 000e 00BF     		.section	.text.isr_delsig_Interrupt_InterruptCallback,"ax",%progbits
+ 360              		.align	2
+ 361              		.global	isr_delsig_Interrupt_InterruptCallback
+ 362              		.thumb
+ 363              		.thumb_func
+ 364              		.type	isr_delsig_Interrupt_InterruptCallback, %function
+ 365              	isr_delsig_Interrupt_InterruptCallback:
+ 366              	.LFB69:
+ 133:..\src/isr_callbacks.c **** }
+ 134:..\src/isr_callbacks.c **** 
+ 135:..\src/isr_callbacks.c **** void isr_delsig_Interrupt_InterruptCallback()
+ 136:..\src/isr_callbacks.c **** {
+ 367              		.loc 1 136 0
+ 368              		.cfi_startproc
+ 369              		@ args = 0, pretend = 0, frame = 0
+ 370              		@ frame_needed = 0, uses_anonymous_args = 0
+ 371 0000 08B5     		push	{r3, lr}
+ 372              		.cfi_def_cfa_offset 8
+ 373              		.cfi_offset 3, -8
+ 374              		.cfi_offset 14, -4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 10
+
+
+ 137:..\src/isr_callbacks.c **** 	ADC_DelSig_1_StopConvert();
+ 375              		.loc 1 137 0
+ 376 0002 FFF7FEFF 		bl	ADC_DelSig_1_StopConvert
+ 377              	.LVL23:
+ 138:..\src/isr_callbacks.c **** 	adc_delsig_flag = 1;	
+ 378              		.loc 1 138 0
+ 379 0006 0122     		movs	r2, #1
+ 380 0008 014B     		ldr	r3, .L28
+ 381 000a 1A70     		strb	r2, [r3]
+ 382 000c 08BD     		pop	{r3, pc}
+ 383              	.L29:
+ 384 000e 00BF     		.align	2
+ 385              	.L28:
+ 386 0010 00000000 		.word	adc_delsig_flag
+ 387              		.cfi_endproc
+ 388              	.LFE69:
+ 389              		.size	isr_delsig_Interrupt_InterruptCallback, .-isr_delsig_Interrupt_InterruptCallback
+ 390              		.section	.text.ADC_SAR_1_ISR_InterruptCallback,"ax",%progbits
+ 391              		.align	2
+ 392              		.global	ADC_SAR_1_ISR_InterruptCallback
+ 393              		.thumb
+ 394              		.thumb_func
+ 395              		.type	ADC_SAR_1_ISR_InterruptCallback, %function
+ 396              	ADC_SAR_1_ISR_InterruptCallback:
+ 397              	.LFB70:
+ 139:..\src/isr_callbacks.c **** }
+ 140:..\src/isr_callbacks.c **** 
+ 141:..\src/isr_callbacks.c **** void ADC_SAR_1_ISR_InterruptCallback()
+ 142:..\src/isr_callbacks.c **** {
+ 398              		.loc 1 142 0
+ 399              		.cfi_startproc
+ 400              		@ args = 0, pretend = 0, frame = 0
+ 401              		@ frame_needed = 0, uses_anonymous_args = 0
+ 402              		@ link register save eliminated.
+ 403 0000 7047     		bx	lr
+ 404              		.cfi_endproc
+ 405              	.LFE70:
+ 406              		.size	ADC_SAR_1_ISR_InterruptCallback, .-ADC_SAR_1_ISR_InterruptCallback
+ 407 0002 00BF     		.bss
+ 408              		.set	.LANCHOR0,. + 0
+ 409              		.type	ch.10482, %object
+ 410              		.size	ch.10482, 1
+ 411              	ch.10482:
+ 412 0000 00       		.space	1
+ 413              		.text
+ 414              	.Letext0:
+ 415              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 416              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 417              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 418              		.file 5 "..\\inc/../../flexsea-system/inc/flexsea_cmd_control.h"
+ 419              		.file 6 "Generated_Source\\PSoC5/core_cm3.h"
+ 420              		.file 7 "..\\inc/peripherals.h"
+ 421              		.file 8 "..\\inc/misc.h"
+ 422              		.file 9 "..\\inc/analog.h"
+ 423              		.file 10 "..\\inc/control.h"
+ 424              		.file 11 "Generated_Source\\PSoC5/Timer_1.h"
+ 425              		.file 12 "Generated_Source\\PSoC5/Timer_2.h"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 11
+
+
+ 426              		.file 13 "Generated_Source\\PSoC5/isr_t1.h"
+ 427              		.file 14 "Generated_Source\\PSoC5/isr_t2.h"
+ 428              		.file 15 "Generated_Source\\PSoC5/UART_DMA_XMIT.h"
+ 429              		.file 16 "Generated_Source\\PSoC5/DE.h"
+ 430              		.file 17 "Generated_Source\\PSoC5/NOT_RE.h"
+ 431              		.file 18 "Generated_Source\\PSoC5/T2_RESET.h"
+ 432              		.file 19 "Generated_Source\\PSoC5/ADC_SAR_1.h"
+ 433              		.file 20 "Generated_Source\\PSoC5/AMux_1.h"
+ 434              		.file 21 "c:\\flexsea_alx87grd\\flexsea-comm\\inc\\flexsea_buffers.h"
+ 435              		.file 22 "Generated_Source\\PSoC5/ADC_DelSig_1.h"
+ 436              		.section	.debug_info,"",%progbits
+ 437              	.Ldebug_info0:
+ 438 0000 57060000 		.4byte	0x657
+ 439 0004 0400     		.2byte	0x4
+ 440 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 441 000a 04       		.byte	0x4
+ 442 000b 01       		.uleb128 0x1
+ 443 000c 78030000 		.4byte	.LASF85
+ 444 0010 01       		.byte	0x1
+ 445 0011 FD040000 		.4byte	.LASF86
+ 446 0015 32010000 		.4byte	.LASF87
+ 447 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 448 001d 00000000 		.4byte	0
+ 449 0021 00000000 		.4byte	.Ldebug_line0
+ 450 0025 02       		.uleb128 0x2
+ 451 0026 01       		.byte	0x1
+ 452 0027 06       		.byte	0x6
+ 453 0028 E9020000 		.4byte	.LASF0
+ 454 002c 03       		.uleb128 0x3
+ 455 002d 5F020000 		.4byte	.LASF3
+ 456 0031 02       		.byte	0x2
+ 457 0032 1D       		.byte	0x1d
+ 458 0033 37000000 		.4byte	0x37
+ 459 0037 02       		.uleb128 0x2
+ 460 0038 01       		.byte	0x1
+ 461 0039 08       		.byte	0x8
+ 462 003a D2020000 		.4byte	.LASF1
+ 463 003e 02       		.uleb128 0x2
+ 464 003f 02       		.byte	0x2
+ 465 0040 05       		.byte	0x5
+ 466 0041 4D000000 		.4byte	.LASF2
+ 467 0045 03       		.uleb128 0x3
+ 468 0046 B4000000 		.4byte	.LASF4
+ 469 004a 02       		.byte	0x2
+ 470 004b 2B       		.byte	0x2b
+ 471 004c 50000000 		.4byte	0x50
+ 472 0050 02       		.uleb128 0x2
+ 473 0051 02       		.byte	0x2
+ 474 0052 07       		.byte	0x7
+ 475 0053 3B030000 		.4byte	.LASF5
+ 476 0057 03       		.uleb128 0x3
+ 477 0058 1B050000 		.4byte	.LASF6
+ 478 005c 02       		.byte	0x2
+ 479 005d 3F       		.byte	0x3f
+ 480 005e 62000000 		.4byte	0x62
+ 481 0062 02       		.uleb128 0x2
+ 482 0063 04       		.byte	0x4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 12
+
+
+ 483 0064 05       		.byte	0x5
+ 484 0065 44020000 		.4byte	.LASF7
+ 485 0069 03       		.uleb128 0x3
+ 486 006a A9000000 		.4byte	.LASF8
+ 487 006e 02       		.byte	0x2
+ 488 006f 41       		.byte	0x41
+ 489 0070 74000000 		.4byte	0x74
+ 490 0074 02       		.uleb128 0x2
+ 491 0075 04       		.byte	0x4
+ 492 0076 07       		.byte	0x7
+ 493 0077 BE040000 		.4byte	.LASF9
+ 494 007b 02       		.uleb128 0x2
+ 495 007c 08       		.byte	0x8
+ 496 007d 05       		.byte	0x5
+ 497 007e 9B000000 		.4byte	.LASF10
+ 498 0082 02       		.uleb128 0x2
+ 499 0083 08       		.byte	0x8
+ 500 0084 07       		.byte	0x7
+ 501 0085 F5020000 		.4byte	.LASF11
+ 502 0089 04       		.uleb128 0x4
+ 503 008a 04       		.byte	0x4
+ 504 008b 05       		.byte	0x5
+ 505 008c 696E7400 		.ascii	"int\000"
+ 506 0090 02       		.uleb128 0x2
+ 507 0091 04       		.byte	0x4
+ 508 0092 07       		.byte	0x7
+ 509 0093 15030000 		.4byte	.LASF12
+ 510 0097 03       		.uleb128 0x3
+ 511 0098 14010000 		.4byte	.LASF13
+ 512 009c 03       		.byte	0x3
+ 513 009d 15       		.byte	0x15
+ 514 009e 2C000000 		.4byte	0x2c
+ 515 00a2 03       		.uleb128 0x3
+ 516 00a3 22030000 		.4byte	.LASF14
+ 517 00a7 03       		.byte	0x3
+ 518 00a8 21       		.byte	0x21
+ 519 00a9 45000000 		.4byte	0x45
+ 520 00ad 03       		.uleb128 0x3
+ 521 00ae 2C040000 		.4byte	.LASF15
+ 522 00b2 03       		.byte	0x3
+ 523 00b3 2C       		.byte	0x2c
+ 524 00b4 57000000 		.4byte	0x57
+ 525 00b8 03       		.uleb128 0x3
+ 526 00b9 0C030000 		.4byte	.LASF16
+ 527 00bd 03       		.byte	0x3
+ 528 00be 2D       		.byte	0x2d
+ 529 00bf 69000000 		.4byte	0x69
+ 530 00c3 03       		.uleb128 0x3
+ 531 00c4 7D040000 		.4byte	.LASF17
+ 532 00c8 04       		.byte	0x4
+ 533 00c9 C2       		.byte	0xc2
+ 534 00ca 37000000 		.4byte	0x37
+ 535 00ce 03       		.uleb128 0x3
+ 536 00cf 03010000 		.4byte	.LASF18
+ 537 00d3 04       		.byte	0x4
+ 538 00d4 C3       		.byte	0xc3
+ 539 00d5 50000000 		.4byte	0x50
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 13
+
+
+ 540 00d9 03       		.uleb128 0x3
+ 541 00da 1C010000 		.4byte	.LASF19
+ 542 00de 04       		.byte	0x4
+ 543 00df C6       		.byte	0xc6
+ 544 00e0 3E000000 		.4byte	0x3e
+ 545 00e4 03       		.uleb128 0x3
+ 546 00e5 DE040000 		.4byte	.LASF20
+ 547 00e9 04       		.byte	0x4
+ 548 00ea C7       		.byte	0xc7
+ 549 00eb 62000000 		.4byte	0x62
+ 550 00ef 02       		.uleb128 0x2
+ 551 00f0 04       		.byte	0x4
+ 552 00f1 04       		.byte	0x4
+ 553 00f2 A8010000 		.4byte	.LASF21
+ 554 00f6 02       		.uleb128 0x2
+ 555 00f7 08       		.byte	0x8
+ 556 00f8 04       		.byte	0x4
+ 557 00f9 59050000 		.4byte	.LASF22
+ 558 00fd 02       		.uleb128 0x2
+ 559 00fe 01       		.byte	0x1
+ 560 00ff 08       		.byte	0x8
+ 561 0100 73030000 		.4byte	.LASF23
+ 562 0104 05       		.uleb128 0x5
+ 563 0105 C3000000 		.4byte	0xc3
+ 564 0109 02       		.uleb128 0x2
+ 565 010a 04       		.byte	0x4
+ 566 010b 07       		.byte	0x7
+ 567 010c 57000000 		.4byte	.LASF24
+ 568 0110 02       		.uleb128 0x2
+ 569 0111 08       		.byte	0x8
+ 570 0112 04       		.byte	0x4
+ 571 0113 BC020000 		.4byte	.LASF25
+ 572 0117 06       		.uleb128 0x6
+ 573 0118 2C000000 		.4byte	.LASF26
+ 574 011c 0C       		.byte	0xc
+ 575 011d 05       		.byte	0x5
+ 576 011e 43       		.byte	0x43
+ 577 011f 66010000 		.4byte	0x166
+ 578 0123 07       		.uleb128 0x7
+ 579 0124 673000   		.ascii	"g0\000"
+ 580 0127 05       		.byte	0x5
+ 581 0128 45       		.byte	0x45
+ 582 0129 A2000000 		.4byte	0xa2
+ 583 012d 00       		.byte	0
+ 584 012e 07       		.uleb128 0x7
+ 585 012f 673100   		.ascii	"g1\000"
+ 586 0132 05       		.byte	0x5
+ 587 0133 45       		.byte	0x45
+ 588 0134 A2000000 		.4byte	0xa2
+ 589 0138 02       		.byte	0x2
+ 590 0139 07       		.uleb128 0x7
+ 591 013a 673200   		.ascii	"g2\000"
+ 592 013d 05       		.byte	0x5
+ 593 013e 45       		.byte	0x45
+ 594 013f A2000000 		.4byte	0xa2
+ 595 0143 04       		.byte	0x4
+ 596 0144 07       		.uleb128 0x7
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 14
+
+
+ 597 0145 673300   		.ascii	"g3\000"
+ 598 0148 05       		.byte	0x5
+ 599 0149 45       		.byte	0x45
+ 600 014a A2000000 		.4byte	0xa2
+ 601 014e 06       		.byte	0x6
+ 602 014f 07       		.uleb128 0x7
+ 603 0150 673400   		.ascii	"g4\000"
+ 604 0153 05       		.byte	0x5
+ 605 0154 45       		.byte	0x45
+ 606 0155 A2000000 		.4byte	0xa2
+ 607 0159 08       		.byte	0x8
+ 608 015a 07       		.uleb128 0x7
+ 609 015b 673500   		.ascii	"g5\000"
+ 610 015e 05       		.byte	0x5
+ 611 015f 45       		.byte	0x45
+ 612 0160 A2000000 		.4byte	0xa2
+ 613 0164 0A       		.byte	0xa
+ 614 0165 00       		.byte	0
+ 615 0166 06       		.uleb128 0x6
+ 616 0167 A3020000 		.4byte	.LASF27
+ 617 016b 24       		.byte	0x24
+ 618 016c 05       		.byte	0x5
+ 619 016d 49       		.byte	0x49
+ 620 016e C7010000 		.4byte	0x1c7
+ 621 0172 08       		.uleb128 0x8
+ 622 0173 36030000 		.4byte	.LASF28
+ 623 0177 05       		.byte	0x5
+ 624 0178 4C       		.byte	0x4c
+ 625 0179 17010000 		.4byte	0x117
+ 626 017d 00       		.byte	0
+ 627 017e 08       		.uleb128 0x8
+ 628 017f 42000000 		.4byte	.LASF29
+ 629 0183 05       		.byte	0x5
+ 630 0184 4F       		.byte	0x4f
+ 631 0185 AD000000 		.4byte	0xad
+ 632 0189 0C       		.byte	0xc
+ 633 018a 08       		.uleb128 0x8
+ 634 018b 4C050000 		.4byte	.LASF30
+ 635 018f 05       		.byte	0x5
+ 636 0190 50       		.byte	0x50
+ 637 0191 AD000000 		.4byte	0xad
+ 638 0195 10       		.byte	0x10
+ 639 0196 08       		.uleb128 0x8
+ 640 0197 46050000 		.4byte	.LASF31
+ 641 019b 05       		.byte	0x5
+ 642 019c 53       		.byte	0x53
+ 643 019d AD000000 		.4byte	0xad
+ 644 01a1 14       		.byte	0x14
+ 645 01a2 08       		.uleb128 0x8
+ 646 01a3 2B030000 		.4byte	.LASF32
+ 647 01a7 05       		.byte	0x5
+ 648 01a8 54       		.byte	0x54
+ 649 01a9 AD000000 		.4byte	0xad
+ 650 01ad 18       		.byte	0x18
+ 651 01ae 08       		.uleb128 0x8
+ 652 01af C8020000 		.4byte	.LASF33
+ 653 01b3 05       		.byte	0x5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 15
+
+
+ 654 01b4 55       		.byte	0x55
+ 655 01b5 AD000000 		.4byte	0xad
+ 656 01b9 1C       		.byte	0x1c
+ 657 01ba 08       		.uleb128 0x8
+ 658 01bb AD050000 		.4byte	.LASF34
+ 659 01bf 05       		.byte	0x5
+ 660 01c0 56       		.byte	0x56
+ 661 01c1 AD000000 		.4byte	0xad
+ 662 01c5 20       		.byte	0x20
+ 663 01c6 00       		.byte	0
+ 664 01c7 06       		.uleb128 0x6
+ 665 01c8 68030000 		.4byte	.LASF35
+ 666 01cc 34       		.byte	0x34
+ 667 01cd 05       		.byte	0x5
+ 668 01ce 5A       		.byte	0x5a
+ 669 01cf 58020000 		.4byte	0x258
+ 670 01d3 08       		.uleb128 0x8
+ 671 01d4 36030000 		.4byte	.LASF28
+ 672 01d8 05       		.byte	0x5
+ 673 01d9 5D       		.byte	0x5d
+ 674 01da 17010000 		.4byte	0x117
+ 675 01de 00       		.byte	0
+ 676 01df 07       		.uleb128 0x7
+ 677 01e0 706F7300 		.ascii	"pos\000"
+ 678 01e4 05       		.byte	0x5
+ 679 01e5 60       		.byte	0x60
+ 680 01e6 AD000000 		.4byte	0xad
+ 681 01ea 0C       		.byte	0xc
+ 682 01eb 08       		.uleb128 0x8
+ 683 01ec 90050000 		.4byte	.LASF36
+ 684 01f0 05       		.byte	0x5
+ 685 01f1 61       		.byte	0x61
+ 686 01f2 AD000000 		.4byte	0xad
+ 687 01f6 10       		.byte	0x10
+ 688 01f7 08       		.uleb128 0x8
+ 689 01f8 A8050000 		.4byte	.LASF37
+ 690 01fc 05       		.byte	0x5
+ 691 01fd 62       		.byte	0x62
+ 692 01fe AD000000 		.4byte	0xad
+ 693 0202 14       		.byte	0x14
+ 694 0203 08       		.uleb128 0x8
+ 695 0204 A3050000 		.4byte	.LASF38
+ 696 0208 05       		.byte	0x5
+ 697 0209 63       		.byte	0x63
+ 698 020a AD000000 		.4byte	0xad
+ 699 020e 18       		.byte	0x18
+ 700 020f 08       		.uleb128 0x8
+ 701 0210 4D020000 		.4byte	.LASF39
+ 702 0214 05       		.byte	0x5
+ 703 0215 64       		.byte	0x64
+ 704 0216 AD000000 		.4byte	0xad
+ 705 021a 1C       		.byte	0x1c
+ 706 021b 07       		.uleb128 0x7
+ 707 021c 61636300 		.ascii	"acc\000"
+ 708 0220 05       		.byte	0x5
+ 709 0221 65       		.byte	0x65
+ 710 0222 AD000000 		.4byte	0xad
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 16
+
+
+ 711 0226 20       		.byte	0x20
+ 712 0227 08       		.uleb128 0x8
+ 713 0228 46050000 		.4byte	.LASF31
+ 714 022c 05       		.byte	0x5
+ 715 022d 68       		.byte	0x68
+ 716 022e AD000000 		.4byte	0xad
+ 717 0232 24       		.byte	0x24
+ 718 0233 08       		.uleb128 0x8
+ 719 0234 2B030000 		.4byte	.LASF32
+ 720 0238 05       		.byte	0x5
+ 721 0239 69       		.byte	0x69
+ 722 023a AD000000 		.4byte	0xad
+ 723 023e 28       		.byte	0x28
+ 724 023f 08       		.uleb128 0x8
+ 725 0240 C8020000 		.4byte	.LASF33
+ 726 0244 05       		.byte	0x5
+ 727 0245 6A       		.byte	0x6a
+ 728 0246 AD000000 		.4byte	0xad
+ 729 024a 2C       		.byte	0x2c
+ 730 024b 08       		.uleb128 0x8
+ 731 024c AD050000 		.4byte	.LASF34
+ 732 0250 05       		.byte	0x5
+ 733 0251 6B       		.byte	0x6b
+ 734 0252 AD000000 		.4byte	0xad
+ 735 0256 30       		.byte	0x30
+ 736 0257 00       		.byte	0
+ 737 0258 06       		.uleb128 0x6
+ 738 0259 14050000 		.4byte	.LASF40
+ 739 025d A4       		.byte	0xa4
+ 740 025e 05       		.byte	0x5
+ 741 025f 6F       		.byte	0x6f
+ 742 0260 AD020000 		.4byte	0x2ad
+ 743 0264 08       		.uleb128 0x8
+ 744 0265 B2040000 		.4byte	.LASF41
+ 745 0269 05       		.byte	0x5
+ 746 026a 71       		.byte	0x71
+ 747 026b 97000000 		.4byte	0x97
+ 748 026f 00       		.byte	0
+ 749 0270 07       		.uleb128 0x7
+ 750 0271 70776D00 		.ascii	"pwm\000"
+ 751 0275 05       		.byte	0x5
+ 752 0276 72       		.byte	0x72
+ 753 0277 97000000 		.4byte	0x97
+ 754 027b 01       		.byte	0x1
+ 755 027c 08       		.uleb128 0x8
+ 756 027d 83040000 		.4byte	.LASF42
+ 757 0281 05       		.byte	0x5
+ 758 0282 73       		.byte	0x73
+ 759 0283 66010000 		.4byte	0x166
+ 760 0287 04       		.byte	0x4
+ 761 0288 08       		.uleb128 0x8
+ 762 0289 3E050000 		.4byte	.LASF43
+ 763 028d 05       		.byte	0x5
+ 764 028e 74       		.byte	0x74
+ 765 028f 66010000 		.4byte	0x166
+ 766 0293 28       		.byte	0x28
+ 767 0294 08       		.uleb128 0x8
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 17
+
+
+ 768 0295 BF000000 		.4byte	.LASF44
+ 769 0299 05       		.byte	0x5
+ 770 029a 75       		.byte	0x75
+ 771 029b C7010000 		.4byte	0x1c7
+ 772 029f 4C       		.byte	0x4c
+ 773 02a0 08       		.uleb128 0x8
+ 774 02a1 0A010000 		.4byte	.LASF45
+ 775 02a5 05       		.byte	0x5
+ 776 02a6 76       		.byte	0x76
+ 777 02a7 66010000 		.4byte	0x166
+ 778 02ab 80       		.byte	0x80
+ 779 02ac 00       		.byte	0
+ 780 02ad 09       		.uleb128 0x9
+ 781 02ae C4010000 		.4byte	.LASF46
+ 782 02b2 01       		.byte	0x1
+ 783 02b3 19       		.byte	0x19
+ 784 02b4 00000000 		.4byte	.LFB63
+ 785 02b8 48000000 		.4byte	.LFE63-.LFB63
+ 786 02bc 01       		.uleb128 0x1
+ 787 02bd 9C       		.byte	0x9c
+ 788 02be D5020000 		.4byte	0x2d5
+ 789 02c2 0A       		.uleb128 0xa
+ 790 02c3 06000000 		.4byte	.LVL0
+ 791 02c7 69050000 		.4byte	0x569
+ 792 02cb 0A       		.uleb128 0xa
+ 793 02cc 0A000000 		.4byte	.LVL1
+ 794 02d0 74050000 		.4byte	0x574
+ 795 02d4 00       		.byte	0
+ 796 02d5 09       		.uleb128 0x9
+ 797 02d6 60050000 		.4byte	.LASF47
+ 798 02da 01       		.byte	0x1
+ 799 02db 2E       		.byte	0x2e
+ 800 02dc 00000000 		.4byte	.LFB64
+ 801 02e0 24000000 		.4byte	.LFE64-.LFB64
+ 802 02e4 01       		.uleb128 0x1
+ 803 02e5 9C       		.byte	0x9c
+ 804 02e6 45030000 		.4byte	0x345
+ 805 02ea 0A       		.uleb128 0xa
+ 806 02eb 06000000 		.4byte	.LVL2
+ 807 02ef 7B050000 		.4byte	0x57b
+ 808 02f3 0A       		.uleb128 0xa
+ 809 02f4 0A000000 		.4byte	.LVL3
+ 810 02f8 86050000 		.4byte	0x586
+ 811 02fc 0B       		.uleb128 0xb
+ 812 02fd 10000000 		.4byte	.LVL4
+ 813 0301 8D050000 		.4byte	0x58d
+ 814 0305 0F030000 		.4byte	0x30f
+ 815 0309 0C       		.uleb128 0xc
+ 816 030a 01       		.uleb128 0x1
+ 817 030b 50       		.byte	0x50
+ 818 030c 01       		.uleb128 0x1
+ 819 030d 30       		.byte	0x30
+ 820 030e 00       		.byte	0
+ 821 030f 0B       		.uleb128 0xb
+ 822 0310 16000000 		.4byte	.LVL5
+ 823 0314 9E050000 		.4byte	0x59e
+ 824 0318 22030000 		.4byte	0x322
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 18
+
+
+ 825 031c 0C       		.uleb128 0xc
+ 826 031d 01       		.uleb128 0x1
+ 827 031e 50       		.byte	0x50
+ 828 031f 01       		.uleb128 0x1
+ 829 0320 30       		.byte	0x30
+ 830 0321 00       		.byte	0
+ 831 0322 0B       		.uleb128 0xb
+ 832 0323 1C000000 		.4byte	.LVL6
+ 833 0327 AF050000 		.4byte	0x5af
+ 834 032b 35030000 		.4byte	0x335
+ 835 032f 0C       		.uleb128 0xc
+ 836 0330 01       		.uleb128 0x1
+ 837 0331 50       		.byte	0x50
+ 838 0332 01       		.uleb128 0x1
+ 839 0333 30       		.byte	0x30
+ 840 0334 00       		.byte	0
+ 841 0335 0D       		.uleb128 0xd
+ 842 0336 22000000 		.4byte	.LVL7
+ 843 033a C0050000 		.4byte	0x5c0
+ 844 033e 0C       		.uleb128 0xc
+ 845 033f 01       		.uleb128 0x1
+ 846 0340 50       		.byte	0x50
+ 847 0341 01       		.uleb128 0x1
+ 848 0342 31       		.byte	0x31
+ 849 0343 00       		.byte	0
+ 850 0344 00       		.byte	0
+ 851 0345 09       		.uleb128 0x9
+ 852 0346 E7010000 		.4byte	.LASF48
+ 853 034a 01       		.byte	0x1
+ 854 034b 40       		.byte	0x40
+ 855 034c 00000000 		.4byte	.LFB65
+ 856 0350 74000000 		.4byte	.LFE65-.LFB65
+ 857 0354 01       		.uleb128 0x1
+ 858 0355 9C       		.byte	0x9c
+ 859 0356 9C030000 		.4byte	0x39c
+ 860 035a 0E       		.uleb128 0xe
+ 861 035b 636800   		.ascii	"ch\000"
+ 862 035e 01       		.byte	0x1
+ 863 035f 42       		.byte	0x42
+ 864 0360 37000000 		.4byte	0x37
+ 865 0364 05       		.uleb128 0x5
+ 866 0365 03       		.byte	0x3
+ 867 0366 00000000 		.4byte	ch.10482
+ 868 036a 0F       		.uleb128 0xf
+ 869 036b 6900     		.ascii	"i\000"
+ 870 036d 01       		.byte	0x1
+ 871 036e 43       		.byte	0x43
+ 872 036f 89000000 		.4byte	0x89
+ 873 0373 00000000 		.4byte	.LLST0
+ 874 0377 0A       		.uleb128 0xa
+ 875 0378 06000000 		.4byte	.LVL9
+ 876 037c D1050000 		.4byte	0x5d1
+ 877 0380 0A       		.uleb128 0xa
+ 878 0381 4A000000 		.4byte	.LVL15
+ 879 0385 D8050000 		.4byte	0x5d8
+ 880 0389 0A       		.uleb128 0xa
+ 881 038a 58000000 		.4byte	.LVL16
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 19
+
+
+ 882 038e DF050000 		.4byte	0x5df
+ 883 0392 0A       		.uleb128 0xa
+ 884 0393 5C000000 		.4byte	.LVL17
+ 885 0397 F0050000 		.4byte	0x5f0
+ 886 039b 00       		.byte	0
+ 887 039c 09       		.uleb128 0x9
+ 888 039d 54040000 		.4byte	.LASF49
+ 889 03a1 01       		.byte	0x1
+ 890 03a2 60       		.byte	0x60
+ 891 03a3 00000000 		.4byte	.LFB66
+ 892 03a7 70000000 		.4byte	.LFE66-.LFB66
+ 893 03ab 01       		.uleb128 0x1
+ 894 03ac 9C       		.byte	0x9c
+ 895 03ad D7030000 		.4byte	0x3d7
+ 896 03b1 10       		.uleb128 0x10
+ 897 03b2 93000000 		.4byte	.LASF50
+ 898 03b6 01       		.byte	0x1
+ 899 03b7 62       		.byte	0x62
+ 900 03b8 D7030000 		.4byte	0x3d7
+ 901 03bc 02       		.uleb128 0x2
+ 902 03bd 91       		.byte	0x91
+ 903 03be 74       		.sleb128 -12
+ 904 03bf 10       		.uleb128 0x10
+ 905 03c0 B7050000 		.4byte	.LASF51
+ 906 03c4 01       		.byte	0x1
+ 907 03c5 63       		.byte	0x63
+ 908 03c6 D7030000 		.4byte	0x3d7
+ 909 03ca 02       		.uleb128 0x2
+ 910 03cb 91       		.byte	0x91
+ 911 03cc 70       		.sleb128 -16
+ 912 03cd 0A       		.uleb128 0xa
+ 913 03ce 5E000000 		.4byte	.LVL18
+ 914 03d2 F7050000 		.4byte	0x5f7
+ 915 03d6 00       		.byte	0
+ 916 03d7 05       		.uleb128 0x5
+ 917 03d8 E4000000 		.4byte	0xe4
+ 918 03dc 09       		.uleb128 0x9
+ 919 03dd 00000000 		.4byte	.LASF52
+ 920 03e1 01       		.byte	0x1
+ 921 03e2 74       		.byte	0x74
+ 922 03e3 00000000 		.4byte	.LFB67
+ 923 03e7 30000000 		.4byte	.LFE67-.LFB67
+ 924 03eb 01       		.uleb128 0x1
+ 925 03ec 9C       		.byte	0x9c
+ 926 03ed 22040000 		.4byte	0x422
+ 927 03f1 0B       		.uleb128 0xb
+ 928 03f2 0E000000 		.4byte	.LVL19
+ 929 03f6 11060000 		.4byte	0x611
+ 930 03fa 0B040000 		.4byte	0x40b
+ 931 03fe 0C       		.uleb128 0xc
+ 932 03ff 01       		.uleb128 0x1
+ 933 0400 52       		.byte	0x52
+ 934 0401 02       		.uleb128 0x2
+ 935 0402 08       		.byte	0x8
+ 936 0403 30       		.byte	0x30
+ 937 0404 0C       		.uleb128 0xc
+ 938 0405 01       		.uleb128 0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 20
+
+
+ 939 0406 51       		.byte	0x51
+ 940 0407 02       		.uleb128 0x2
+ 941 0408 74       		.byte	0x74
+ 942 0409 00       		.sleb128 0
+ 943 040a 00       		.byte	0
+ 944 040b 0D       		.uleb128 0xd
+ 945 040c 16000000 		.4byte	.LVL20
+ 946 0410 36060000 		.4byte	0x636
+ 947 0414 0C       		.uleb128 0xc
+ 948 0415 01       		.uleb128 0x1
+ 949 0416 51       		.byte	0x51
+ 950 0417 02       		.uleb128 0x2
+ 951 0418 08       		.byte	0x8
+ 952 0419 30       		.byte	0x30
+ 953 041a 0C       		.uleb128 0xc
+ 954 041b 01       		.uleb128 0x1
+ 955 041c 50       		.byte	0x50
+ 956 041d 02       		.uleb128 0x2
+ 957 041e 74       		.byte	0x74
+ 958 041f 00       		.sleb128 0
+ 959 0420 00       		.byte	0
+ 960 0421 00       		.byte	0
+ 961 0422 09       		.uleb128 0x9
+ 962 0423 60010000 		.4byte	.LASF53
+ 963 0427 01       		.byte	0x1
+ 964 0428 81       		.byte	0x81
+ 965 0429 00000000 		.4byte	.LFB68
+ 966 042d 0E000000 		.4byte	.LFE68-.LFB68
+ 967 0431 01       		.uleb128 0x1
+ 968 0432 9C       		.byte	0x9c
+ 969 0433 54040000 		.4byte	0x454
+ 970 0437 0B       		.uleb128 0xb
+ 971 0438 08000000 		.4byte	.LVL21
+ 972 043c C0050000 		.4byte	0x5c0
+ 973 0440 4A040000 		.4byte	0x44a
+ 974 0444 0C       		.uleb128 0xc
+ 975 0445 01       		.uleb128 0x1
+ 976 0446 50       		.byte	0x50
+ 977 0447 01       		.uleb128 0x1
+ 978 0448 30       		.byte	0x30
+ 979 0449 00       		.byte	0
+ 980 044a 0A       		.uleb128 0xa
+ 981 044b 0C000000 		.4byte	.LVL22
+ 982 044f 4C060000 		.4byte	0x64c
+ 983 0453 00       		.byte	0
+ 984 0454 09       		.uleb128 0x9
+ 985 0455 8B040000 		.4byte	.LASF54
+ 986 0459 01       		.byte	0x1
+ 987 045a 87       		.byte	0x87
+ 988 045b 00000000 		.4byte	.LFB69
+ 989 045f 14000000 		.4byte	.LFE69-.LFB69
+ 990 0463 01       		.uleb128 0x1
+ 991 0464 9C       		.byte	0x9c
+ 992 0465 73040000 		.4byte	0x473
+ 993 0469 0A       		.uleb128 0xa
+ 994 046a 06000000 		.4byte	.LVL23
+ 995 046e 53060000 		.4byte	0x653
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 21
+
+
+ 996 0472 00       		.byte	0
+ 997 0473 11       		.uleb128 0x11
+ 998 0474 34040000 		.4byte	.LASF88
+ 999 0478 01       		.byte	0x1
+ 1000 0479 8D       		.byte	0x8d
+ 1001 047a 00000000 		.4byte	.LFB70
+ 1002 047e 02000000 		.4byte	.LFE70-.LFB70
+ 1003 0482 01       		.uleb128 0x1
+ 1004 0483 9C       		.byte	0x9c
+ 1005 0484 12       		.uleb128 0x12
+ 1006 0485 83050000 		.4byte	.LASF55
+ 1007 0489 06       		.byte	0x6
+ 1008 048a 2A06     		.2byte	0x62a
+ 1009 048c 90040000 		.4byte	0x490
+ 1010 0490 05       		.uleb128 0x5
+ 1011 0491 AD000000 		.4byte	0xad
+ 1012 0495 13       		.uleb128 0x13
+ 1013 0496 C3000000 		.4byte	0xc3
+ 1014 049a A5040000 		.4byte	0x4a5
+ 1015 049e 14       		.uleb128 0x14
+ 1016 049f 09010000 		.4byte	0x109
+ 1017 04a3 5F       		.byte	0x5f
+ 1018 04a4 00       		.byte	0
+ 1019 04a5 15       		.uleb128 0x15
+ 1020 04a6 34020000 		.4byte	.LASF56
+ 1021 04aa 07       		.byte	0x7
+ 1022 04ab 1E       		.byte	0x1e
+ 1023 04ac 95040000 		.4byte	0x495
+ 1024 04b0 15       		.uleb128 0x15
+ 1025 04b1 D0040000 		.4byte	.LASF57
+ 1026 04b5 08       		.byte	0x8
+ 1027 04b6 17       		.byte	0x17
+ 1028 04b7 04010000 		.4byte	0x104
+ 1029 04bb 15       		.uleb128 0x15
+ 1030 04bc AE020000 		.4byte	.LASF58
+ 1031 04c0 08       		.byte	0x8
+ 1032 04c1 18       		.byte	0x18
+ 1033 04c2 04010000 		.4byte	0x104
+ 1034 04c6 15       		.uleb128 0x15
+ 1035 04c7 52020000 		.4byte	.LASF59
+ 1036 04cb 08       		.byte	0x8
+ 1037 04cc 18       		.byte	0x18
+ 1038 04cd 04010000 		.4byte	0x104
+ 1039 04d1 15       		.uleb128 0x15
+ 1040 04d2 34000000 		.4byte	.LASF60
+ 1041 04d6 08       		.byte	0x8
+ 1042 04d7 1A       		.byte	0x1a
+ 1043 04d8 C3000000 		.4byte	0xc3
+ 1044 04dc 15       		.uleb128 0x15
+ 1045 04dd 1D040000 		.4byte	.LASF61
+ 1046 04e1 08       		.byte	0x8
+ 1047 04e2 1B       		.byte	0x1b
+ 1048 04e3 04010000 		.4byte	0x104
+ 1049 04e7 15       		.uleb128 0x15
+ 1050 04e8 22010000 		.4byte	.LASF62
+ 1051 04ec 08       		.byte	0x8
+ 1052 04ed 1D       		.byte	0x1d
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 22
+
+
+ 1053 04ee 04010000 		.4byte	0x104
+ 1054 04f2 13       		.uleb128 0x13
+ 1055 04f3 CE000000 		.4byte	0xce
+ 1056 04f7 08050000 		.4byte	0x508
+ 1057 04fb 14       		.uleb128 0x14
+ 1058 04fc 09010000 		.4byte	0x109
+ 1059 0500 05       		.byte	0x5
+ 1060 0501 14       		.uleb128 0x14
+ 1061 0502 09010000 		.4byte	0x109
+ 1062 0506 07       		.byte	0x7
+ 1063 0507 00       		.byte	0
+ 1064 0508 15       		.uleb128 0x15
+ 1065 0509 60000000 		.4byte	.LASF63
+ 1066 050d 09       		.byte	0x9
+ 1067 050e 30       		.byte	0x30
+ 1068 050f 13050000 		.4byte	0x513
+ 1069 0513 05       		.uleb128 0x5
+ 1070 0514 F2040000 		.4byte	0x4f2
+ 1071 0518 13       		.uleb128 0x13
+ 1072 0519 D9000000 		.4byte	0xd9
+ 1073 051d 28050000 		.4byte	0x528
+ 1074 0521 14       		.uleb128 0x14
+ 1075 0522 09010000 		.4byte	0x109
+ 1076 0526 07       		.byte	0x7
+ 1077 0527 00       		.byte	0
+ 1078 0528 15       		.uleb128 0x15
+ 1079 0529 9A010000 		.4byte	.LASF64
+ 1080 052d 09       		.byte	0x9
+ 1081 052e 33       		.byte	0x33
+ 1082 052f 18050000 		.4byte	0x518
+ 1083 0533 13       		.uleb128 0x13
+ 1084 0534 CE000000 		.4byte	0xce
+ 1085 0538 43050000 		.4byte	0x543
+ 1086 053c 14       		.uleb128 0x14
+ 1087 053d 09010000 		.4byte	0x109
+ 1088 0541 08       		.byte	0x8
+ 1089 0542 00       		.byte	0
+ 1090 0543 15       		.uleb128 0x15
+ 1091 0544 C8000000 		.4byte	.LASF65
+ 1092 0548 09       		.byte	0x9
+ 1093 0549 34       		.byte	0x34
+ 1094 054a 33050000 		.4byte	0x533
+ 1095 054e 15       		.uleb128 0x15
+ 1096 054f 4E030000 		.4byte	.LASF66
+ 1097 0553 07       		.byte	0x7
+ 1098 0554 1F       		.byte	0x1f
+ 1099 0555 95040000 		.4byte	0x495
+ 1100 0559 15       		.uleb128 0x15
+ 1101 055a E4040000 		.4byte	.LASF67
+ 1102 055e 0A       		.byte	0xa
+ 1103 055f 17       		.byte	0x17
+ 1104 0560 64050000 		.4byte	0x564
+ 1105 0564 05       		.uleb128 0x5
+ 1106 0565 58020000 		.4byte	0x258
+ 1107 0569 16       		.uleb128 0x16
+ 1108 056a E8000000 		.4byte	.LASF68
+ 1109 056e 0B       		.byte	0xb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 23
+
+
+ 1110 056f 5E       		.byte	0x5e
+ 1111 0570 C3000000 		.4byte	0xc3
+ 1112 0574 17       		.uleb128 0x17
+ 1113 0575 7B020000 		.4byte	.LASF70
+ 1114 0579 0D       		.byte	0xd
+ 1115 057a 28       		.byte	0x28
+ 1116 057b 16       		.uleb128 0x16
+ 1117 057c 69000000 		.4byte	.LASF69
+ 1118 0580 0C       		.byte	0xc
+ 1119 0581 5E       		.byte	0x5e
+ 1120 0582 C3000000 		.4byte	0xc3
+ 1121 0586 17       		.uleb128 0x17
+ 1122 0587 E9040000 		.4byte	.LASF71
+ 1123 058b 0E       		.byte	0xe
+ 1124 058c 28       		.byte	0x28
+ 1125 058d 18       		.uleb128 0x18
+ 1126 058e 8F020000 		.4byte	.LASF72
+ 1127 0592 0F       		.byte	0xf
+ 1128 0593 27       		.byte	0x27
+ 1129 0594 9E050000 		.4byte	0x59e
+ 1130 0598 19       		.uleb128 0x19
+ 1131 0599 C3000000 		.4byte	0xc3
+ 1132 059d 00       		.byte	0
+ 1133 059e 18       		.uleb128 0x18
+ 1134 059f E0020000 		.4byte	.LASF73
+ 1135 05a3 10       		.byte	0x10
+ 1136 05a4 28       		.byte	0x28
+ 1137 05a5 AF050000 		.4byte	0x5af
+ 1138 05a9 19       		.uleb128 0x19
+ 1139 05aa C3000000 		.4byte	0xc3
+ 1140 05ae 00       		.byte	0
+ 1141 05af 18       		.uleb128 0x18
+ 1142 05b0 DB000000 		.4byte	.LASF74
+ 1143 05b4 11       		.byte	0x11
+ 1144 05b5 28       		.byte	0x28
+ 1145 05b6 C0050000 		.4byte	0x5c0
+ 1146 05ba 19       		.uleb128 0x19
+ 1147 05bb C3000000 		.4byte	0xc3
+ 1148 05bf 00       		.byte	0
+ 1149 05c0 18       		.uleb128 0x18
+ 1150 05c1 84000000 		.4byte	.LASF75
+ 1151 05c5 12       		.byte	0x12
+ 1152 05c6 27       		.byte	0x27
+ 1153 05c7 D1050000 		.4byte	0x5d1
+ 1154 05cb 19       		.uleb128 0x19
+ 1155 05cc C3000000 		.4byte	0xc3
+ 1156 05d0 00       		.byte	0
+ 1157 05d1 17       		.uleb128 0x17
+ 1158 05d2 AE010000 		.4byte	.LASF76
+ 1159 05d6 13       		.byte	0x13
+ 1160 05d7 D2       		.byte	0xd2
+ 1161 05d8 17       		.uleb128 0x17
+ 1162 05d9 69020000 		.4byte	.LASF77
+ 1163 05dd 09       		.byte	0x9
+ 1164 05de 1D       		.byte	0x1d
+ 1165 05df 18       		.uleb128 0x18
+ 1166 05e0 26020000 		.4byte	.LASF78
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 24
+
+
+ 1167 05e4 14       		.byte	0x14
+ 1168 05e5 50       		.byte	0x50
+ 1169 05e6 F0050000 		.4byte	0x5f0
+ 1170 05ea 19       		.uleb128 0x19
+ 1171 05eb C3000000 		.4byte	0xc3
+ 1172 05ef 00       		.byte	0
+ 1173 05f0 17       		.uleb128 0x17
+ 1174 05f1 06040000 		.4byte	.LASF79
+ 1175 05f5 13       		.byte	0x13
+ 1176 05f6 D1       		.byte	0xd1
+ 1177 05f7 1A       		.uleb128 0x1a
+ 1178 05f8 BF050000 		.4byte	.LASF80
+ 1179 05fc 0A       		.byte	0xa
+ 1180 05fd 23       		.byte	0x23
+ 1181 05fe E4000000 		.4byte	0xe4
+ 1182 0602 11060000 		.4byte	0x611
+ 1183 0606 19       		.uleb128 0x19
+ 1184 0607 E4000000 		.4byte	0xe4
+ 1185 060b 19       		.uleb128 0x19
+ 1186 060c E4000000 		.4byte	0xe4
+ 1187 0610 00       		.byte	0
+ 1188 0611 1A       		.uleb128 0x1a
+ 1189 0612 8C010000 		.4byte	.LASF81
+ 1190 0616 15       		.byte	0x15
+ 1191 0617 40       		.byte	0x40
+ 1192 0618 97000000 		.4byte	0x97
+ 1193 061c 30060000 		.4byte	0x630
+ 1194 0620 19       		.uleb128 0x19
+ 1195 0621 30060000 		.4byte	0x630
+ 1196 0625 19       		.uleb128 0x19
+ 1197 0626 30060000 		.4byte	0x630
+ 1198 062a 19       		.uleb128 0x19
+ 1199 062b B8000000 		.4byte	0xb8
+ 1200 062f 00       		.byte	0
+ 1201 0630 1B       		.uleb128 0x1b
+ 1202 0631 04       		.byte	0x4
+ 1203 0632 97000000 		.4byte	0x97
+ 1204 0636 18       		.uleb128 0x18
+ 1205 0637 10020000 		.4byte	.LASF82
+ 1206 063b 15       		.byte	0x15
+ 1207 063c 30       		.byte	0x30
+ 1208 063d 4C060000 		.4byte	0x64c
+ 1209 0641 19       		.uleb128 0x19
+ 1210 0642 30060000 		.4byte	0x630
+ 1211 0646 19       		.uleb128 0x19
+ 1212 0647 B8000000 		.4byte	0xb8
+ 1213 064b 00       		.byte	0
+ 1214 064c 17       		.uleb128 0x17
+ 1215 064d 95050000 		.4byte	.LASF83
+ 1216 0651 0C       		.byte	0xc
+ 1217 0652 5A       		.byte	0x5a
+ 1218 0653 17       		.uleb128 0x17
+ 1219 0654 25050000 		.4byte	.LASF84
+ 1220 0658 16       		.byte	0x16
+ 1221 0659 3E       		.byte	0x3e
+ 1222 065a 00       		.byte	0
+ 1223              		.section	.debug_abbrev,"",%progbits
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 25
+
+
+ 1224              	.Ldebug_abbrev0:
+ 1225 0000 01       		.uleb128 0x1
+ 1226 0001 11       		.uleb128 0x11
+ 1227 0002 01       		.byte	0x1
+ 1228 0003 25       		.uleb128 0x25
+ 1229 0004 0E       		.uleb128 0xe
+ 1230 0005 13       		.uleb128 0x13
+ 1231 0006 0B       		.uleb128 0xb
+ 1232 0007 03       		.uleb128 0x3
+ 1233 0008 0E       		.uleb128 0xe
+ 1234 0009 1B       		.uleb128 0x1b
+ 1235 000a 0E       		.uleb128 0xe
+ 1236 000b 55       		.uleb128 0x55
+ 1237 000c 17       		.uleb128 0x17
+ 1238 000d 11       		.uleb128 0x11
+ 1239 000e 01       		.uleb128 0x1
+ 1240 000f 10       		.uleb128 0x10
+ 1241 0010 17       		.uleb128 0x17
+ 1242 0011 00       		.byte	0
+ 1243 0012 00       		.byte	0
+ 1244 0013 02       		.uleb128 0x2
+ 1245 0014 24       		.uleb128 0x24
+ 1246 0015 00       		.byte	0
+ 1247 0016 0B       		.uleb128 0xb
+ 1248 0017 0B       		.uleb128 0xb
+ 1249 0018 3E       		.uleb128 0x3e
+ 1250 0019 0B       		.uleb128 0xb
+ 1251 001a 03       		.uleb128 0x3
+ 1252 001b 0E       		.uleb128 0xe
+ 1253 001c 00       		.byte	0
+ 1254 001d 00       		.byte	0
+ 1255 001e 03       		.uleb128 0x3
+ 1256 001f 16       		.uleb128 0x16
+ 1257 0020 00       		.byte	0
+ 1258 0021 03       		.uleb128 0x3
+ 1259 0022 0E       		.uleb128 0xe
+ 1260 0023 3A       		.uleb128 0x3a
+ 1261 0024 0B       		.uleb128 0xb
+ 1262 0025 3B       		.uleb128 0x3b
+ 1263 0026 0B       		.uleb128 0xb
+ 1264 0027 49       		.uleb128 0x49
+ 1265 0028 13       		.uleb128 0x13
+ 1266 0029 00       		.byte	0
+ 1267 002a 00       		.byte	0
+ 1268 002b 04       		.uleb128 0x4
+ 1269 002c 24       		.uleb128 0x24
+ 1270 002d 00       		.byte	0
+ 1271 002e 0B       		.uleb128 0xb
+ 1272 002f 0B       		.uleb128 0xb
+ 1273 0030 3E       		.uleb128 0x3e
+ 1274 0031 0B       		.uleb128 0xb
+ 1275 0032 03       		.uleb128 0x3
+ 1276 0033 08       		.uleb128 0x8
+ 1277 0034 00       		.byte	0
+ 1278 0035 00       		.byte	0
+ 1279 0036 05       		.uleb128 0x5
+ 1280 0037 35       		.uleb128 0x35
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 26
+
+
+ 1281 0038 00       		.byte	0
+ 1282 0039 49       		.uleb128 0x49
+ 1283 003a 13       		.uleb128 0x13
+ 1284 003b 00       		.byte	0
+ 1285 003c 00       		.byte	0
+ 1286 003d 06       		.uleb128 0x6
+ 1287 003e 13       		.uleb128 0x13
+ 1288 003f 01       		.byte	0x1
+ 1289 0040 03       		.uleb128 0x3
+ 1290 0041 0E       		.uleb128 0xe
+ 1291 0042 0B       		.uleb128 0xb
+ 1292 0043 0B       		.uleb128 0xb
+ 1293 0044 3A       		.uleb128 0x3a
+ 1294 0045 0B       		.uleb128 0xb
+ 1295 0046 3B       		.uleb128 0x3b
+ 1296 0047 0B       		.uleb128 0xb
+ 1297 0048 01       		.uleb128 0x1
+ 1298 0049 13       		.uleb128 0x13
+ 1299 004a 00       		.byte	0
+ 1300 004b 00       		.byte	0
+ 1301 004c 07       		.uleb128 0x7
+ 1302 004d 0D       		.uleb128 0xd
+ 1303 004e 00       		.byte	0
+ 1304 004f 03       		.uleb128 0x3
+ 1305 0050 08       		.uleb128 0x8
+ 1306 0051 3A       		.uleb128 0x3a
+ 1307 0052 0B       		.uleb128 0xb
+ 1308 0053 3B       		.uleb128 0x3b
+ 1309 0054 0B       		.uleb128 0xb
+ 1310 0055 49       		.uleb128 0x49
+ 1311 0056 13       		.uleb128 0x13
+ 1312 0057 38       		.uleb128 0x38
+ 1313 0058 0B       		.uleb128 0xb
+ 1314 0059 00       		.byte	0
+ 1315 005a 00       		.byte	0
+ 1316 005b 08       		.uleb128 0x8
+ 1317 005c 0D       		.uleb128 0xd
+ 1318 005d 00       		.byte	0
+ 1319 005e 03       		.uleb128 0x3
+ 1320 005f 0E       		.uleb128 0xe
+ 1321 0060 3A       		.uleb128 0x3a
+ 1322 0061 0B       		.uleb128 0xb
+ 1323 0062 3B       		.uleb128 0x3b
+ 1324 0063 0B       		.uleb128 0xb
+ 1325 0064 49       		.uleb128 0x49
+ 1326 0065 13       		.uleb128 0x13
+ 1327 0066 38       		.uleb128 0x38
+ 1328 0067 0B       		.uleb128 0xb
+ 1329 0068 00       		.byte	0
+ 1330 0069 00       		.byte	0
+ 1331 006a 09       		.uleb128 0x9
+ 1332 006b 2E       		.uleb128 0x2e
+ 1333 006c 01       		.byte	0x1
+ 1334 006d 3F       		.uleb128 0x3f
+ 1335 006e 19       		.uleb128 0x19
+ 1336 006f 03       		.uleb128 0x3
+ 1337 0070 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 27
+
+
+ 1338 0071 3A       		.uleb128 0x3a
+ 1339 0072 0B       		.uleb128 0xb
+ 1340 0073 3B       		.uleb128 0x3b
+ 1341 0074 0B       		.uleb128 0xb
+ 1342 0075 11       		.uleb128 0x11
+ 1343 0076 01       		.uleb128 0x1
+ 1344 0077 12       		.uleb128 0x12
+ 1345 0078 06       		.uleb128 0x6
+ 1346 0079 40       		.uleb128 0x40
+ 1347 007a 18       		.uleb128 0x18
+ 1348 007b 9742     		.uleb128 0x2117
+ 1349 007d 19       		.uleb128 0x19
+ 1350 007e 01       		.uleb128 0x1
+ 1351 007f 13       		.uleb128 0x13
+ 1352 0080 00       		.byte	0
+ 1353 0081 00       		.byte	0
+ 1354 0082 0A       		.uleb128 0xa
+ 1355 0083 898201   		.uleb128 0x4109
+ 1356 0086 00       		.byte	0
+ 1357 0087 11       		.uleb128 0x11
+ 1358 0088 01       		.uleb128 0x1
+ 1359 0089 31       		.uleb128 0x31
+ 1360 008a 13       		.uleb128 0x13
+ 1361 008b 00       		.byte	0
+ 1362 008c 00       		.byte	0
+ 1363 008d 0B       		.uleb128 0xb
+ 1364 008e 898201   		.uleb128 0x4109
+ 1365 0091 01       		.byte	0x1
+ 1366 0092 11       		.uleb128 0x11
+ 1367 0093 01       		.uleb128 0x1
+ 1368 0094 31       		.uleb128 0x31
+ 1369 0095 13       		.uleb128 0x13
+ 1370 0096 01       		.uleb128 0x1
+ 1371 0097 13       		.uleb128 0x13
+ 1372 0098 00       		.byte	0
+ 1373 0099 00       		.byte	0
+ 1374 009a 0C       		.uleb128 0xc
+ 1375 009b 8A8201   		.uleb128 0x410a
+ 1376 009e 00       		.byte	0
+ 1377 009f 02       		.uleb128 0x2
+ 1378 00a0 18       		.uleb128 0x18
+ 1379 00a1 9142     		.uleb128 0x2111
+ 1380 00a3 18       		.uleb128 0x18
+ 1381 00a4 00       		.byte	0
+ 1382 00a5 00       		.byte	0
+ 1383 00a6 0D       		.uleb128 0xd
+ 1384 00a7 898201   		.uleb128 0x4109
+ 1385 00aa 01       		.byte	0x1
+ 1386 00ab 11       		.uleb128 0x11
+ 1387 00ac 01       		.uleb128 0x1
+ 1388 00ad 31       		.uleb128 0x31
+ 1389 00ae 13       		.uleb128 0x13
+ 1390 00af 00       		.byte	0
+ 1391 00b0 00       		.byte	0
+ 1392 00b1 0E       		.uleb128 0xe
+ 1393 00b2 34       		.uleb128 0x34
+ 1394 00b3 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 28
+
+
+ 1395 00b4 03       		.uleb128 0x3
+ 1396 00b5 08       		.uleb128 0x8
+ 1397 00b6 3A       		.uleb128 0x3a
+ 1398 00b7 0B       		.uleb128 0xb
+ 1399 00b8 3B       		.uleb128 0x3b
+ 1400 00b9 0B       		.uleb128 0xb
+ 1401 00ba 49       		.uleb128 0x49
+ 1402 00bb 13       		.uleb128 0x13
+ 1403 00bc 02       		.uleb128 0x2
+ 1404 00bd 18       		.uleb128 0x18
+ 1405 00be 00       		.byte	0
+ 1406 00bf 00       		.byte	0
+ 1407 00c0 0F       		.uleb128 0xf
+ 1408 00c1 34       		.uleb128 0x34
+ 1409 00c2 00       		.byte	0
+ 1410 00c3 03       		.uleb128 0x3
+ 1411 00c4 08       		.uleb128 0x8
+ 1412 00c5 3A       		.uleb128 0x3a
+ 1413 00c6 0B       		.uleb128 0xb
+ 1414 00c7 3B       		.uleb128 0x3b
+ 1415 00c8 0B       		.uleb128 0xb
+ 1416 00c9 49       		.uleb128 0x49
+ 1417 00ca 13       		.uleb128 0x13
+ 1418 00cb 02       		.uleb128 0x2
+ 1419 00cc 17       		.uleb128 0x17
+ 1420 00cd 00       		.byte	0
+ 1421 00ce 00       		.byte	0
+ 1422 00cf 10       		.uleb128 0x10
+ 1423 00d0 34       		.uleb128 0x34
+ 1424 00d1 00       		.byte	0
+ 1425 00d2 03       		.uleb128 0x3
+ 1426 00d3 0E       		.uleb128 0xe
+ 1427 00d4 3A       		.uleb128 0x3a
+ 1428 00d5 0B       		.uleb128 0xb
+ 1429 00d6 3B       		.uleb128 0x3b
+ 1430 00d7 0B       		.uleb128 0xb
+ 1431 00d8 49       		.uleb128 0x49
+ 1432 00d9 13       		.uleb128 0x13
+ 1433 00da 02       		.uleb128 0x2
+ 1434 00db 18       		.uleb128 0x18
+ 1435 00dc 00       		.byte	0
+ 1436 00dd 00       		.byte	0
+ 1437 00de 11       		.uleb128 0x11
+ 1438 00df 2E       		.uleb128 0x2e
+ 1439 00e0 00       		.byte	0
+ 1440 00e1 3F       		.uleb128 0x3f
+ 1441 00e2 19       		.uleb128 0x19
+ 1442 00e3 03       		.uleb128 0x3
+ 1443 00e4 0E       		.uleb128 0xe
+ 1444 00e5 3A       		.uleb128 0x3a
+ 1445 00e6 0B       		.uleb128 0xb
+ 1446 00e7 3B       		.uleb128 0x3b
+ 1447 00e8 0B       		.uleb128 0xb
+ 1448 00e9 11       		.uleb128 0x11
+ 1449 00ea 01       		.uleb128 0x1
+ 1450 00eb 12       		.uleb128 0x12
+ 1451 00ec 06       		.uleb128 0x6
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 29
+
+
+ 1452 00ed 40       		.uleb128 0x40
+ 1453 00ee 18       		.uleb128 0x18
+ 1454 00ef 9742     		.uleb128 0x2117
+ 1455 00f1 19       		.uleb128 0x19
+ 1456 00f2 00       		.byte	0
+ 1457 00f3 00       		.byte	0
+ 1458 00f4 12       		.uleb128 0x12
+ 1459 00f5 34       		.uleb128 0x34
+ 1460 00f6 00       		.byte	0
+ 1461 00f7 03       		.uleb128 0x3
+ 1462 00f8 0E       		.uleb128 0xe
+ 1463 00f9 3A       		.uleb128 0x3a
+ 1464 00fa 0B       		.uleb128 0xb
+ 1465 00fb 3B       		.uleb128 0x3b
+ 1466 00fc 05       		.uleb128 0x5
+ 1467 00fd 49       		.uleb128 0x49
+ 1468 00fe 13       		.uleb128 0x13
+ 1469 00ff 3F       		.uleb128 0x3f
+ 1470 0100 19       		.uleb128 0x19
+ 1471 0101 3C       		.uleb128 0x3c
+ 1472 0102 19       		.uleb128 0x19
+ 1473 0103 00       		.byte	0
+ 1474 0104 00       		.byte	0
+ 1475 0105 13       		.uleb128 0x13
+ 1476 0106 01       		.uleb128 0x1
+ 1477 0107 01       		.byte	0x1
+ 1478 0108 49       		.uleb128 0x49
+ 1479 0109 13       		.uleb128 0x13
+ 1480 010a 01       		.uleb128 0x1
+ 1481 010b 13       		.uleb128 0x13
+ 1482 010c 00       		.byte	0
+ 1483 010d 00       		.byte	0
+ 1484 010e 14       		.uleb128 0x14
+ 1485 010f 21       		.uleb128 0x21
+ 1486 0110 00       		.byte	0
+ 1487 0111 49       		.uleb128 0x49
+ 1488 0112 13       		.uleb128 0x13
+ 1489 0113 2F       		.uleb128 0x2f
+ 1490 0114 0B       		.uleb128 0xb
+ 1491 0115 00       		.byte	0
+ 1492 0116 00       		.byte	0
+ 1493 0117 15       		.uleb128 0x15
+ 1494 0118 34       		.uleb128 0x34
+ 1495 0119 00       		.byte	0
+ 1496 011a 03       		.uleb128 0x3
+ 1497 011b 0E       		.uleb128 0xe
+ 1498 011c 3A       		.uleb128 0x3a
+ 1499 011d 0B       		.uleb128 0xb
+ 1500 011e 3B       		.uleb128 0x3b
+ 1501 011f 0B       		.uleb128 0xb
+ 1502 0120 49       		.uleb128 0x49
+ 1503 0121 13       		.uleb128 0x13
+ 1504 0122 3F       		.uleb128 0x3f
+ 1505 0123 19       		.uleb128 0x19
+ 1506 0124 3C       		.uleb128 0x3c
+ 1507 0125 19       		.uleb128 0x19
+ 1508 0126 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 30
+
+
+ 1509 0127 00       		.byte	0
+ 1510 0128 16       		.uleb128 0x16
+ 1511 0129 2E       		.uleb128 0x2e
+ 1512 012a 00       		.byte	0
+ 1513 012b 3F       		.uleb128 0x3f
+ 1514 012c 19       		.uleb128 0x19
+ 1515 012d 03       		.uleb128 0x3
+ 1516 012e 0E       		.uleb128 0xe
+ 1517 012f 3A       		.uleb128 0x3a
+ 1518 0130 0B       		.uleb128 0xb
+ 1519 0131 3B       		.uleb128 0x3b
+ 1520 0132 0B       		.uleb128 0xb
+ 1521 0133 27       		.uleb128 0x27
+ 1522 0134 19       		.uleb128 0x19
+ 1523 0135 49       		.uleb128 0x49
+ 1524 0136 13       		.uleb128 0x13
+ 1525 0137 3C       		.uleb128 0x3c
+ 1526 0138 19       		.uleb128 0x19
+ 1527 0139 00       		.byte	0
+ 1528 013a 00       		.byte	0
+ 1529 013b 17       		.uleb128 0x17
+ 1530 013c 2E       		.uleb128 0x2e
+ 1531 013d 00       		.byte	0
+ 1532 013e 3F       		.uleb128 0x3f
+ 1533 013f 19       		.uleb128 0x19
+ 1534 0140 03       		.uleb128 0x3
+ 1535 0141 0E       		.uleb128 0xe
+ 1536 0142 3A       		.uleb128 0x3a
+ 1537 0143 0B       		.uleb128 0xb
+ 1538 0144 3B       		.uleb128 0x3b
+ 1539 0145 0B       		.uleb128 0xb
+ 1540 0146 27       		.uleb128 0x27
+ 1541 0147 19       		.uleb128 0x19
+ 1542 0148 3C       		.uleb128 0x3c
+ 1543 0149 19       		.uleb128 0x19
+ 1544 014a 00       		.byte	0
+ 1545 014b 00       		.byte	0
+ 1546 014c 18       		.uleb128 0x18
+ 1547 014d 2E       		.uleb128 0x2e
+ 1548 014e 01       		.byte	0x1
+ 1549 014f 3F       		.uleb128 0x3f
+ 1550 0150 19       		.uleb128 0x19
+ 1551 0151 03       		.uleb128 0x3
+ 1552 0152 0E       		.uleb128 0xe
+ 1553 0153 3A       		.uleb128 0x3a
+ 1554 0154 0B       		.uleb128 0xb
+ 1555 0155 3B       		.uleb128 0x3b
+ 1556 0156 0B       		.uleb128 0xb
+ 1557 0157 27       		.uleb128 0x27
+ 1558 0158 19       		.uleb128 0x19
+ 1559 0159 3C       		.uleb128 0x3c
+ 1560 015a 19       		.uleb128 0x19
+ 1561 015b 01       		.uleb128 0x1
+ 1562 015c 13       		.uleb128 0x13
+ 1563 015d 00       		.byte	0
+ 1564 015e 00       		.byte	0
+ 1565 015f 19       		.uleb128 0x19
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 31
+
+
+ 1566 0160 05       		.uleb128 0x5
+ 1567 0161 00       		.byte	0
+ 1568 0162 49       		.uleb128 0x49
+ 1569 0163 13       		.uleb128 0x13
+ 1570 0164 00       		.byte	0
+ 1571 0165 00       		.byte	0
+ 1572 0166 1A       		.uleb128 0x1a
+ 1573 0167 2E       		.uleb128 0x2e
+ 1574 0168 01       		.byte	0x1
+ 1575 0169 3F       		.uleb128 0x3f
+ 1576 016a 19       		.uleb128 0x19
+ 1577 016b 03       		.uleb128 0x3
+ 1578 016c 0E       		.uleb128 0xe
+ 1579 016d 3A       		.uleb128 0x3a
+ 1580 016e 0B       		.uleb128 0xb
+ 1581 016f 3B       		.uleb128 0x3b
+ 1582 0170 0B       		.uleb128 0xb
+ 1583 0171 27       		.uleb128 0x27
+ 1584 0172 19       		.uleb128 0x19
+ 1585 0173 49       		.uleb128 0x49
+ 1586 0174 13       		.uleb128 0x13
+ 1587 0175 3C       		.uleb128 0x3c
+ 1588 0176 19       		.uleb128 0x19
+ 1589 0177 01       		.uleb128 0x1
+ 1590 0178 13       		.uleb128 0x13
+ 1591 0179 00       		.byte	0
+ 1592 017a 00       		.byte	0
+ 1593 017b 1B       		.uleb128 0x1b
+ 1594 017c 0F       		.uleb128 0xf
+ 1595 017d 00       		.byte	0
+ 1596 017e 0B       		.uleb128 0xb
+ 1597 017f 0B       		.uleb128 0xb
+ 1598 0180 49       		.uleb128 0x49
+ 1599 0181 13       		.uleb128 0x13
+ 1600 0182 00       		.byte	0
+ 1601 0183 00       		.byte	0
+ 1602 0184 00       		.byte	0
+ 1603              		.section	.debug_loc,"",%progbits
+ 1604              	.Ldebug_loc0:
+ 1605              	.LLST0:
+ 1606 0000 02000000 		.4byte	.LVL8
+ 1607 0004 0A000000 		.4byte	.LVL10
+ 1608 0008 0200     		.2byte	0x2
+ 1609 000a 30       		.byte	0x30
+ 1610 000b 9F       		.byte	0x9f
+ 1611 000c 0A000000 		.4byte	.LVL10
+ 1612 0010 1A000000 		.4byte	.LVL11
+ 1613 0014 0100     		.2byte	0x1
+ 1614 0016 53       		.byte	0x53
+ 1615 0017 1A000000 		.4byte	.LVL11
+ 1616 001b 20000000 		.4byte	.LVL12
+ 1617 001f 0300     		.2byte	0x3
+ 1618 0021 72       		.byte	0x72
+ 1619 0022 7F       		.sleb128 -1
+ 1620 0023 9F       		.byte	0x9f
+ 1621 0024 20000000 		.4byte	.LVL12
+ 1622 0028 22000000 		.4byte	.LVL13
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 32
+
+
+ 1623 002c 0100     		.2byte	0x1
+ 1624 002e 52       		.byte	0x52
+ 1625 002f 22000000 		.4byte	.LVL13
+ 1626 0033 2A000000 		.4byte	.LVL14
+ 1627 0037 0100     		.2byte	0x1
+ 1628 0039 53       		.byte	0x53
+ 1629 003a 00000000 		.4byte	0
+ 1630 003e 00000000 		.4byte	0
+ 1631              		.section	.debug_aranges,"",%progbits
+ 1632 0000 54000000 		.4byte	0x54
+ 1633 0004 0200     		.2byte	0x2
+ 1634 0006 00000000 		.4byte	.Ldebug_info0
+ 1635 000a 04       		.byte	0x4
+ 1636 000b 00       		.byte	0
+ 1637 000c 0000     		.2byte	0
+ 1638 000e 0000     		.2byte	0
+ 1639 0010 00000000 		.4byte	.LFB63
+ 1640 0014 48000000 		.4byte	.LFE63-.LFB63
+ 1641 0018 00000000 		.4byte	.LFB64
+ 1642 001c 24000000 		.4byte	.LFE64-.LFB64
+ 1643 0020 00000000 		.4byte	.LFB65
+ 1644 0024 74000000 		.4byte	.LFE65-.LFB65
+ 1645 0028 00000000 		.4byte	.LFB66
+ 1646 002c 70000000 		.4byte	.LFE66-.LFB66
+ 1647 0030 00000000 		.4byte	.LFB67
+ 1648 0034 30000000 		.4byte	.LFE67-.LFB67
+ 1649 0038 00000000 		.4byte	.LFB68
+ 1650 003c 0E000000 		.4byte	.LFE68-.LFB68
+ 1651 0040 00000000 		.4byte	.LFB69
+ 1652 0044 14000000 		.4byte	.LFE69-.LFB69
+ 1653 0048 00000000 		.4byte	.LFB70
+ 1654 004c 02000000 		.4byte	.LFE70-.LFB70
+ 1655 0050 00000000 		.4byte	0
+ 1656 0054 00000000 		.4byte	0
+ 1657              		.section	.debug_ranges,"",%progbits
+ 1658              	.Ldebug_ranges0:
+ 1659 0000 00000000 		.4byte	.LFB63
+ 1660 0004 48000000 		.4byte	.LFE63
+ 1661 0008 00000000 		.4byte	.LFB64
+ 1662 000c 24000000 		.4byte	.LFE64
+ 1663 0010 00000000 		.4byte	.LFB65
+ 1664 0014 74000000 		.4byte	.LFE65
+ 1665 0018 00000000 		.4byte	.LFB66
+ 1666 001c 70000000 		.4byte	.LFE66
+ 1667 0020 00000000 		.4byte	.LFB67
+ 1668 0024 30000000 		.4byte	.LFE67
+ 1669 0028 00000000 		.4byte	.LFB68
+ 1670 002c 0E000000 		.4byte	.LFE68
+ 1671 0030 00000000 		.4byte	.LFB69
+ 1672 0034 14000000 		.4byte	.LFE69
+ 1673 0038 00000000 		.4byte	.LFB70
+ 1674 003c 02000000 		.4byte	.LFE70
+ 1675 0040 00000000 		.4byte	0
+ 1676 0044 00000000 		.4byte	0
+ 1677              		.section	.debug_line,"",%progbits
+ 1678              	.Ldebug_line0:
+ 1679 0000 5B030000 		.section	.debug_str,"MS",%progbits,1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 33
+
+
+ 1679      02009902 
+ 1679      00000201 
+ 1679      FB0E0D00 
+ 1679      01010101 
+ 1680              	.LASF52:
+ 1681 0000 6973725F 		.ascii	"isr_dma_uart_rx_Interrupt_InterruptCallback\000"
+ 1681      646D615F 
+ 1681      75617274 
+ 1681      5F72785F 
+ 1681      496E7465 
+ 1682              	.LASF26:
+ 1683 002c 6761696E 		.ascii	"gains_s\000"
+ 1683      735F7300 
+ 1684              	.LASF60:
+ 1685 0034 6164635F 		.ascii	"adc_sar1_flag\000"
+ 1685      73617231 
+ 1685      5F666C61 
+ 1685      6700
+ 1686              	.LASF29:
+ 1687 0042 61637475 		.ascii	"actual_val\000"
+ 1687      616C5F76 
+ 1687      616C00
+ 1688              	.LASF2:
+ 1689 004d 73686F72 		.ascii	"short int\000"
+ 1689      7420696E 
+ 1689      7400
+ 1690              	.LASF24:
+ 1691 0057 73697A65 		.ascii	"sizetype\000"
+ 1691      74797065 
+ 1691      00
+ 1692              	.LASF63:
+ 1693 0060 61646331 		.ascii	"adc1_res\000"
+ 1693      5F726573 
+ 1693      00
+ 1694              	.LASF69:
+ 1695 0069 54696D65 		.ascii	"Timer_2_ReadStatusRegister\000"
+ 1695      725F325F 
+ 1695      52656164 
+ 1695      53746174 
+ 1695      75735265 
+ 1696              	.LASF75:
+ 1697 0084 54325F52 		.ascii	"T2_RESET_Write\000"
+ 1697      45534554 
+ 1697      5F577269 
+ 1697      746500
+ 1698              	.LASF50:
+ 1699 0093 6164635F 		.ascii	"adc_sum\000"
+ 1699      73756D00 
+ 1700              	.LASF10:
+ 1701 009b 6C6F6E67 		.ascii	"long long int\000"
+ 1701      206C6F6E 
+ 1701      6720696E 
+ 1701      7400
+ 1702              	.LASF8:
+ 1703 00a9 5F5F7569 		.ascii	"__uint32_t\000"
+ 1703      6E743332 
+ 1703      5F7400
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 34
+
+
+ 1704              	.LASF4:
+ 1705 00b4 5F5F7569 		.ascii	"__uint16_t\000"
+ 1705      6E743136 
+ 1705      5F7400
+ 1706              	.LASF44:
+ 1707 00bf 706F7369 		.ascii	"position\000"
+ 1707      74696F6E 
+ 1707      00
+ 1708              	.LASF65:
+ 1709 00c8 6164635F 		.ascii	"adc_sar1_dma_array\000"
+ 1709      73617231 
+ 1709      5F646D61 
+ 1709      5F617272 
+ 1709      617900
+ 1710              	.LASF74:
+ 1711 00db 4E4F545F 		.ascii	"NOT_RE_Write\000"
+ 1711      52455F57 
+ 1711      72697465 
+ 1711      00
+ 1712              	.LASF68:
+ 1713 00e8 54696D65 		.ascii	"Timer_1_ReadStatusRegister\000"
+ 1713      725F315F 
+ 1713      52656164 
+ 1713      53746174 
+ 1713      75735265 
+ 1714              	.LASF18:
+ 1715 0103 75696E74 		.ascii	"uint16\000"
+ 1715      313600
+ 1716              	.LASF45:
+ 1717 010a 696D7065 		.ascii	"impedance\000"
+ 1717      64616E63 
+ 1717      6500
+ 1718              	.LASF13:
+ 1719 0114 75696E74 		.ascii	"uint8_t\000"
+ 1719      385F7400 
+ 1720              	.LASF19:
+ 1721 011c 696E7431 		.ascii	"int16\000"
+ 1721      3600
+ 1722              	.LASF62:
+ 1723 0122 6164635F 		.ascii	"adc_delsig_flag\000"
+ 1723      64656C73 
+ 1723      69675F66 
+ 1723      6C616700 
+ 1724              	.LASF87:
+ 1725 0132 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 1725      6C657853 
+ 1725      45415F61 
+ 1725      6C783837 
+ 1725      6772645C 
+ 1726              	.LASF53:
+ 1727 0160 6973725F 		.ascii	"isr_dma_uart_tx_Interrupt_InterruptCallback\000"
+ 1727      646D615F 
+ 1727      75617274 
+ 1727      5F74785F 
+ 1727      496E7465 
+ 1728              	.LASF81:
+ 1729 018c 756E7772 		.ascii	"unwrap_buffer\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 35
+
+
+ 1729      61705F62 
+ 1729      75666665 
+ 1729      7200
+ 1730              	.LASF64:
+ 1731 019a 6164635F 		.ascii	"adc_dma_array\000"
+ 1731      646D615F 
+ 1731      61727261 
+ 1731      7900
+ 1732              	.LASF21:
+ 1733 01a8 666C6F61 		.ascii	"float\000"
+ 1733      7400
+ 1734              	.LASF76:
+ 1735 01ae 4144435F 		.ascii	"ADC_SAR_1_StopConvert\000"
+ 1735      5341525F 
+ 1735      315F5374 
+ 1735      6F70436F 
+ 1735      6E766572 
+ 1736              	.LASF46:
+ 1737 01c4 6973725F 		.ascii	"isr_t1_Interrupt_InterruptCallback\000"
+ 1737      74315F49 
+ 1737      6E746572 
+ 1737      72757074 
+ 1737      5F496E74 
+ 1738              	.LASF48:
+ 1739 01e7 6973725F 		.ascii	"isr_sar1_dma_Interrupt_InterruptCallback\000"
+ 1739      73617231 
+ 1739      5F646D61 
+ 1739      5F496E74 
+ 1739      65727275 
+ 1740              	.LASF82:
+ 1741 0210 75706461 		.ascii	"update_rx_buf_array_1\000"
+ 1741      74655F72 
+ 1741      785F6275 
+ 1741      665F6172 
+ 1741      7261795F 
+ 1742              	.LASF78:
+ 1743 0226 414D7578 		.ascii	"AMux_1_Select\000"
+ 1743      5F315F53 
+ 1743      656C6563 
+ 1743      7400
+ 1744              	.LASF56:
+ 1745 0234 75617274 		.ascii	"uart_dma_rx_buf\000"
+ 1745      5F646D61 
+ 1745      5F72785F 
+ 1745      62756600 
+ 1746              	.LASF7:
+ 1747 0244 6C6F6E67 		.ascii	"long int\000"
+ 1747      20696E74 
+ 1747      00
+ 1748              	.LASF39:
+ 1749 024d 7370646D 		.ascii	"spdm\000"
+ 1749      00
+ 1750              	.LASF59:
+ 1751 0252 74315F6E 		.ascii	"t1_new_value\000"
+ 1751      65775F76 
+ 1751      616C7565 
+ 1751      00
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 36
+
+
+ 1752              	.LASF3:
+ 1753 025f 5F5F7569 		.ascii	"__uint8_t\000"
+ 1753      6E74385F 
+ 1753      7400
+ 1754              	.LASF77:
+ 1755 0269 646F7562 		.ascii	"double_buffer_adc\000"
+ 1755      6C655F62 
+ 1755      75666665 
+ 1755      725F6164 
+ 1755      6300
+ 1756              	.LASF70:
+ 1757 027b 6973725F 		.ascii	"isr_t1_ClearPending\000"
+ 1757      74315F43 
+ 1757      6C656172 
+ 1757      50656E64 
+ 1757      696E6700 
+ 1758              	.LASF72:
+ 1759 028f 55415254 		.ascii	"UART_DMA_XMIT_Write\000"
+ 1759      5F444D41 
+ 1759      5F584D49 
+ 1759      545F5772 
+ 1759      69746500 
+ 1760              	.LASF27:
+ 1761 02a3 67656E5F 		.ascii	"gen_ctrl_s\000"
+ 1761      6374726C 
+ 1761      5F7300
+ 1762              	.LASF58:
+ 1763 02ae 74315F74 		.ascii	"t1_time_share\000"
+ 1763      696D655F 
+ 1763      73686172 
+ 1763      6500
+ 1764              	.LASF25:
+ 1765 02bc 6C6F6E67 		.ascii	"long double\000"
+ 1765      20646F75 
+ 1765      626C6500 
+ 1766              	.LASF33:
+ 1767 02c8 6572726F 		.ascii	"error_sum\000"
+ 1767      725F7375 
+ 1767      6D00
+ 1768              	.LASF1:
+ 1769 02d2 756E7369 		.ascii	"unsigned char\000"
+ 1769      676E6564 
+ 1769      20636861 
+ 1769      7200
+ 1770              	.LASF73:
+ 1771 02e0 44455F57 		.ascii	"DE_Write\000"
+ 1771      72697465 
+ 1771      00
+ 1772              	.LASF0:
+ 1773 02e9 7369676E 		.ascii	"signed char\000"
+ 1773      65642063 
+ 1773      68617200 
+ 1774              	.LASF11:
+ 1775 02f5 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1775      206C6F6E 
+ 1775      6720756E 
+ 1775      7369676E 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 37
+
+
+ 1775      65642069 
+ 1776              	.LASF16:
+ 1777 030c 75696E74 		.ascii	"uint32_t\000"
+ 1777      33325F74 
+ 1777      00
+ 1778              	.LASF12:
+ 1779 0315 756E7369 		.ascii	"unsigned int\000"
+ 1779      676E6564 
+ 1779      20696E74 
+ 1779      00
+ 1780              	.LASF14:
+ 1781 0322 75696E74 		.ascii	"uint16_t\000"
+ 1781      31365F74 
+ 1781      00
+ 1782              	.LASF32:
+ 1783 032b 6572726F 		.ascii	"error_prev\000"
+ 1783      725F7072 
+ 1783      657600
+ 1784              	.LASF28:
+ 1785 0336 6761696E 		.ascii	"gain\000"
+ 1785      00
+ 1786              	.LASF5:
+ 1787 033b 73686F72 		.ascii	"short unsigned int\000"
+ 1787      7420756E 
+ 1787      7369676E 
+ 1787      65642069 
+ 1787      6E7400
+ 1788              	.LASF66:
+ 1789 034e 75617274 		.ascii	"uart_dma_rx_buf_unwrapped\000"
+ 1789      5F646D61 
+ 1789      5F72785F 
+ 1789      6275665F 
+ 1789      756E7772 
+ 1790              	.LASF35:
+ 1791 0368 706F735F 		.ascii	"pos_ctrl_s\000"
+ 1791      6374726C 
+ 1791      5F7300
+ 1792              	.LASF23:
+ 1793 0373 63686172 		.ascii	"char\000"
+ 1793      00
+ 1794              	.LASF85:
+ 1795 0378 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 1795      4320342E 
+ 1795      392E3320 
+ 1795      32303135 
+ 1795      30333033 
+ 1796 03ab 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 1796      20726576 
+ 1796      6973696F 
+ 1796      6E203232 
+ 1796      31323230 
+ 1797 03de 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1797      66756E63 
+ 1797      74696F6E 
+ 1797      2D736563 
+ 1797      74696F6E 
+ 1798              	.LASF79:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 38
+
+
+ 1799 0406 4144435F 		.ascii	"ADC_SAR_1_StartConvert\000"
+ 1799      5341525F 
+ 1799      315F5374 
+ 1799      61727443 
+ 1799      6F6E7665 
+ 1800              	.LASF61:
+ 1801 041d 64617461 		.ascii	"data_ready_485\000"
+ 1801      5F726561 
+ 1801      64795F34 
+ 1801      383500
+ 1802              	.LASF15:
+ 1803 042c 696E7433 		.ascii	"int32_t\000"
+ 1803      325F7400 
+ 1804              	.LASF88:
+ 1805 0434 4144435F 		.ascii	"ADC_SAR_1_ISR_InterruptCallback\000"
+ 1805      5341525F 
+ 1805      315F4953 
+ 1805      525F496E 
+ 1805      74657272 
+ 1806              	.LASF49:
+ 1807 0454 6973725F 		.ascii	"isr_sar2_dma_Interrupt_InterruptCallback\000"
+ 1807      73617232 
+ 1807      5F646D61 
+ 1807      5F496E74 
+ 1807      65727275 
+ 1808              	.LASF17:
+ 1809 047d 75696E74 		.ascii	"uint8\000"
+ 1809      3800
+ 1810              	.LASF42:
+ 1811 0483 67656E65 		.ascii	"generic\000"
+ 1811      72696300 
+ 1812              	.LASF54:
+ 1813 048b 6973725F 		.ascii	"isr_delsig_Interrupt_InterruptCallback\000"
+ 1813      64656C73 
+ 1813      69675F49 
+ 1813      6E746572 
+ 1813      72757074 
+ 1814              	.LASF41:
+ 1815 04b2 61637469 		.ascii	"active_ctrl\000"
+ 1815      76655F63 
+ 1815      74726C00 
+ 1816              	.LASF9:
+ 1817 04be 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1817      20756E73 
+ 1817      69676E65 
+ 1817      6420696E 
+ 1817      7400
+ 1818              	.LASF57:
+ 1819 04d0 74315F31 		.ascii	"t1_100us_flag\000"
+ 1819      30307573 
+ 1819      5F666C61 
+ 1819      6700
+ 1820              	.LASF20:
+ 1821 04de 696E7433 		.ascii	"int32\000"
+ 1821      3200
+ 1822              	.LASF67:
+ 1823 04e4 6374726C 		.ascii	"ctrl\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 39
+
+
+ 1823      00
+ 1824              	.LASF71:
+ 1825 04e9 6973725F 		.ascii	"isr_t2_ClearPending\000"
+ 1825      74325F43 
+ 1825      6C656172 
+ 1825      50656E64 
+ 1825      696E6700 
+ 1826              	.LASF86:
+ 1827 04fd 2E2E5C73 		.ascii	"..\\src\\isr_callbacks.c\000"
+ 1827      72635C69 
+ 1827      73725F63 
+ 1827      616C6C62 
+ 1827      61636B73 
+ 1828              	.LASF40:
+ 1829 0514 6374726C 		.ascii	"ctrl_s\000"
+ 1829      5F7300
+ 1830              	.LASF6:
+ 1831 051b 5F5F696E 		.ascii	"__int32_t\000"
+ 1831      7433325F 
+ 1831      7400
+ 1832              	.LASF84:
+ 1833 0525 4144435F 		.ascii	"ADC_DelSig_1_StopConvert\000"
+ 1833      44656C53 
+ 1833      69675F31 
+ 1833      5F53746F 
+ 1833      70436F6E 
+ 1834              	.LASF43:
+ 1835 053e 63757272 		.ascii	"current\000"
+ 1835      656E7400 
+ 1836              	.LASF31:
+ 1837 0546 6572726F 		.ascii	"error\000"
+ 1837      7200
+ 1838              	.LASF30:
+ 1839 054c 73657470 		.ascii	"setpoint_val\000"
+ 1839      6F696E74 
+ 1839      5F76616C 
+ 1839      00
+ 1840              	.LASF22:
+ 1841 0559 646F7562 		.ascii	"double\000"
+ 1841      6C6500
+ 1842              	.LASF47:
+ 1843 0560 6973725F 		.ascii	"isr_t2_Interrupt_InterruptCallback\000"
+ 1843      74325F49 
+ 1843      6E746572 
+ 1843      72757074 
+ 1843      5F496E74 
+ 1844              	.LASF55:
+ 1845 0583 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 1845      52784275 
+ 1845      66666572 
+ 1845      00
+ 1846              	.LASF36:
+ 1847 0590 73657470 		.ascii	"setp\000"
+ 1847      00
+ 1848              	.LASF83:
+ 1849 0595 54696D65 		.ascii	"Timer_2_Start\000"
+ 1849      725F325F 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccvSrtjj.s 			page 40
+
+
+ 1849      53746172 
+ 1849      7400
+ 1850              	.LASF38:
+ 1851 05a3 706F7366 		.ascii	"posf\000"
+ 1851      00
+ 1852              	.LASF37:
+ 1853 05a8 706F7369 		.ascii	"posi\000"
+ 1853      00
+ 1854              	.LASF34:
+ 1855 05ad 6572726F 		.ascii	"error_dif\000"
+ 1855      725F6469 
+ 1855      6600
+ 1856              	.LASF51:
+ 1857 05b7 6164635F 		.ascii	"adc_avg\000"
+ 1857      61766700 
+ 1858              	.LASF80:
+ 1859 05bf 6D6F746F 		.ascii	"motor_current_pid_2\000"
+ 1859      725F6375 
+ 1859      7272656E 
+ 1859      745F7069 
+ 1859      645F3200 
+ 1860              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

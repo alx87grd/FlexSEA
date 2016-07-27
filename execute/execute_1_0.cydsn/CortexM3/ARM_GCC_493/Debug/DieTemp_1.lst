@@ -1,0 +1,1754 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"DieTemp_1.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.section	.text.DieTemp_1_Start,"ax",%progbits
+  19              		.align	2
+  20              		.global	DieTemp_1_Start
+  21              		.thumb
+  22              		.thumb_func
+  23              		.type	DieTemp_1_Start, %function
+  24              	DieTemp_1_Start:
+  25              	.LFB0:
+  26              		.file 1 ".\\Generated_Source\\PSoC5\\DieTemp_1.c"
+   1:.\Generated_Source\PSoC5/DieTemp_1.c **** /*******************************************************************************
+   2:.\Generated_Source\PSoC5/DieTemp_1.c **** * File Name: DieTemp_1_DieTemp.c
+   3:.\Generated_Source\PSoC5/DieTemp_1.c **** * Version 2.0
+   4:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+   5:.\Generated_Source\PSoC5/DieTemp_1.c **** * Description:
+   6:.\Generated_Source\PSoC5/DieTemp_1.c **** *  Provides the API to acquire the die temperature.
+   7:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+   8:.\Generated_Source\PSoC5/DieTemp_1.c **** ********************************************************************************
+   9:.\Generated_Source\PSoC5/DieTemp_1.c **** * Copyright 2008-2012, Cypress Semiconductor Corporation.  All rights reserved.
+  10:.\Generated_Source\PSoC5/DieTemp_1.c **** * You may use this file only in accordance with the license, terms, conditions,
+  11:.\Generated_Source\PSoC5/DieTemp_1.c **** * disclaimers, and limitations in the end user license agreement accompanying
+  12:.\Generated_Source\PSoC5/DieTemp_1.c **** * the software package with which this file was provided.
+  13:.\Generated_Source\PSoC5/DieTemp_1.c **** *******************************************************************************/
+  14:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  15:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  16:.\Generated_Source\PSoC5/DieTemp_1.c **** #include <cydevice_trm.H>
+  17:.\Generated_Source\PSoC5/DieTemp_1.c **** #include <DieTemp_1.h>
+  18:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  19:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  20:.\Generated_Source\PSoC5/DieTemp_1.c **** #define DieTemp_1_NUMBER_OF_SAMPLES      (0x1u)
+  21:.\Generated_Source\PSoC5/DieTemp_1.c **** #define DieTemp_1_TIMER_PERIOD           (0xFFFu)
+  22:.\Generated_Source\PSoC5/DieTemp_1.c **** #define DieTemp_1_CLK_DIV_SELECT         (0x4u)
+  23:.\Generated_Source\PSoC5/DieTemp_1.c **** #define DieTemp_1_SPC_CLK_PERIOD         (120u) /* In nano seconds. */
+  24:.\Generated_Source\PSoC5/DieTemp_1.c **** #define DieTemp_1_NANO_TO_MILLI_FACTOR   (1000000u)
+  25:.\Generated_Source\PSoC5/DieTemp_1.c **** #define DieTemp_1_FRM_EXEC_TIME          (1000u) /* In nano seconds. */
+  26:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  27:.\Generated_Source\PSoC5/DieTemp_1.c **** #define DieTemp_1_GET_TEMPR_TIME     (uint32)(((((uint32)1u << (DieTemp_1_NUMBER_OF_SAMPLES + 1u)))
+  28:.\Generated_Source\PSoC5/DieTemp_1.c ****                                                 ((uint32)(DieTemp_1_SPC_CLK_PERIOD * \
+  29:.\Generated_Source\PSoC5/DieTemp_1.c ****                                                 DieTemp_1_CLK_DIV_SELECT)) * \
+  30:.\Generated_Source\PSoC5/DieTemp_1.c ****                                                 ((uint32)DieTemp_1_TIMER_PERIOD)) + \
+  31:.\Generated_Source\PSoC5/DieTemp_1.c ****                                                 (uint32)DieTemp_1_FRM_EXEC_TIME)
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 2
+
+
+  32:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  33:.\Generated_Source\PSoC5/DieTemp_1.c **** #define DieTemp_1_MAX_WAIT           (uint16)(((DieTemp_1_GET_TEMPR_TIME + \
+  34:.\Generated_Source\PSoC5/DieTemp_1.c ****                                                 DieTemp_1_NANO_TO_MILLI_FACTOR) - 1u) / \
+  35:.\Generated_Source\PSoC5/DieTemp_1.c ****                                                 DieTemp_1_NANO_TO_MILLI_FACTOR)  /* In milli second
+  36:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  37:.\Generated_Source\PSoC5/DieTemp_1.c **** static cystatus DieTemp_1_GetTempT(int16 * temperature);
+  38:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  39:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  40:.\Generated_Source\PSoC5/DieTemp_1.c **** /*******************************************************************************
+  41:.\Generated_Source\PSoC5/DieTemp_1.c **** * Function Name: DieTemp_1_Start
+  42:.\Generated_Source\PSoC5/DieTemp_1.c **** ********************************************************************************
+  43:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+  44:.\Generated_Source\PSoC5/DieTemp_1.c **** * Summary:
+  45:.\Generated_Source\PSoC5/DieTemp_1.c **** *  Starts the SPC command to get the die temperature. If this function is
+  46:.\Generated_Source\PSoC5/DieTemp_1.c **** *  called successfuly. The SPC will be locked and DieTemp_1_QueryDieTemp
+  47:.\Generated_Source\PSoC5/DieTemp_1.c **** *  will have to be successfuly called to unlock it. CySpcUnlock() can also
+  48:.\Generated_Source\PSoC5/DieTemp_1.c **** *  be called if the caller decides not to finish the temperature reading.
+  49:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+  50:.\Generated_Source\PSoC5/DieTemp_1.c **** * Parameters:
+  51:.\Generated_Source\PSoC5/DieTemp_1.c **** *  void.
+  52:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+  53:.\Generated_Source\PSoC5/DieTemp_1.c **** * Return:
+  54:.\Generated_Source\PSoC5/DieTemp_1.c **** *  CYRET_STARTED if the spc command was started sucessfuly.
+  55:.\Generated_Source\PSoC5/DieTemp_1.c **** *  CYRET_UNKNOWN if the spc command failed.
+  56:.\Generated_Source\PSoC5/DieTemp_1.c **** *  CYRET_LOCKED if the spc was busy.
+  57:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+  58:.\Generated_Source\PSoC5/DieTemp_1.c **** *******************************************************************************/
+  59:.\Generated_Source\PSoC5/DieTemp_1.c **** cystatus DieTemp_1_Start(void) 
+  60:.\Generated_Source\PSoC5/DieTemp_1.c **** {
+  27              		.loc 1 60 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31 0000 10B5     		push	{r4, lr}
+  32              		.cfi_def_cfa_offset 8
+  33              		.cfi_offset 4, -8
+  34              		.cfi_offset 14, -4
+  35              	.LVL0:
+  61:.\Generated_Source\PSoC5/DieTemp_1.c ****     cystatus status;
+  62:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  63:.\Generated_Source\PSoC5/DieTemp_1.c ****     /* Plan for failure. */
+  64:.\Generated_Source\PSoC5/DieTemp_1.c ****     status = CYRET_UNKNOWN;
+  65:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  66:.\Generated_Source\PSoC5/DieTemp_1.c ****     /* Power up the SPC. */
+  67:.\Generated_Source\PSoC5/DieTemp_1.c ****     CySpcStart();
+  36              		.loc 1 67 0
+  37 0002 FFF7FEFF 		bl	CySpcStart
+  38              	.LVL1:
+  68:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  69:.\Generated_Source\PSoC5/DieTemp_1.c ****     if(CySpcLock() == CYRET_SUCCESS)
+  39              		.loc 1 69 0
+  40 0006 FFF7FEFF 		bl	CySpcLock
+  41              	.LVL2:
+  42 000a 58B9     		cbnz	r0, .L4
+  70:.\Generated_Source\PSoC5/DieTemp_1.c ****     {
+  71:.\Generated_Source\PSoC5/DieTemp_1.c ****         #if(CY_PSOC5A)
+  72:.\Generated_Source\PSoC5/DieTemp_1.c ****             if(CYRET_STARTED == CySpcGetTemp(DieTemp_1_NUMBER_OF_SAMPLES,
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 3
+
+
+  73:.\Generated_Source\PSoC5/DieTemp_1.c ****                                              DieTemp_1_TIMER_PERIOD,
+  74:.\Generated_Source\PSoC5/DieTemp_1.c ****                                              DieTemp_1_CLK_DIV_SELECT))
+  75:.\Generated_Source\PSoC5/DieTemp_1.c ****             {
+  76:.\Generated_Source\PSoC5/DieTemp_1.c ****                 status = CYRET_STARTED;
+  77:.\Generated_Source\PSoC5/DieTemp_1.c ****             }
+  78:.\Generated_Source\PSoC5/DieTemp_1.c ****         #else
+  79:.\Generated_Source\PSoC5/DieTemp_1.c ****             if(CYRET_STARTED == CySpcGetTemp(DieTemp_1_NUMBER_OF_SAMPLES))
+  43              		.loc 1 79 0
+  44 000c 0120     		movs	r0, #1
+  45 000e FFF7FEFF 		bl	CySpcGetTemp
+  46              	.LVL3:
+  47 0012 0728     		cmp	r0, #7
+  48 0014 02D0     		beq	.L5
+  64:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  49              		.loc 1 64 0
+  50 0016 4FF0FF34 		mov	r4, #-1
+  51 001a 00E0     		b	.L3
+  52              	.L5:
+  80:.\Generated_Source\PSoC5/DieTemp_1.c ****             {
+  81:.\Generated_Source\PSoC5/DieTemp_1.c ****                 status = CYRET_STARTED;
+  53              		.loc 1 81 0
+  54 001c 0724     		movs	r4, #7
+  55              	.L3:
+  56              	.LVL4:
+  82:.\Generated_Source\PSoC5/DieTemp_1.c ****             }
+  83:.\Generated_Source\PSoC5/DieTemp_1.c ****         #endif  /* (CY_PSOC5A) */
+  84:.\Generated_Source\PSoC5/DieTemp_1.c ****         CySpcUnlock();
+  57              		.loc 1 84 0
+  58 001e FFF7FEFF 		bl	CySpcUnlock
+  59              	.LVL5:
+  60 0022 00E0     		b	.L2
+  61              	.LVL6:
+  62              	.L4:
+  85:.\Generated_Source\PSoC5/DieTemp_1.c ****     }
+  86:.\Generated_Source\PSoC5/DieTemp_1.c ****     else
+  87:.\Generated_Source\PSoC5/DieTemp_1.c ****     {
+  88:.\Generated_Source\PSoC5/DieTemp_1.c ****         status = CYRET_LOCKED;
+  63              		.loc 1 88 0
+  64 0024 0424     		movs	r4, #4
+  65              	.LVL7:
+  66              	.L2:
+  89:.\Generated_Source\PSoC5/DieTemp_1.c ****     }
+  90:.\Generated_Source\PSoC5/DieTemp_1.c ****     return (status);
+  91:.\Generated_Source\PSoC5/DieTemp_1.c **** }
+  67              		.loc 1 91 0
+  68 0026 2046     		mov	r0, r4
+  69 0028 10BD     		pop	{r4, pc}
+  70              		.cfi_endproc
+  71              	.LFE0:
+  72              		.size	DieTemp_1_Start, .-DieTemp_1_Start
+  73 002a 00BF     		.section	.text.DieTemp_1_Stop,"ax",%progbits
+  74              		.align	2
+  75              		.global	DieTemp_1_Stop
+  76              		.thumb
+  77              		.thumb_func
+  78              		.type	DieTemp_1_Stop, %function
+  79              	DieTemp_1_Stop:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 4
+
+
+  80              	.LFB1:
+  92:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  93:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+  94:.\Generated_Source\PSoC5/DieTemp_1.c **** /*******************************************************************************
+  95:.\Generated_Source\PSoC5/DieTemp_1.c **** * FUNCTION NAME:   DieTemp_1_Stop
+  96:.\Generated_Source\PSoC5/DieTemp_1.c **** ********************************************************************************
+  97:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+  98:.\Generated_Source\PSoC5/DieTemp_1.c **** * Summary:
+  99:.\Generated_Source\PSoC5/DieTemp_1.c **** *  There is no need to stop or disable this component. This component is
+ 100:.\Generated_Source\PSoC5/DieTemp_1.c **** *  naturally a slave that sends request to SPC through SPC API of cy_boot
+ 101:.\Generated_Source\PSoC5/DieTemp_1.c **** *  and waits for data to be ready or in case of non-blocking operation it
+ 102:.\Generated_Source\PSoC5/DieTemp_1.c **** *  sends request to SPC and user can manually poll the result.
+ 103:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 104:.\Generated_Source\PSoC5/DieTemp_1.c **** * Parameters:
+ 105:.\Generated_Source\PSoC5/DieTemp_1.c **** *  void
+ 106:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 107:.\Generated_Source\PSoC5/DieTemp_1.c **** * Return:
+ 108:.\Generated_Source\PSoC5/DieTemp_1.c **** *  void
+ 109:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 110:.\Generated_Source\PSoC5/DieTemp_1.c **** *******************************************************************************/
+ 111:.\Generated_Source\PSoC5/DieTemp_1.c **** void DieTemp_1_Stop(void) 
+ 112:.\Generated_Source\PSoC5/DieTemp_1.c **** {
+  81              		.loc 1 112 0
+  82              		.cfi_startproc
+  83              		@ args = 0, pretend = 0, frame = 0
+  84              		@ frame_needed = 0, uses_anonymous_args = 0
+  85              		@ link register save eliminated.
+  86 0000 7047     		bx	lr
+  87              		.cfi_endproc
+  88              	.LFE1:
+  89              		.size	DieTemp_1_Stop, .-DieTemp_1_Stop
+  90 0002 00BF     		.section	.text.DieTemp_1_Query,"ax",%progbits
+  91              		.align	2
+  92              		.global	DieTemp_1_Query
+  93              		.thumb
+  94              		.thumb_func
+  95              		.type	DieTemp_1_Query, %function
+  96              	DieTemp_1_Query:
+  97              	.LFB2:
+ 113:.\Generated_Source\PSoC5/DieTemp_1.c ****     /* There aren't anything to stop */
+ 114:.\Generated_Source\PSoC5/DieTemp_1.c **** }
+ 115:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+ 116:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+ 117:.\Generated_Source\PSoC5/DieTemp_1.c **** /*******************************************************************************
+ 118:.\Generated_Source\PSoC5/DieTemp_1.c **** * Function Name: DieTemp_1_Query
+ 119:.\Generated_Source\PSoC5/DieTemp_1.c **** ********************************************************************************
+ 120:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 121:.\Generated_Source\PSoC5/DieTemp_1.c **** * Summary:
+ 122:.\Generated_Source\PSoC5/DieTemp_1.c **** *  Querys the SPC to see if the termperature command is finished.
+ 123:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 124:.\Generated_Source\PSoC5/DieTemp_1.c **** * Parameters:
+ 125:.\Generated_Source\PSoC5/DieTemp_1.c **** *  temperature: Address to store the two byte temperature value.
+ 126:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 127:.\Generated_Source\PSoC5/DieTemp_1.c **** * Return:
+ 128:.\Generated_Source\PSoC5/DieTemp_1.c **** *  CYRET_SUCCESS if the temperature command completed sucessfully.
+ 129:.\Generated_Source\PSoC5/DieTemp_1.c **** *  CYRET_UNKNOWN if the there was an spc failure.
+ 130:.\Generated_Source\PSoC5/DieTemp_1.c **** *  CYRET_STARTED if the temperature command has not completed.
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 5
+
+
+ 131:.\Generated_Source\PSoC5/DieTemp_1.c **** *  CYRET_TIMEOUT if waited to long before reading data.
+ 132:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 133:.\Generated_Source\PSoC5/DieTemp_1.c **** *******************************************************************************/
+ 134:.\Generated_Source\PSoC5/DieTemp_1.c **** cystatus DieTemp_1_Query(int16 * temperature) 
+ 135:.\Generated_Source\PSoC5/DieTemp_1.c **** {
+  98              		.loc 1 135 0
+  99              		.cfi_startproc
+ 100              		@ args = 0, pretend = 0, frame = 8
+ 101              		@ frame_needed = 0, uses_anonymous_args = 0
+ 102              	.LVL8:
+ 103              		.loc 1 135 0
+ 104 0000 10B5     		push	{r4, lr}
+ 105              		.cfi_def_cfa_offset 8
+ 106              		.cfi_offset 4, -8
+ 107              		.cfi_offset 14, -4
+ 108 0002 82B0     		sub	sp, sp, #8
+ 109              		.cfi_def_cfa_offset 16
+ 136:.\Generated_Source\PSoC5/DieTemp_1.c ****     uint8 temp[2u];
+ 137:.\Generated_Source\PSoC5/DieTemp_1.c ****     cystatus status;
+ 138:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+ 139:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+ 140:.\Generated_Source\PSoC5/DieTemp_1.c ****     if(CY_SPC_BUSY)
+ 110              		.loc 1 140 0
+ 111 0004 154B     		ldr	r3, .L16
+ 112 0006 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 113 0008 13F0020F 		tst	r3, #2
+ 114 000c 19D1     		bne	.L12
+ 115 000e 0446     		mov	r4, r0
+ 141:.\Generated_Source\PSoC5/DieTemp_1.c ****     {
+ 142:.\Generated_Source\PSoC5/DieTemp_1.c ****         if((CY_SPC_STATUS_REG>>2u) == CYRET_SUCCESS)
+ 116              		.loc 1 142 0
+ 117 0010 124B     		ldr	r3, .L16
+ 118 0012 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 119 0014 9B08     		lsrs	r3, r3, #2
+ 120 0016 16D1     		bne	.L13
+ 143:.\Generated_Source\PSoC5/DieTemp_1.c ****         {
+ 144:.\Generated_Source\PSoC5/DieTemp_1.c ****             /* See if any data is ready. */
+ 145:.\Generated_Source\PSoC5/DieTemp_1.c ****             if(CySpcReadData(temp, 2u) == 2u)
+ 121              		.loc 1 145 0
+ 122 0018 01A8     		add	r0, sp, #4
+ 123              	.LVL9:
+ 124 001a 0221     		movs	r1, #2
+ 125 001c FFF7FEFF 		bl	CySpcReadData
+ 126              	.LVL10:
+ 127 0020 0228     		cmp	r0, #2
+ 128 0022 12D1     		bne	.L14
+ 146:.\Generated_Source\PSoC5/DieTemp_1.c ****             {
+ 147:.\Generated_Source\PSoC5/DieTemp_1.c ****                 if(temp[0u] == 1u)
+ 129              		.loc 1 147 0
+ 130 0024 9DF80430 		ldrb	r3, [sp, #4]	@ zero_extendqisi2
+ 131 0028 012B     		cmp	r3, #1
+ 132 002a 04D1     		bne	.L10
+ 148:.\Generated_Source\PSoC5/DieTemp_1.c ****                 {
+ 149:.\Generated_Source\PSoC5/DieTemp_1.c ****                     *temperature = (int16) ((uint16) temp[1]);
+ 133              		.loc 1 149 0
+ 134 002c 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
+ 135 0030 2380     		strh	r3, [r4]	@ movhi
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 6
+
+
+ 150:.\Generated_Source\PSoC5/DieTemp_1.c ****                 }
+ 151:.\Generated_Source\PSoC5/DieTemp_1.c ****                 else
+ 152:.\Generated_Source\PSoC5/DieTemp_1.c ****                 {
+ 153:.\Generated_Source\PSoC5/DieTemp_1.c ****                     *temperature = (int16) - ((int16) temp[1]);
+ 154:.\Generated_Source\PSoC5/DieTemp_1.c ****                 }
+ 155:.\Generated_Source\PSoC5/DieTemp_1.c ****                 status = CYRET_SUCCESS;
+ 136              		.loc 1 155 0
+ 137 0032 0024     		movs	r4, #0
+ 138              	.LVL11:
+ 139 0034 0BE0     		b	.L9
+ 140              	.LVL12:
+ 141              	.L10:
+ 153:.\Generated_Source\PSoC5/DieTemp_1.c ****                 }
+ 142              		.loc 1 153 0
+ 143 0036 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
+ 144 003a 5B42     		negs	r3, r3
+ 145 003c 2380     		strh	r3, [r4]	@ movhi
+ 146              		.loc 1 155 0
+ 147 003e 0024     		movs	r4, #0
+ 148              	.LVL13:
+ 149 0040 05E0     		b	.L9
+ 150              	.LVL14:
+ 151              	.L12:
+ 156:.\Generated_Source\PSoC5/DieTemp_1.c ****             }
+ 157:.\Generated_Source\PSoC5/DieTemp_1.c ****             else
+ 158:.\Generated_Source\PSoC5/DieTemp_1.c ****             {
+ 159:.\Generated_Source\PSoC5/DieTemp_1.c ****                 status = CYRET_UNKNOWN;
+ 160:.\Generated_Source\PSoC5/DieTemp_1.c ****             }
+ 161:.\Generated_Source\PSoC5/DieTemp_1.c ****         }
+ 162:.\Generated_Source\PSoC5/DieTemp_1.c ****         else
+ 163:.\Generated_Source\PSoC5/DieTemp_1.c ****         {
+ 164:.\Generated_Source\PSoC5/DieTemp_1.c ****             status = CYRET_STARTED;
+ 165:.\Generated_Source\PSoC5/DieTemp_1.c ****         }
+ 166:.\Generated_Source\PSoC5/DieTemp_1.c ****     }
+ 167:.\Generated_Source\PSoC5/DieTemp_1.c ****     else
+ 168:.\Generated_Source\PSoC5/DieTemp_1.c ****     {
+ 169:.\Generated_Source\PSoC5/DieTemp_1.c ****         status = CYRET_TIMEOUT;
+ 152              		.loc 1 169 0
+ 153 0042 1024     		movs	r4, #16
+ 154 0044 03E0     		b	.L9
+ 155              	.L13:
+ 164:.\Generated_Source\PSoC5/DieTemp_1.c ****         }
+ 156              		.loc 1 164 0
+ 157 0046 0724     		movs	r4, #7
+ 158 0048 01E0     		b	.L9
+ 159              	.LVL15:
+ 160              	.L14:
+ 159:.\Generated_Source\PSoC5/DieTemp_1.c ****             }
+ 161              		.loc 1 159 0
+ 162 004a 4FF0FF34 		mov	r4, #-1
+ 163              	.LVL16:
+ 164              	.L9:
+ 170:.\Generated_Source\PSoC5/DieTemp_1.c ****     }
+ 171:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+ 172:.\Generated_Source\PSoC5/DieTemp_1.c ****     if(status != CYRET_STARTED)
+ 165              		.loc 1 172 0
+ 166 004e 072C     		cmp	r4, #7
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 7
+
+
+ 167 0050 01D0     		beq	.L11
+ 173:.\Generated_Source\PSoC5/DieTemp_1.c ****     {
+ 174:.\Generated_Source\PSoC5/DieTemp_1.c ****         /* Unlock the SPC so someone else can use it. */
+ 175:.\Generated_Source\PSoC5/DieTemp_1.c ****         CySpcUnlock();
+ 168              		.loc 1 175 0
+ 169 0052 FFF7FEFF 		bl	CySpcUnlock
+ 170              	.LVL17:
+ 171              	.L11:
+ 176:.\Generated_Source\PSoC5/DieTemp_1.c ****     }
+ 177:.\Generated_Source\PSoC5/DieTemp_1.c ****     return (status);
+ 178:.\Generated_Source\PSoC5/DieTemp_1.c **** }
+ 172              		.loc 1 178 0
+ 173 0056 2046     		mov	r0, r4
+ 174 0058 02B0     		add	sp, sp, #8
+ 175              		.cfi_def_cfa_offset 8
+ 176              		@ sp needed
+ 177 005a 10BD     		pop	{r4, pc}
+ 178              	.LVL18:
+ 179              	.L17:
+ 180              		.align	2
+ 181              	.L16:
+ 182 005c 22470040 		.word	1073760034
+ 183              		.cfi_endproc
+ 184              	.LFE2:
+ 185              		.size	DieTemp_1_Query, .-DieTemp_1_Query
+ 186              		.section	.text.DieTemp_1_GetTempT,"ax",%progbits
+ 187              		.align	2
+ 188              		.thumb
+ 189              		.thumb_func
+ 190              		.type	DieTemp_1_GetTempT, %function
+ 191              	DieTemp_1_GetTempT:
+ 192              	.LFB3:
+ 179:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+ 180:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+ 181:.\Generated_Source\PSoC5/DieTemp_1.c **** /*******************************************************************************
+ 182:.\Generated_Source\PSoC5/DieTemp_1.c **** * Function Name: DieTemp_1_GetTemp
+ 183:.\Generated_Source\PSoC5/DieTemp_1.c **** ********************************************************************************
+ 184:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 185:.\Generated_Source\PSoC5/DieTemp_1.c **** * Summary:
+ 186:.\Generated_Source\PSoC5/DieTemp_1.c **** *  Sets up the command to get the temperature and blocks until finished. After
+ 187:.\Generated_Source\PSoC5/DieTemp_1.c **** *  DieTemp_1_MAX_WAIT ticks the function will return even if the
+ 188:.\Generated_Source\PSoC5/DieTemp_1.c **** *  SPC has not finished.
+ 189:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 190:.\Generated_Source\PSoC5/DieTemp_1.c **** * Parameters:
+ 191:.\Generated_Source\PSoC5/DieTemp_1.c **** *  temperature: Address to store the two byte temperature value.
+ 192:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 193:.\Generated_Source\PSoC5/DieTemp_1.c **** * Return:
+ 194:.\Generated_Source\PSoC5/DieTemp_1.c **** *  CYRET_SUCCESS if the command was completed sucessfuly.
+ 195:.\Generated_Source\PSoC5/DieTemp_1.c **** *  Status code from DieTemp_1_Start or DieTemp_1_Query
+ 196:.\Generated_Source\PSoC5/DieTemp_1.c **** *
+ 197:.\Generated_Source\PSoC5/DieTemp_1.c **** *******************************************************************************/
+ 198:.\Generated_Source\PSoC5/DieTemp_1.c **** static cystatus DieTemp_1_GetTempT(int16 * temperature) 
+ 199:.\Generated_Source\PSoC5/DieTemp_1.c **** {
+ 193              		.loc 1 199 0
+ 194              		.cfi_startproc
+ 195              		@ args = 0, pretend = 0, frame = 0
+ 196              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 8
+
+
+ 197              	.LVL19:
+ 198 0000 70B5     		push	{r4, r5, r6, lr}
+ 199              		.cfi_def_cfa_offset 16
+ 200              		.cfi_offset 4, -16
+ 201              		.cfi_offset 5, -12
+ 202              		.cfi_offset 6, -8
+ 203              		.cfi_offset 14, -4
+ 204 0002 0646     		mov	r6, r0
+ 200:.\Generated_Source\PSoC5/DieTemp_1.c ****     uint16 us;
+ 201:.\Generated_Source\PSoC5/DieTemp_1.c ****     cystatus status;
+ 202:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+ 203:.\Generated_Source\PSoC5/DieTemp_1.c ****     /* Start the temp reading */
+ 204:.\Generated_Source\PSoC5/DieTemp_1.c ****     status = DieTemp_1_Start();
+ 205              		.loc 1 204 0
+ 206 0004 FFF7FEFF 		bl	DieTemp_1_Start
+ 207              	.LVL20:
+ 208 0008 0546     		mov	r5, r0
+ 209              	.LVL21:
+ 205:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+ 206:.\Generated_Source\PSoC5/DieTemp_1.c ****     if(status == CYRET_STARTED)
+ 210              		.loc 1 206 0
+ 211 000a 0728     		cmp	r0, #7
+ 212 000c 17D1     		bne	.L20
+ 213 000e 12E0     		b	.L24
+ 214              	.LVL22:
+ 215              	.L23:
+ 207:.\Generated_Source\PSoC5/DieTemp_1.c ****     {
+ 208:.\Generated_Source\PSoC5/DieTemp_1.c ****         /**************************************************************************
+ 209:.\Generated_Source\PSoC5/DieTemp_1.c ****         * Wait for SPC to finish temperature reading. If state will change and SPC
+ 210:.\Generated_Source\PSoC5/DieTemp_1.c ****         * will finish - break cycle.
+ 211:.\Generated_Source\PSoC5/DieTemp_1.c ****         * DieTemp_1_MAX_WAIT is maximum time in ms to wait for SPC.
+ 212:.\Generated_Source\PSoC5/DieTemp_1.c ****         **************************************************************************/
+ 213:.\Generated_Source\PSoC5/DieTemp_1.c ****         for (us=(DieTemp_1_MAX_WAIT*1000u); us>0u; us-=10u)
+ 214:.\Generated_Source\PSoC5/DieTemp_1.c ****         {
+ 215:.\Generated_Source\PSoC5/DieTemp_1.c ****             if((CYRET_STARTED != status)&&(CY_SPC_IDLE))
+ 216              		.loc 1 215 0
+ 217 0010 072D     		cmp	r5, #7
+ 218 0012 04D0     		beq	.L21
+ 219              		.loc 1 215 0 is_stmt 0 discriminator 1
+ 220 0014 0B4B     		ldr	r3, .L26
+ 221 0016 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 222 0018 13F0020F 		tst	r3, #2
+ 223 001c 0FD1     		bne	.L20
+ 224              	.L21:
+ 216:.\Generated_Source\PSoC5/DieTemp_1.c ****             {
+ 217:.\Generated_Source\PSoC5/DieTemp_1.c ****                 break;
+ 218:.\Generated_Source\PSoC5/DieTemp_1.c ****             }
+ 219:.\Generated_Source\PSoC5/DieTemp_1.c ****             else if(CYRET_STARTED == status)
+ 225              		.loc 1 219 0 is_stmt 1
+ 226 001e 072D     		cmp	r5, #7
+ 227 0020 03D1     		bne	.L22
+ 220:.\Generated_Source\PSoC5/DieTemp_1.c ****             {
+ 221:.\Generated_Source\PSoC5/DieTemp_1.c ****                 status = DieTemp_1_Query(temperature);
+ 228              		.loc 1 221 0
+ 229 0022 3046     		mov	r0, r6
+ 230 0024 FFF7FEFF 		bl	DieTemp_1_Query
+ 231              	.LVL23:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 9
+
+
+ 232 0028 0546     		mov	r5, r0
+ 233              	.LVL24:
+ 234              	.L22:
+ 222:.\Generated_Source\PSoC5/DieTemp_1.c ****             }
+ 223:.\Generated_Source\PSoC5/DieTemp_1.c ****             else
+ 224:.\Generated_Source\PSoC5/DieTemp_1.c ****             {
+ 225:.\Generated_Source\PSoC5/DieTemp_1.c ****                 /* SPC has not finished reading or isn't idle */
+ 226:.\Generated_Source\PSoC5/DieTemp_1.c ****             }
+ 227:.\Generated_Source\PSoC5/DieTemp_1.c ****             CyDelayUs(10u);
+ 235              		.loc 1 227 0 discriminator 2
+ 236 002a 0A20     		movs	r0, #10
+ 237 002c FFF7FEFF 		bl	CyDelayUs
+ 238              	.LVL25:
+ 213:.\Generated_Source\PSoC5/DieTemp_1.c ****         {
+ 239              		.loc 1 213 0 discriminator 2
+ 240 0030 0A3C     		subs	r4, r4, #10
+ 241              	.LVL26:
+ 242 0032 A4B2     		uxth	r4, r4
+ 243              	.LVL27:
+ 244 0034 01E0     		b	.L19
+ 245              	.LVL28:
+ 246              	.L24:
+ 247 0036 4FF4FA54 		mov	r4, #8000
+ 248              	.LVL29:
+ 249              	.L19:
+ 213:.\Generated_Source\PSoC5/DieTemp_1.c ****         {
+ 250              		.loc 1 213 0 is_stmt 0 discriminator 1
+ 251 003a 002C     		cmp	r4, #0
+ 252 003c E8D1     		bne	.L23
+ 253              	.LVL30:
+ 254              	.L20:
+ 228:.\Generated_Source\PSoC5/DieTemp_1.c ****         }
+ 229:.\Generated_Source\PSoC5/DieTemp_1.c ****     }
+ 230:.\Generated_Source\PSoC5/DieTemp_1.c **** 
+ 231:.\Generated_Source\PSoC5/DieTemp_1.c ****     return status;
+ 232:.\Generated_Source\PSoC5/DieTemp_1.c **** }
+ 255              		.loc 1 232 0 is_stmt 1
+ 256 003e 2846     		mov	r0, r5
+ 257 0040 70BD     		pop	{r4, r5, r6, pc}
+ 258              	.LVL31:
+ 259              	.L27:
+ 260 0042 00BF     		.align	2
+ 261              	.L26:
+ 262 0044 22470040 		.word	1073760034
+ 263              		.cfi_endproc
+ 264              	.LFE3:
+ 265              		.size	DieTemp_1_GetTempT, .-DieTemp_1_GetTempT
+ 266              		.section	.text.DieTemp_1_GetTemp,"ax",%progbits
+ 267              		.align	2
+ 268              		.global	DieTemp_1_GetTemp
+ 269              		.thumb
+ 270              		.thumb_func
+ 271              		.type	DieTemp_1_GetTemp, %function
+ 272              	DieTemp_1_GetTemp:
+ 273              	.LFB4:
+ 233:.\Generated_Source\PSoC5/DieTemp_1.c **** cystatus DieTemp_1_GetTemp(int16 * temperature) 
+ 234:.\Generated_Source\PSoC5/DieTemp_1.c **** {
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 10
+
+
+ 274              		.loc 1 234 0
+ 275              		.cfi_startproc
+ 276              		@ args = 0, pretend = 0, frame = 0
+ 277              		@ frame_needed = 0, uses_anonymous_args = 0
+ 278              	.LVL32:
+ 279 0000 38B5     		push	{r3, r4, r5, lr}
+ 280              		.cfi_def_cfa_offset 16
+ 281              		.cfi_offset 3, -16
+ 282              		.cfi_offset 4, -12
+ 283              		.cfi_offset 5, -8
+ 284              		.cfi_offset 14, -4
+ 285 0002 0546     		mov	r5, r0
+ 286              	.LVL33:
+ 235:.\Generated_Source\PSoC5/DieTemp_1.c ****     cystatus status;
+ 236:.\Generated_Source\PSoC5/DieTemp_1.c ****     uint8 count = 2u;
+ 287              		.loc 1 236 0
+ 288 0004 0224     		movs	r4, #2
+ 237:.\Generated_Source\PSoC5/DieTemp_1.c ****     while (count != 0u)
+ 289              		.loc 1 237 0
+ 290 0006 06E0     		b	.L29
+ 291              	.LVL34:
+ 292              	.L31:
+ 238:.\Generated_Source\PSoC5/DieTemp_1.c ****     {
+ 239:.\Generated_Source\PSoC5/DieTemp_1.c ****         status = DieTemp_1_GetTempT(temperature);
+ 293              		.loc 1 239 0
+ 294 0008 2846     		mov	r0, r5
+ 295 000a FFF7FEFF 		bl	DieTemp_1_GetTempT
+ 296              	.LVL35:
+ 240:.\Generated_Source\PSoC5/DieTemp_1.c ****         if (status != CYRET_SUCCESS)
+ 297              		.loc 1 240 0
+ 298 000e 0346     		mov	r3, r0
+ 299 0010 18B9     		cbnz	r0, .L30
+ 241:.\Generated_Source\PSoC5/DieTemp_1.c ****         {
+ 242:.\Generated_Source\PSoC5/DieTemp_1.c ****             break;
+ 243:.\Generated_Source\PSoC5/DieTemp_1.c ****         }
+ 244:.\Generated_Source\PSoC5/DieTemp_1.c ****         count--;
+ 300              		.loc 1 244 0
+ 301 0012 013C     		subs	r4, r4, #1
+ 302              	.LVL36:
+ 303 0014 E4B2     		uxtb	r4, r4
+ 304              	.LVL37:
+ 305              	.L29:
+ 237:.\Generated_Source\PSoC5/DieTemp_1.c ****     {
+ 306              		.loc 1 237 0
+ 307 0016 002C     		cmp	r4, #0
+ 308 0018 F6D1     		bne	.L31
+ 309              	.L30:
+ 245:.\Generated_Source\PSoC5/DieTemp_1.c ****     }
+ 246:.\Generated_Source\PSoC5/DieTemp_1.c ****     return status;
+ 247:.\Generated_Source\PSoC5/DieTemp_1.c **** }
+ 310              		.loc 1 247 0
+ 311 001a 1846     		mov	r0, r3
+ 312 001c 38BD     		pop	{r3, r4, r5, pc}
+ 313              		.cfi_endproc
+ 314              	.LFE4:
+ 315              		.size	DieTemp_1_GetTemp, .-DieTemp_1_GetTemp
+ 316 001e 00BF     		.text
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 11
+
+
+ 317              	.Letext0:
+ 318              		.file 2 "Generated_Source\\PSoC5/cytypes.h"
+ 319              		.file 3 "Generated_Source\\PSoC5/CySpc.h"
+ 320              		.file 4 "Generated_Source\\PSoC5/CyLib.h"
+ 321              		.section	.debug_info,"",%progbits
+ 322              	.Ldebug_info0:
+ 323 0000 D7020000 		.4byte	0x2d7
+ 324 0004 0400     		.2byte	0x4
+ 325 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 326 000a 04       		.byte	0x4
+ 327 000b 01       		.uleb128 0x1
+ 328 000c 2B010000 		.4byte	.LASF30
+ 329 0010 01       		.byte	0x1
+ 330 0011 FF000000 		.4byte	.LASF31
+ 331 0015 09000000 		.4byte	.LASF32
+ 332 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 333 001d 00000000 		.4byte	0
+ 334 0021 00000000 		.4byte	.Ldebug_line0
+ 335 0025 02       		.uleb128 0x2
+ 336 0026 01       		.byte	0x1
+ 337 0027 06       		.byte	0x6
+ 338 0028 44020000 		.4byte	.LASF0
+ 339 002c 02       		.uleb128 0x2
+ 340 002d 01       		.byte	0x1
+ 341 002e 08       		.byte	0x8
+ 342 002f A4000000 		.4byte	.LASF1
+ 343 0033 02       		.uleb128 0x2
+ 344 0034 02       		.byte	0x2
+ 345 0035 05       		.byte	0x5
+ 346 0036 22020000 		.4byte	.LASF2
+ 347 003a 02       		.uleb128 0x2
+ 348 003b 02       		.byte	0x2
+ 349 003c 07       		.byte	0x7
+ 350 003d 5E000000 		.4byte	.LASF3
+ 351 0041 02       		.uleb128 0x2
+ 352 0042 04       		.byte	0x4
+ 353 0043 05       		.byte	0x5
+ 354 0044 3B020000 		.4byte	.LASF4
+ 355 0048 02       		.uleb128 0x2
+ 356 0049 04       		.byte	0x4
+ 357 004a 07       		.byte	0x7
+ 358 004b BD000000 		.4byte	.LASF5
+ 359 004f 02       		.uleb128 0x2
+ 360 0050 08       		.byte	0x8
+ 361 0051 05       		.byte	0x5
+ 362 0052 05020000 		.4byte	.LASF6
+ 363 0056 02       		.uleb128 0x2
+ 364 0057 08       		.byte	0x8
+ 365 0058 07       		.byte	0x7
+ 366 0059 D9010000 		.4byte	.LASF7
+ 367 005d 03       		.uleb128 0x3
+ 368 005e 04       		.byte	0x4
+ 369 005f 05       		.byte	0x5
+ 370 0060 696E7400 		.ascii	"int\000"
+ 371 0064 02       		.uleb128 0x2
+ 372 0065 04       		.byte	0x4
+ 373 0066 07       		.byte	0x7
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 12
+
+
+ 374 0067 B9010000 		.4byte	.LASF8
+ 375 006b 04       		.uleb128 0x4
+ 376 006c D4000000 		.4byte	.LASF9
+ 377 0070 02       		.byte	0x2
+ 378 0071 C2       		.byte	0xc2
+ 379 0072 2C000000 		.4byte	0x2c
+ 380 0076 04       		.uleb128 0x4
+ 381 0077 EE000000 		.4byte	.LASF10
+ 382 007b 02       		.byte	0x2
+ 383 007c C3       		.byte	0xc3
+ 384 007d 3A000000 		.4byte	0x3a
+ 385 0081 04       		.uleb128 0x4
+ 386 0082 24010000 		.4byte	.LASF11
+ 387 0086 02       		.byte	0x2
+ 388 0087 C4       		.byte	0xc4
+ 389 0088 48000000 		.4byte	0x48
+ 390 008c 04       		.uleb128 0x4
+ 391 008d B7000000 		.4byte	.LASF12
+ 392 0091 02       		.byte	0x2
+ 393 0092 C6       		.byte	0xc6
+ 394 0093 33000000 		.4byte	0x33
+ 395 0097 02       		.uleb128 0x2
+ 396 0098 04       		.byte	0x4
+ 397 0099 04       		.byte	0x4
+ 398 009a 42000000 		.4byte	.LASF13
+ 399 009e 02       		.uleb128 0x2
+ 400 009f 08       		.byte	0x8
+ 401 00a0 04       		.byte	0x4
+ 402 00a1 DA000000 		.4byte	.LASF14
+ 403 00a5 02       		.uleb128 0x2
+ 404 00a6 01       		.byte	0x1
+ 405 00a7 08       		.byte	0x8
+ 406 00a8 1D020000 		.4byte	.LASF15
+ 407 00ac 05       		.uleb128 0x5
+ 408 00ad 00000000 		.4byte	.LASF16
+ 409 00b1 02       		.byte	0x2
+ 410 00b2 6401     		.2byte	0x164
+ 411 00b4 48000000 		.4byte	0x48
+ 412 00b8 05       		.uleb128 0x5
+ 413 00b9 B2000000 		.4byte	.LASF17
+ 414 00bd 02       		.byte	0x2
+ 415 00be 6C01     		.2byte	0x16c
+ 416 00c0 C4000000 		.4byte	0xc4
+ 417 00c4 06       		.uleb128 0x6
+ 418 00c5 6B000000 		.4byte	0x6b
+ 419 00c9 02       		.uleb128 0x2
+ 420 00ca 04       		.byte	0x4
+ 421 00cb 07       		.byte	0x7
+ 422 00cc F0010000 		.4byte	.LASF18
+ 423 00d0 07       		.uleb128 0x7
+ 424 00d1 50020000 		.4byte	.LASF19
+ 425 00d5 01       		.byte	0x1
+ 426 00d6 3B       		.byte	0x3b
+ 427 00d7 AC000000 		.4byte	0xac
+ 428 00db 00000000 		.4byte	.LFB0
+ 429 00df 2A000000 		.4byte	.LFE0-.LFB0
+ 430 00e3 01       		.uleb128 0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 13
+
+
+ 431 00e4 9C       		.byte	0x9c
+ 432 00e5 27010000 		.4byte	0x127
+ 433 00e9 08       		.uleb128 0x8
+ 434 00ea 7F000000 		.4byte	.LASF21
+ 435 00ee 01       		.byte	0x1
+ 436 00ef 3D       		.byte	0x3d
+ 437 00f0 AC000000 		.4byte	0xac
+ 438 00f4 00000000 		.4byte	.LLST0
+ 439 00f8 09       		.uleb128 0x9
+ 440 00f9 06000000 		.4byte	.LVL1
+ 441 00fd 7F020000 		.4byte	0x27f
+ 442 0101 09       		.uleb128 0x9
+ 443 0102 0A000000 		.4byte	.LVL2
+ 444 0106 86020000 		.4byte	0x286
+ 445 010a 0A       		.uleb128 0xa
+ 446 010b 12000000 		.4byte	.LVL3
+ 447 010f 91020000 		.4byte	0x291
+ 448 0113 1D010000 		.4byte	0x11d
+ 449 0117 0B       		.uleb128 0xb
+ 450 0118 01       		.uleb128 0x1
+ 451 0119 50       		.byte	0x50
+ 452 011a 01       		.uleb128 0x1
+ 453 011b 31       		.byte	0x31
+ 454 011c 00       		.byte	0
+ 455 011d 09       		.uleb128 0x9
+ 456 011e 22000000 		.4byte	.LVL5
+ 457 0122 A6020000 		.4byte	0x2a6
+ 458 0126 00       		.byte	0
+ 459 0127 0C       		.uleb128 0xc
+ 460 0128 2C020000 		.4byte	.LASF33
+ 461 012c 01       		.byte	0x1
+ 462 012d 6F       		.byte	0x6f
+ 463 012e 00000000 		.4byte	.LFB1
+ 464 0132 02000000 		.4byte	.LFE1-.LFB1
+ 465 0136 01       		.uleb128 0x1
+ 466 0137 9C       		.byte	0x9c
+ 467 0138 07       		.uleb128 0x7
+ 468 0139 4E000000 		.4byte	.LASF20
+ 469 013d 01       		.byte	0x1
+ 470 013e 86       		.byte	0x86
+ 471 013f AC000000 		.4byte	0xac
+ 472 0143 00000000 		.4byte	.LFB2
+ 473 0147 60000000 		.4byte	.LFE2-.LFB2
+ 474 014b 01       		.uleb128 0x1
+ 475 014c 9C       		.byte	0x9c
+ 476 014d A0010000 		.4byte	0x1a0
+ 477 0151 0D       		.uleb128 0xd
+ 478 0152 98000000 		.4byte	.LASF23
+ 479 0156 01       		.byte	0x1
+ 480 0157 86       		.byte	0x86
+ 481 0158 A0010000 		.4byte	0x1a0
+ 482 015c 38000000 		.4byte	.LLST1
+ 483 0160 0E       		.uleb128 0xe
+ 484 0161 CF000000 		.4byte	.LASF22
+ 485 0165 01       		.byte	0x1
+ 486 0166 88       		.byte	0x88
+ 487 0167 A6010000 		.4byte	0x1a6
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 14
+
+
+ 488 016b 02       		.uleb128 0x2
+ 489 016c 91       		.byte	0x91
+ 490 016d 74       		.sleb128 -12
+ 491 016e 08       		.uleb128 0x8
+ 492 016f 7F000000 		.4byte	.LASF21
+ 493 0173 01       		.byte	0x1
+ 494 0174 89       		.byte	0x89
+ 495 0175 AC000000 		.4byte	0xac
+ 496 0179 A1000000 		.4byte	.LLST2
+ 497 017d 0A       		.uleb128 0xa
+ 498 017e 20000000 		.4byte	.LVL10
+ 499 0182 AD020000 		.4byte	0x2ad
+ 500 0186 96010000 		.4byte	0x196
+ 501 018a 0B       		.uleb128 0xb
+ 502 018b 01       		.uleb128 0x1
+ 503 018c 51       		.byte	0x51
+ 504 018d 01       		.uleb128 0x1
+ 505 018e 32       		.byte	0x32
+ 506 018f 0B       		.uleb128 0xb
+ 507 0190 01       		.uleb128 0x1
+ 508 0191 50       		.byte	0x50
+ 509 0192 02       		.uleb128 0x2
+ 510 0193 91       		.byte	0x91
+ 511 0194 74       		.sleb128 -12
+ 512 0195 00       		.byte	0
+ 513 0196 09       		.uleb128 0x9
+ 514 0197 56000000 		.4byte	.LVL17
+ 515 019b A6020000 		.4byte	0x2a6
+ 516 019f 00       		.byte	0
+ 517 01a0 0F       		.uleb128 0xf
+ 518 01a1 04       		.byte	0x4
+ 519 01a2 8C000000 		.4byte	0x8c
+ 520 01a6 10       		.uleb128 0x10
+ 521 01a7 6B000000 		.4byte	0x6b
+ 522 01ab B6010000 		.4byte	0x1b6
+ 523 01af 11       		.uleb128 0x11
+ 524 01b0 C9000000 		.4byte	0xc9
+ 525 01b4 01       		.byte	0x1
+ 526 01b5 00       		.byte	0
+ 527 01b6 12       		.uleb128 0x12
+ 528 01b7 C6010000 		.4byte	.LASF34
+ 529 01bb 01       		.byte	0x1
+ 530 01bc C6       		.byte	0xc6
+ 531 01bd AC000000 		.4byte	0xac
+ 532 01c1 00000000 		.4byte	.LFB3
+ 533 01c5 48000000 		.4byte	.LFE3-.LFB3
+ 534 01c9 01       		.uleb128 0x1
+ 535 01ca 9C       		.byte	0x9c
+ 536 01cb 28020000 		.4byte	0x228
+ 537 01cf 0D       		.uleb128 0xd
+ 538 01d0 98000000 		.4byte	.LASF23
+ 539 01d4 01       		.byte	0x1
+ 540 01d5 C6       		.byte	0xc6
+ 541 01d6 A0010000 		.4byte	0x1a0
+ 542 01da BF000000 		.4byte	.LLST3
+ 543 01de 13       		.uleb128 0x13
+ 544 01df 757300   		.ascii	"us\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 15
+
+
+ 545 01e2 01       		.byte	0x1
+ 546 01e3 C8       		.byte	0xc8
+ 547 01e4 76000000 		.4byte	0x76
+ 548 01e8 EB000000 		.4byte	.LLST4
+ 549 01ec 08       		.uleb128 0x8
+ 550 01ed 7F000000 		.4byte	.LASF21
+ 551 01f1 01       		.byte	0x1
+ 552 01f2 C9       		.byte	0xc9
+ 553 01f3 AC000000 		.4byte	0xac
+ 554 01f7 14010000 		.4byte	.LLST5
+ 555 01fb 09       		.uleb128 0x9
+ 556 01fc 08000000 		.4byte	.LVL20
+ 557 0200 D0000000 		.4byte	0xd0
+ 558 0204 0A       		.uleb128 0xa
+ 559 0205 28000000 		.4byte	.LVL23
+ 560 0209 38010000 		.4byte	0x138
+ 561 020d 18020000 		.4byte	0x218
+ 562 0211 0B       		.uleb128 0xb
+ 563 0212 01       		.uleb128 0x1
+ 564 0213 50       		.byte	0x50
+ 565 0214 02       		.uleb128 0x2
+ 566 0215 76       		.byte	0x76
+ 567 0216 00       		.sleb128 0
+ 568 0217 00       		.byte	0
+ 569 0218 14       		.uleb128 0x14
+ 570 0219 30000000 		.4byte	.LVL25
+ 571 021d CD020000 		.4byte	0x2cd
+ 572 0221 0B       		.uleb128 0xb
+ 573 0222 01       		.uleb128 0x1
+ 574 0223 50       		.byte	0x50
+ 575 0224 01       		.uleb128 0x1
+ 576 0225 3A       		.byte	0x3a
+ 577 0226 00       		.byte	0
+ 578 0227 00       		.byte	0
+ 579 0228 07       		.uleb128 0x7
+ 580 0229 86000000 		.4byte	.LASF24
+ 581 022d 01       		.byte	0x1
+ 582 022e E9       		.byte	0xe9
+ 583 022f AC000000 		.4byte	0xac
+ 584 0233 00000000 		.4byte	.LFB4
+ 585 0237 1E000000 		.4byte	.LFE4-.LFB4
+ 586 023b 01       		.uleb128 0x1
+ 587 023c 9C       		.byte	0x9c
+ 588 023d 7F020000 		.4byte	0x27f
+ 589 0241 0D       		.uleb128 0xd
+ 590 0242 98000000 		.4byte	.LASF23
+ 591 0246 01       		.byte	0x1
+ 592 0247 E9       		.byte	0xe9
+ 593 0248 A0010000 		.4byte	0x1a0
+ 594 024c 53010000 		.4byte	.LLST6
+ 595 0250 08       		.uleb128 0x8
+ 596 0251 7F000000 		.4byte	.LASF21
+ 597 0255 01       		.byte	0x1
+ 598 0256 EB       		.byte	0xeb
+ 599 0257 AC000000 		.4byte	0xac
+ 600 025b 71010000 		.4byte	.LLST7
+ 601 025f 08       		.uleb128 0x8
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 16
+
+
+ 602 0260 48000000 		.4byte	.LASF25
+ 603 0264 01       		.byte	0x1
+ 604 0265 EC       		.byte	0xec
+ 605 0266 6B000000 		.4byte	0x6b
+ 606 026a 9A010000 		.4byte	.LLST8
+ 607 026e 14       		.uleb128 0x14
+ 608 026f 0E000000 		.4byte	.LVL35
+ 609 0273 B6010000 		.4byte	0x1b6
+ 610 0277 0B       		.uleb128 0xb
+ 611 0278 01       		.uleb128 0x1
+ 612 0279 50       		.byte	0x50
+ 613 027a 02       		.uleb128 0x2
+ 614 027b 75       		.byte	0x75
+ 615 027c 00       		.sleb128 0
+ 616 027d 00       		.byte	0
+ 617 027e 00       		.byte	0
+ 618 027f 15       		.uleb128 0x15
+ 619 0280 37000000 		.4byte	.LASF26
+ 620 0284 03       		.byte	0x3
+ 621 0285 22       		.byte	0x22
+ 622 0286 16       		.uleb128 0x16
+ 623 0287 F5000000 		.4byte	.LASF35
+ 624 028b 03       		.byte	0x3
+ 625 028c 2F       		.byte	0x2f
+ 626 028d AC000000 		.4byte	0xac
+ 627 0291 17       		.uleb128 0x17
+ 628 0292 E1000000 		.4byte	.LASF28
+ 629 0296 03       		.byte	0x3
+ 630 0297 2D       		.byte	0x2d
+ 631 0298 AC000000 		.4byte	0xac
+ 632 029c A6020000 		.4byte	0x2a6
+ 633 02a0 18       		.uleb128 0x18
+ 634 02a1 6B000000 		.4byte	0x6b
+ 635 02a5 00       		.byte	0
+ 636 02a6 15       		.uleb128 0x15
+ 637 02a7 F9010000 		.4byte	.LASF27
+ 638 02ab 03       		.byte	0x3
+ 639 02ac 30       		.byte	0x30
+ 640 02ad 17       		.uleb128 0x17
+ 641 02ae 71000000 		.4byte	.LASF29
+ 642 02b2 03       		.byte	0x3
+ 643 02b3 24       		.byte	0x24
+ 644 02b4 6B000000 		.4byte	0x6b
+ 645 02b8 C7020000 		.4byte	0x2c7
+ 646 02bc 18       		.uleb128 0x18
+ 647 02bd C7020000 		.4byte	0x2c7
+ 648 02c1 18       		.uleb128 0x18
+ 649 02c2 6B000000 		.4byte	0x6b
+ 650 02c6 00       		.byte	0
+ 651 02c7 0F       		.uleb128 0xf
+ 652 02c8 04       		.byte	0x4
+ 653 02c9 6B000000 		.4byte	0x6b
+ 654 02cd 19       		.uleb128 0x19
+ 655 02ce 13020000 		.4byte	.LASF36
+ 656 02d2 04       		.byte	0x4
+ 657 02d3 78       		.byte	0x78
+ 658 02d4 18       		.uleb128 0x18
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 17
+
+
+ 659 02d5 76000000 		.4byte	0x76
+ 660 02d9 00       		.byte	0
+ 661 02da 00       		.byte	0
+ 662              		.section	.debug_abbrev,"",%progbits
+ 663              	.Ldebug_abbrev0:
+ 664 0000 01       		.uleb128 0x1
+ 665 0001 11       		.uleb128 0x11
+ 666 0002 01       		.byte	0x1
+ 667 0003 25       		.uleb128 0x25
+ 668 0004 0E       		.uleb128 0xe
+ 669 0005 13       		.uleb128 0x13
+ 670 0006 0B       		.uleb128 0xb
+ 671 0007 03       		.uleb128 0x3
+ 672 0008 0E       		.uleb128 0xe
+ 673 0009 1B       		.uleb128 0x1b
+ 674 000a 0E       		.uleb128 0xe
+ 675 000b 55       		.uleb128 0x55
+ 676 000c 17       		.uleb128 0x17
+ 677 000d 11       		.uleb128 0x11
+ 678 000e 01       		.uleb128 0x1
+ 679 000f 10       		.uleb128 0x10
+ 680 0010 17       		.uleb128 0x17
+ 681 0011 00       		.byte	0
+ 682 0012 00       		.byte	0
+ 683 0013 02       		.uleb128 0x2
+ 684 0014 24       		.uleb128 0x24
+ 685 0015 00       		.byte	0
+ 686 0016 0B       		.uleb128 0xb
+ 687 0017 0B       		.uleb128 0xb
+ 688 0018 3E       		.uleb128 0x3e
+ 689 0019 0B       		.uleb128 0xb
+ 690 001a 03       		.uleb128 0x3
+ 691 001b 0E       		.uleb128 0xe
+ 692 001c 00       		.byte	0
+ 693 001d 00       		.byte	0
+ 694 001e 03       		.uleb128 0x3
+ 695 001f 24       		.uleb128 0x24
+ 696 0020 00       		.byte	0
+ 697 0021 0B       		.uleb128 0xb
+ 698 0022 0B       		.uleb128 0xb
+ 699 0023 3E       		.uleb128 0x3e
+ 700 0024 0B       		.uleb128 0xb
+ 701 0025 03       		.uleb128 0x3
+ 702 0026 08       		.uleb128 0x8
+ 703 0027 00       		.byte	0
+ 704 0028 00       		.byte	0
+ 705 0029 04       		.uleb128 0x4
+ 706 002a 16       		.uleb128 0x16
+ 707 002b 00       		.byte	0
+ 708 002c 03       		.uleb128 0x3
+ 709 002d 0E       		.uleb128 0xe
+ 710 002e 3A       		.uleb128 0x3a
+ 711 002f 0B       		.uleb128 0xb
+ 712 0030 3B       		.uleb128 0x3b
+ 713 0031 0B       		.uleb128 0xb
+ 714 0032 49       		.uleb128 0x49
+ 715 0033 13       		.uleb128 0x13
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 18
+
+
+ 716 0034 00       		.byte	0
+ 717 0035 00       		.byte	0
+ 718 0036 05       		.uleb128 0x5
+ 719 0037 16       		.uleb128 0x16
+ 720 0038 00       		.byte	0
+ 721 0039 03       		.uleb128 0x3
+ 722 003a 0E       		.uleb128 0xe
+ 723 003b 3A       		.uleb128 0x3a
+ 724 003c 0B       		.uleb128 0xb
+ 725 003d 3B       		.uleb128 0x3b
+ 726 003e 05       		.uleb128 0x5
+ 727 003f 49       		.uleb128 0x49
+ 728 0040 13       		.uleb128 0x13
+ 729 0041 00       		.byte	0
+ 730 0042 00       		.byte	0
+ 731 0043 06       		.uleb128 0x6
+ 732 0044 35       		.uleb128 0x35
+ 733 0045 00       		.byte	0
+ 734 0046 49       		.uleb128 0x49
+ 735 0047 13       		.uleb128 0x13
+ 736 0048 00       		.byte	0
+ 737 0049 00       		.byte	0
+ 738 004a 07       		.uleb128 0x7
+ 739 004b 2E       		.uleb128 0x2e
+ 740 004c 01       		.byte	0x1
+ 741 004d 3F       		.uleb128 0x3f
+ 742 004e 19       		.uleb128 0x19
+ 743 004f 03       		.uleb128 0x3
+ 744 0050 0E       		.uleb128 0xe
+ 745 0051 3A       		.uleb128 0x3a
+ 746 0052 0B       		.uleb128 0xb
+ 747 0053 3B       		.uleb128 0x3b
+ 748 0054 0B       		.uleb128 0xb
+ 749 0055 27       		.uleb128 0x27
+ 750 0056 19       		.uleb128 0x19
+ 751 0057 49       		.uleb128 0x49
+ 752 0058 13       		.uleb128 0x13
+ 753 0059 11       		.uleb128 0x11
+ 754 005a 01       		.uleb128 0x1
+ 755 005b 12       		.uleb128 0x12
+ 756 005c 06       		.uleb128 0x6
+ 757 005d 40       		.uleb128 0x40
+ 758 005e 18       		.uleb128 0x18
+ 759 005f 9742     		.uleb128 0x2117
+ 760 0061 19       		.uleb128 0x19
+ 761 0062 01       		.uleb128 0x1
+ 762 0063 13       		.uleb128 0x13
+ 763 0064 00       		.byte	0
+ 764 0065 00       		.byte	0
+ 765 0066 08       		.uleb128 0x8
+ 766 0067 34       		.uleb128 0x34
+ 767 0068 00       		.byte	0
+ 768 0069 03       		.uleb128 0x3
+ 769 006a 0E       		.uleb128 0xe
+ 770 006b 3A       		.uleb128 0x3a
+ 771 006c 0B       		.uleb128 0xb
+ 772 006d 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 19
+
+
+ 773 006e 0B       		.uleb128 0xb
+ 774 006f 49       		.uleb128 0x49
+ 775 0070 13       		.uleb128 0x13
+ 776 0071 02       		.uleb128 0x2
+ 777 0072 17       		.uleb128 0x17
+ 778 0073 00       		.byte	0
+ 779 0074 00       		.byte	0
+ 780 0075 09       		.uleb128 0x9
+ 781 0076 898201   		.uleb128 0x4109
+ 782 0079 00       		.byte	0
+ 783 007a 11       		.uleb128 0x11
+ 784 007b 01       		.uleb128 0x1
+ 785 007c 31       		.uleb128 0x31
+ 786 007d 13       		.uleb128 0x13
+ 787 007e 00       		.byte	0
+ 788 007f 00       		.byte	0
+ 789 0080 0A       		.uleb128 0xa
+ 790 0081 898201   		.uleb128 0x4109
+ 791 0084 01       		.byte	0x1
+ 792 0085 11       		.uleb128 0x11
+ 793 0086 01       		.uleb128 0x1
+ 794 0087 31       		.uleb128 0x31
+ 795 0088 13       		.uleb128 0x13
+ 796 0089 01       		.uleb128 0x1
+ 797 008a 13       		.uleb128 0x13
+ 798 008b 00       		.byte	0
+ 799 008c 00       		.byte	0
+ 800 008d 0B       		.uleb128 0xb
+ 801 008e 8A8201   		.uleb128 0x410a
+ 802 0091 00       		.byte	0
+ 803 0092 02       		.uleb128 0x2
+ 804 0093 18       		.uleb128 0x18
+ 805 0094 9142     		.uleb128 0x2111
+ 806 0096 18       		.uleb128 0x18
+ 807 0097 00       		.byte	0
+ 808 0098 00       		.byte	0
+ 809 0099 0C       		.uleb128 0xc
+ 810 009a 2E       		.uleb128 0x2e
+ 811 009b 00       		.byte	0
+ 812 009c 3F       		.uleb128 0x3f
+ 813 009d 19       		.uleb128 0x19
+ 814 009e 03       		.uleb128 0x3
+ 815 009f 0E       		.uleb128 0xe
+ 816 00a0 3A       		.uleb128 0x3a
+ 817 00a1 0B       		.uleb128 0xb
+ 818 00a2 3B       		.uleb128 0x3b
+ 819 00a3 0B       		.uleb128 0xb
+ 820 00a4 27       		.uleb128 0x27
+ 821 00a5 19       		.uleb128 0x19
+ 822 00a6 11       		.uleb128 0x11
+ 823 00a7 01       		.uleb128 0x1
+ 824 00a8 12       		.uleb128 0x12
+ 825 00a9 06       		.uleb128 0x6
+ 826 00aa 40       		.uleb128 0x40
+ 827 00ab 18       		.uleb128 0x18
+ 828 00ac 9742     		.uleb128 0x2117
+ 829 00ae 19       		.uleb128 0x19
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 20
+
+
+ 830 00af 00       		.byte	0
+ 831 00b0 00       		.byte	0
+ 832 00b1 0D       		.uleb128 0xd
+ 833 00b2 05       		.uleb128 0x5
+ 834 00b3 00       		.byte	0
+ 835 00b4 03       		.uleb128 0x3
+ 836 00b5 0E       		.uleb128 0xe
+ 837 00b6 3A       		.uleb128 0x3a
+ 838 00b7 0B       		.uleb128 0xb
+ 839 00b8 3B       		.uleb128 0x3b
+ 840 00b9 0B       		.uleb128 0xb
+ 841 00ba 49       		.uleb128 0x49
+ 842 00bb 13       		.uleb128 0x13
+ 843 00bc 02       		.uleb128 0x2
+ 844 00bd 17       		.uleb128 0x17
+ 845 00be 00       		.byte	0
+ 846 00bf 00       		.byte	0
+ 847 00c0 0E       		.uleb128 0xe
+ 848 00c1 34       		.uleb128 0x34
+ 849 00c2 00       		.byte	0
+ 850 00c3 03       		.uleb128 0x3
+ 851 00c4 0E       		.uleb128 0xe
+ 852 00c5 3A       		.uleb128 0x3a
+ 853 00c6 0B       		.uleb128 0xb
+ 854 00c7 3B       		.uleb128 0x3b
+ 855 00c8 0B       		.uleb128 0xb
+ 856 00c9 49       		.uleb128 0x49
+ 857 00ca 13       		.uleb128 0x13
+ 858 00cb 02       		.uleb128 0x2
+ 859 00cc 18       		.uleb128 0x18
+ 860 00cd 00       		.byte	0
+ 861 00ce 00       		.byte	0
+ 862 00cf 0F       		.uleb128 0xf
+ 863 00d0 0F       		.uleb128 0xf
+ 864 00d1 00       		.byte	0
+ 865 00d2 0B       		.uleb128 0xb
+ 866 00d3 0B       		.uleb128 0xb
+ 867 00d4 49       		.uleb128 0x49
+ 868 00d5 13       		.uleb128 0x13
+ 869 00d6 00       		.byte	0
+ 870 00d7 00       		.byte	0
+ 871 00d8 10       		.uleb128 0x10
+ 872 00d9 01       		.uleb128 0x1
+ 873 00da 01       		.byte	0x1
+ 874 00db 49       		.uleb128 0x49
+ 875 00dc 13       		.uleb128 0x13
+ 876 00dd 01       		.uleb128 0x1
+ 877 00de 13       		.uleb128 0x13
+ 878 00df 00       		.byte	0
+ 879 00e0 00       		.byte	0
+ 880 00e1 11       		.uleb128 0x11
+ 881 00e2 21       		.uleb128 0x21
+ 882 00e3 00       		.byte	0
+ 883 00e4 49       		.uleb128 0x49
+ 884 00e5 13       		.uleb128 0x13
+ 885 00e6 2F       		.uleb128 0x2f
+ 886 00e7 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 21
+
+
+ 887 00e8 00       		.byte	0
+ 888 00e9 00       		.byte	0
+ 889 00ea 12       		.uleb128 0x12
+ 890 00eb 2E       		.uleb128 0x2e
+ 891 00ec 01       		.byte	0x1
+ 892 00ed 03       		.uleb128 0x3
+ 893 00ee 0E       		.uleb128 0xe
+ 894 00ef 3A       		.uleb128 0x3a
+ 895 00f0 0B       		.uleb128 0xb
+ 896 00f1 3B       		.uleb128 0x3b
+ 897 00f2 0B       		.uleb128 0xb
+ 898 00f3 27       		.uleb128 0x27
+ 899 00f4 19       		.uleb128 0x19
+ 900 00f5 49       		.uleb128 0x49
+ 901 00f6 13       		.uleb128 0x13
+ 902 00f7 11       		.uleb128 0x11
+ 903 00f8 01       		.uleb128 0x1
+ 904 00f9 12       		.uleb128 0x12
+ 905 00fa 06       		.uleb128 0x6
+ 906 00fb 40       		.uleb128 0x40
+ 907 00fc 18       		.uleb128 0x18
+ 908 00fd 9742     		.uleb128 0x2117
+ 909 00ff 19       		.uleb128 0x19
+ 910 0100 01       		.uleb128 0x1
+ 911 0101 13       		.uleb128 0x13
+ 912 0102 00       		.byte	0
+ 913 0103 00       		.byte	0
+ 914 0104 13       		.uleb128 0x13
+ 915 0105 34       		.uleb128 0x34
+ 916 0106 00       		.byte	0
+ 917 0107 03       		.uleb128 0x3
+ 918 0108 08       		.uleb128 0x8
+ 919 0109 3A       		.uleb128 0x3a
+ 920 010a 0B       		.uleb128 0xb
+ 921 010b 3B       		.uleb128 0x3b
+ 922 010c 0B       		.uleb128 0xb
+ 923 010d 49       		.uleb128 0x49
+ 924 010e 13       		.uleb128 0x13
+ 925 010f 02       		.uleb128 0x2
+ 926 0110 17       		.uleb128 0x17
+ 927 0111 00       		.byte	0
+ 928 0112 00       		.byte	0
+ 929 0113 14       		.uleb128 0x14
+ 930 0114 898201   		.uleb128 0x4109
+ 931 0117 01       		.byte	0x1
+ 932 0118 11       		.uleb128 0x11
+ 933 0119 01       		.uleb128 0x1
+ 934 011a 31       		.uleb128 0x31
+ 935 011b 13       		.uleb128 0x13
+ 936 011c 00       		.byte	0
+ 937 011d 00       		.byte	0
+ 938 011e 15       		.uleb128 0x15
+ 939 011f 2E       		.uleb128 0x2e
+ 940 0120 00       		.byte	0
+ 941 0121 3F       		.uleb128 0x3f
+ 942 0122 19       		.uleb128 0x19
+ 943 0123 03       		.uleb128 0x3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 22
+
+
+ 944 0124 0E       		.uleb128 0xe
+ 945 0125 3A       		.uleb128 0x3a
+ 946 0126 0B       		.uleb128 0xb
+ 947 0127 3B       		.uleb128 0x3b
+ 948 0128 0B       		.uleb128 0xb
+ 949 0129 27       		.uleb128 0x27
+ 950 012a 19       		.uleb128 0x19
+ 951 012b 3C       		.uleb128 0x3c
+ 952 012c 19       		.uleb128 0x19
+ 953 012d 00       		.byte	0
+ 954 012e 00       		.byte	0
+ 955 012f 16       		.uleb128 0x16
+ 956 0130 2E       		.uleb128 0x2e
+ 957 0131 00       		.byte	0
+ 958 0132 3F       		.uleb128 0x3f
+ 959 0133 19       		.uleb128 0x19
+ 960 0134 03       		.uleb128 0x3
+ 961 0135 0E       		.uleb128 0xe
+ 962 0136 3A       		.uleb128 0x3a
+ 963 0137 0B       		.uleb128 0xb
+ 964 0138 3B       		.uleb128 0x3b
+ 965 0139 0B       		.uleb128 0xb
+ 966 013a 27       		.uleb128 0x27
+ 967 013b 19       		.uleb128 0x19
+ 968 013c 49       		.uleb128 0x49
+ 969 013d 13       		.uleb128 0x13
+ 970 013e 3C       		.uleb128 0x3c
+ 971 013f 19       		.uleb128 0x19
+ 972 0140 00       		.byte	0
+ 973 0141 00       		.byte	0
+ 974 0142 17       		.uleb128 0x17
+ 975 0143 2E       		.uleb128 0x2e
+ 976 0144 01       		.byte	0x1
+ 977 0145 3F       		.uleb128 0x3f
+ 978 0146 19       		.uleb128 0x19
+ 979 0147 03       		.uleb128 0x3
+ 980 0148 0E       		.uleb128 0xe
+ 981 0149 3A       		.uleb128 0x3a
+ 982 014a 0B       		.uleb128 0xb
+ 983 014b 3B       		.uleb128 0x3b
+ 984 014c 0B       		.uleb128 0xb
+ 985 014d 27       		.uleb128 0x27
+ 986 014e 19       		.uleb128 0x19
+ 987 014f 49       		.uleb128 0x49
+ 988 0150 13       		.uleb128 0x13
+ 989 0151 3C       		.uleb128 0x3c
+ 990 0152 19       		.uleb128 0x19
+ 991 0153 01       		.uleb128 0x1
+ 992 0154 13       		.uleb128 0x13
+ 993 0155 00       		.byte	0
+ 994 0156 00       		.byte	0
+ 995 0157 18       		.uleb128 0x18
+ 996 0158 05       		.uleb128 0x5
+ 997 0159 00       		.byte	0
+ 998 015a 49       		.uleb128 0x49
+ 999 015b 13       		.uleb128 0x13
+ 1000 015c 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 23
+
+
+ 1001 015d 00       		.byte	0
+ 1002 015e 19       		.uleb128 0x19
+ 1003 015f 2E       		.uleb128 0x2e
+ 1004 0160 01       		.byte	0x1
+ 1005 0161 3F       		.uleb128 0x3f
+ 1006 0162 19       		.uleb128 0x19
+ 1007 0163 03       		.uleb128 0x3
+ 1008 0164 0E       		.uleb128 0xe
+ 1009 0165 3A       		.uleb128 0x3a
+ 1010 0166 0B       		.uleb128 0xb
+ 1011 0167 3B       		.uleb128 0x3b
+ 1012 0168 0B       		.uleb128 0xb
+ 1013 0169 27       		.uleb128 0x27
+ 1014 016a 19       		.uleb128 0x19
+ 1015 016b 3C       		.uleb128 0x3c
+ 1016 016c 19       		.uleb128 0x19
+ 1017 016d 00       		.byte	0
+ 1018 016e 00       		.byte	0
+ 1019 016f 00       		.byte	0
+ 1020              		.section	.debug_loc,"",%progbits
+ 1021              	.Ldebug_loc0:
+ 1022              	.LLST0:
+ 1023 0000 02000000 		.4byte	.LVL0
+ 1024 0004 1E000000 		.4byte	.LVL4
+ 1025 0008 0300     		.2byte	0x3
+ 1026 000a 09       		.byte	0x9
+ 1027 000b FF       		.byte	0xff
+ 1028 000c 9F       		.byte	0x9f
+ 1029 000d 1E000000 		.4byte	.LVL4
+ 1030 0011 24000000 		.4byte	.LVL6
+ 1031 0015 0100     		.2byte	0x1
+ 1032 0017 54       		.byte	0x54
+ 1033 0018 24000000 		.4byte	.LVL6
+ 1034 001c 26000000 		.4byte	.LVL7
+ 1035 0020 0300     		.2byte	0x3
+ 1036 0022 09       		.byte	0x9
+ 1037 0023 FF       		.byte	0xff
+ 1038 0024 9F       		.byte	0x9f
+ 1039 0025 26000000 		.4byte	.LVL7
+ 1040 0029 2A000000 		.4byte	.LFE0
+ 1041 002d 0100     		.2byte	0x1
+ 1042 002f 54       		.byte	0x54
+ 1043 0030 00000000 		.4byte	0
+ 1044 0034 00000000 		.4byte	0
+ 1045              	.LLST1:
+ 1046 0038 00000000 		.4byte	.LVL8
+ 1047 003c 1A000000 		.4byte	.LVL9
+ 1048 0040 0100     		.2byte	0x1
+ 1049 0042 50       		.byte	0x50
+ 1050 0043 1A000000 		.4byte	.LVL9
+ 1051 0047 34000000 		.4byte	.LVL11
+ 1052 004b 0100     		.2byte	0x1
+ 1053 004d 54       		.byte	0x54
+ 1054 004e 34000000 		.4byte	.LVL11
+ 1055 0052 36000000 		.4byte	.LVL12
+ 1056 0056 0400     		.2byte	0x4
+ 1057 0058 F3       		.byte	0xf3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 24
+
+
+ 1058 0059 01       		.uleb128 0x1
+ 1059 005a 50       		.byte	0x50
+ 1060 005b 9F       		.byte	0x9f
+ 1061 005c 36000000 		.4byte	.LVL12
+ 1062 0060 40000000 		.4byte	.LVL13
+ 1063 0064 0100     		.2byte	0x1
+ 1064 0066 54       		.byte	0x54
+ 1065 0067 40000000 		.4byte	.LVL13
+ 1066 006b 42000000 		.4byte	.LVL14
+ 1067 006f 0400     		.2byte	0x4
+ 1068 0071 F3       		.byte	0xf3
+ 1069 0072 01       		.uleb128 0x1
+ 1070 0073 50       		.byte	0x50
+ 1071 0074 9F       		.byte	0x9f
+ 1072 0075 42000000 		.4byte	.LVL14
+ 1073 0079 4A000000 		.4byte	.LVL15
+ 1074 007d 0100     		.2byte	0x1
+ 1075 007f 50       		.byte	0x50
+ 1076 0080 4A000000 		.4byte	.LVL15
+ 1077 0084 4E000000 		.4byte	.LVL16
+ 1078 0088 0100     		.2byte	0x1
+ 1079 008a 54       		.byte	0x54
+ 1080 008b 4E000000 		.4byte	.LVL16
+ 1081 008f 60000000 		.4byte	.LFE2
+ 1082 0093 0400     		.2byte	0x4
+ 1083 0095 F3       		.byte	0xf3
+ 1084 0096 01       		.uleb128 0x1
+ 1085 0097 50       		.byte	0x50
+ 1086 0098 9F       		.byte	0x9f
+ 1087 0099 00000000 		.4byte	0
+ 1088 009d 00000000 		.4byte	0
+ 1089              	.LLST2:
+ 1090 00a1 4E000000 		.4byte	.LVL16
+ 1091 00a5 5C000000 		.4byte	.LVL18
+ 1092 00a9 0100     		.2byte	0x1
+ 1093 00ab 54       		.byte	0x54
+ 1094 00ac 5C000000 		.4byte	.LVL18
+ 1095 00b0 60000000 		.4byte	.LFE2
+ 1096 00b4 0100     		.2byte	0x1
+ 1097 00b6 50       		.byte	0x50
+ 1098 00b7 00000000 		.4byte	0
+ 1099 00bb 00000000 		.4byte	0
+ 1100              	.LLST3:
+ 1101 00bf 00000000 		.4byte	.LVL19
+ 1102 00c3 07000000 		.4byte	.LVL20-1
+ 1103 00c7 0100     		.2byte	0x1
+ 1104 00c9 50       		.byte	0x50
+ 1105 00ca 07000000 		.4byte	.LVL20-1
+ 1106 00ce 42000000 		.4byte	.LVL31
+ 1107 00d2 0100     		.2byte	0x1
+ 1108 00d4 56       		.byte	0x56
+ 1109 00d5 42000000 		.4byte	.LVL31
+ 1110 00d9 48000000 		.4byte	.LFE3
+ 1111 00dd 0400     		.2byte	0x4
+ 1112 00df F3       		.byte	0xf3
+ 1113 00e0 01       		.uleb128 0x1
+ 1114 00e1 50       		.byte	0x50
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 25
+
+
+ 1115 00e2 9F       		.byte	0x9f
+ 1116 00e3 00000000 		.4byte	0
+ 1117 00e7 00000000 		.4byte	0
+ 1118              	.LLST4:
+ 1119 00eb 10000000 		.4byte	.LVL22
+ 1120 00ef 32000000 		.4byte	.LVL26
+ 1121 00f3 0100     		.2byte	0x1
+ 1122 00f5 54       		.byte	0x54
+ 1123 00f6 34000000 		.4byte	.LVL27
+ 1124 00fa 36000000 		.4byte	.LVL28
+ 1125 00fe 0100     		.2byte	0x1
+ 1126 0100 54       		.byte	0x54
+ 1127 0101 3A000000 		.4byte	.LVL29
+ 1128 0105 3E000000 		.4byte	.LVL30
+ 1129 0109 0100     		.2byte	0x1
+ 1130 010b 54       		.byte	0x54
+ 1131 010c 00000000 		.4byte	0
+ 1132 0110 00000000 		.4byte	0
+ 1133              	.LLST5:
+ 1134 0114 0A000000 		.4byte	.LVL21
+ 1135 0118 10000000 		.4byte	.LVL22
+ 1136 011c 0100     		.2byte	0x1
+ 1137 011e 50       		.byte	0x50
+ 1138 011f 10000000 		.4byte	.LVL22
+ 1139 0123 36000000 		.4byte	.LVL28
+ 1140 0127 0100     		.2byte	0x1
+ 1141 0129 55       		.byte	0x55
+ 1142 012a 36000000 		.4byte	.LVL28
+ 1143 012e 3A000000 		.4byte	.LVL29
+ 1144 0132 0100     		.2byte	0x1
+ 1145 0134 50       		.byte	0x50
+ 1146 0135 3A000000 		.4byte	.LVL29
+ 1147 0139 42000000 		.4byte	.LVL31
+ 1148 013d 0100     		.2byte	0x1
+ 1149 013f 55       		.byte	0x55
+ 1150 0140 42000000 		.4byte	.LVL31
+ 1151 0144 48000000 		.4byte	.LFE3
+ 1152 0148 0100     		.2byte	0x1
+ 1153 014a 50       		.byte	0x50
+ 1154 014b 00000000 		.4byte	0
+ 1155 014f 00000000 		.4byte	0
+ 1156              	.LLST6:
+ 1157 0153 00000000 		.4byte	.LVL32
+ 1158 0157 08000000 		.4byte	.LVL34
+ 1159 015b 0100     		.2byte	0x1
+ 1160 015d 50       		.byte	0x50
+ 1161 015e 08000000 		.4byte	.LVL34
+ 1162 0162 1E000000 		.4byte	.LFE4
+ 1163 0166 0100     		.2byte	0x1
+ 1164 0168 55       		.byte	0x55
+ 1165 0169 00000000 		.4byte	0
+ 1166 016d 00000000 		.4byte	0
+ 1167              	.LLST7:
+ 1168 0171 08000000 		.4byte	.LVL34
+ 1169 0175 0D000000 		.4byte	.LVL35-1
+ 1170 0179 0100     		.2byte	0x1
+ 1171 017b 53       		.byte	0x53
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 26
+
+
+ 1172 017c 0E000000 		.4byte	.LVL35
+ 1173 0180 16000000 		.4byte	.LVL37
+ 1174 0184 0100     		.2byte	0x1
+ 1175 0186 50       		.byte	0x50
+ 1176 0187 16000000 		.4byte	.LVL37
+ 1177 018b 1E000000 		.4byte	.LFE4
+ 1178 018f 0100     		.2byte	0x1
+ 1179 0191 53       		.byte	0x53
+ 1180 0192 00000000 		.4byte	0
+ 1181 0196 00000000 		.4byte	0
+ 1182              	.LLST8:
+ 1183 019a 04000000 		.4byte	.LVL33
+ 1184 019e 08000000 		.4byte	.LVL34
+ 1185 01a2 0200     		.2byte	0x2
+ 1186 01a4 32       		.byte	0x32
+ 1187 01a5 9F       		.byte	0x9f
+ 1188 01a6 08000000 		.4byte	.LVL34
+ 1189 01aa 14000000 		.4byte	.LVL36
+ 1190 01ae 0100     		.2byte	0x1
+ 1191 01b0 54       		.byte	0x54
+ 1192 01b1 16000000 		.4byte	.LVL37
+ 1193 01b5 1E000000 		.4byte	.LFE4
+ 1194 01b9 0100     		.2byte	0x1
+ 1195 01bb 54       		.byte	0x54
+ 1196 01bc 00000000 		.4byte	0
+ 1197 01c0 00000000 		.4byte	0
+ 1198              		.section	.debug_aranges,"",%progbits
+ 1199 0000 3C000000 		.4byte	0x3c
+ 1200 0004 0200     		.2byte	0x2
+ 1201 0006 00000000 		.4byte	.Ldebug_info0
+ 1202 000a 04       		.byte	0x4
+ 1203 000b 00       		.byte	0
+ 1204 000c 0000     		.2byte	0
+ 1205 000e 0000     		.2byte	0
+ 1206 0010 00000000 		.4byte	.LFB0
+ 1207 0014 2A000000 		.4byte	.LFE0-.LFB0
+ 1208 0018 00000000 		.4byte	.LFB1
+ 1209 001c 02000000 		.4byte	.LFE1-.LFB1
+ 1210 0020 00000000 		.4byte	.LFB2
+ 1211 0024 60000000 		.4byte	.LFE2-.LFB2
+ 1212 0028 00000000 		.4byte	.LFB3
+ 1213 002c 48000000 		.4byte	.LFE3-.LFB3
+ 1214 0030 00000000 		.4byte	.LFB4
+ 1215 0034 1E000000 		.4byte	.LFE4-.LFB4
+ 1216 0038 00000000 		.4byte	0
+ 1217 003c 00000000 		.4byte	0
+ 1218              		.section	.debug_ranges,"",%progbits
+ 1219              	.Ldebug_ranges0:
+ 1220 0000 00000000 		.4byte	.LFB0
+ 1221 0004 2A000000 		.4byte	.LFE0
+ 1222 0008 00000000 		.4byte	.LFB1
+ 1223 000c 02000000 		.4byte	.LFE1
+ 1224 0010 00000000 		.4byte	.LFB2
+ 1225 0014 60000000 		.4byte	.LFE2
+ 1226 0018 00000000 		.4byte	.LFB3
+ 1227 001c 48000000 		.4byte	.LFE3
+ 1228 0020 00000000 		.4byte	.LFB4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 27
+
+
+ 1229 0024 1E000000 		.4byte	.LFE4
+ 1230 0028 00000000 		.4byte	0
+ 1231 002c 00000000 		.4byte	0
+ 1232              		.section	.debug_line,"",%progbits
+ 1233              	.Ldebug_line0:
+ 1234 0000 1A010000 		.section	.debug_str,"MS",%progbits,1
+ 1234      02007500 
+ 1234      00000201 
+ 1234      FB0E0D00 
+ 1234      01010101 
+ 1235              	.LASF16:
+ 1236 0000 63797374 		.ascii	"cystatus\000"
+ 1236      61747573 
+ 1236      00
+ 1237              	.LASF32:
+ 1238 0009 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 1238      6C657853 
+ 1238      45415F61 
+ 1238      6C783837 
+ 1238      6772645C 
+ 1239              	.LASF26:
+ 1240 0037 43795370 		.ascii	"CySpcStart\000"
+ 1240      63537461 
+ 1240      727400
+ 1241              	.LASF13:
+ 1242 0042 666C6F61 		.ascii	"float\000"
+ 1242      7400
+ 1243              	.LASF25:
+ 1244 0048 636F756E 		.ascii	"count\000"
+ 1244      7400
+ 1245              	.LASF20:
+ 1246 004e 44696554 		.ascii	"DieTemp_1_Query\000"
+ 1246      656D705F 
+ 1246      315F5175 
+ 1246      65727900 
+ 1247              	.LASF3:
+ 1248 005e 73686F72 		.ascii	"short unsigned int\000"
+ 1248      7420756E 
+ 1248      7369676E 
+ 1248      65642069 
+ 1248      6E7400
+ 1249              	.LASF29:
+ 1250 0071 43795370 		.ascii	"CySpcReadData\000"
+ 1250      63526561 
+ 1250      64446174 
+ 1250      6100
+ 1251              	.LASF21:
+ 1252 007f 73746174 		.ascii	"status\000"
+ 1252      757300
+ 1253              	.LASF24:
+ 1254 0086 44696554 		.ascii	"DieTemp_1_GetTemp\000"
+ 1254      656D705F 
+ 1254      315F4765 
+ 1254      7454656D 
+ 1254      7000
+ 1255              	.LASF23:
+ 1256 0098 74656D70 		.ascii	"temperature\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 28
+
+
+ 1256      65726174 
+ 1256      75726500 
+ 1257              	.LASF1:
+ 1258 00a4 756E7369 		.ascii	"unsigned char\000"
+ 1258      676E6564 
+ 1258      20636861 
+ 1258      7200
+ 1259              	.LASF17:
+ 1260 00b2 72656738 		.ascii	"reg8\000"
+ 1260      00
+ 1261              	.LASF12:
+ 1262 00b7 696E7431 		.ascii	"int16\000"
+ 1262      3600
+ 1263              	.LASF5:
+ 1264 00bd 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1264      20756E73 
+ 1264      69676E65 
+ 1264      6420696E 
+ 1264      7400
+ 1265              	.LASF22:
+ 1266 00cf 74656D70 		.ascii	"temp\000"
+ 1266      00
+ 1267              	.LASF9:
+ 1268 00d4 75696E74 		.ascii	"uint8\000"
+ 1268      3800
+ 1269              	.LASF14:
+ 1270 00da 646F7562 		.ascii	"double\000"
+ 1270      6C6500
+ 1271              	.LASF28:
+ 1272 00e1 43795370 		.ascii	"CySpcGetTemp\000"
+ 1272      63476574 
+ 1272      54656D70 
+ 1272      00
+ 1273              	.LASF10:
+ 1274 00ee 75696E74 		.ascii	"uint16\000"
+ 1274      313600
+ 1275              	.LASF35:
+ 1276 00f5 43795370 		.ascii	"CySpcLock\000"
+ 1276      634C6F63 
+ 1276      6B00
+ 1277              	.LASF31:
+ 1278 00ff 2E5C4765 		.ascii	".\\Generated_Source\\PSoC5\\DieTemp_1.c\000"
+ 1278      6E657261 
+ 1278      7465645F 
+ 1278      536F7572 
+ 1278      63655C50 
+ 1279              	.LASF11:
+ 1280 0124 75696E74 		.ascii	"uint32\000"
+ 1280      333200
+ 1281              	.LASF30:
+ 1282 012b 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 1282      4320342E 
+ 1282      392E3320 
+ 1282      32303135 
+ 1282      30333033 
+ 1283 015e 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 1283      20726576 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 29
+
+
+ 1283      6973696F 
+ 1283      6E203232 
+ 1283      31323230 
+ 1284 0191 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1284      66756E63 
+ 1284      74696F6E 
+ 1284      2D736563 
+ 1284      74696F6E 
+ 1285              	.LASF8:
+ 1286 01b9 756E7369 		.ascii	"unsigned int\000"
+ 1286      676E6564 
+ 1286      20696E74 
+ 1286      00
+ 1287              	.LASF34:
+ 1288 01c6 44696554 		.ascii	"DieTemp_1_GetTempT\000"
+ 1288      656D705F 
+ 1288      315F4765 
+ 1288      7454656D 
+ 1288      705400
+ 1289              	.LASF7:
+ 1290 01d9 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1290      206C6F6E 
+ 1290      6720756E 
+ 1290      7369676E 
+ 1290      65642069 
+ 1291              	.LASF18:
+ 1292 01f0 73697A65 		.ascii	"sizetype\000"
+ 1292      74797065 
+ 1292      00
+ 1293              	.LASF27:
+ 1294 01f9 43795370 		.ascii	"CySpcUnlock\000"
+ 1294      63556E6C 
+ 1294      6F636B00 
+ 1295              	.LASF6:
+ 1296 0205 6C6F6E67 		.ascii	"long long int\000"
+ 1296      206C6F6E 
+ 1296      6720696E 
+ 1296      7400
+ 1297              	.LASF36:
+ 1298 0213 43794465 		.ascii	"CyDelayUs\000"
+ 1298      6C617955 
+ 1298      7300
+ 1299              	.LASF15:
+ 1300 021d 63686172 		.ascii	"char\000"
+ 1300      00
+ 1301              	.LASF2:
+ 1302 0222 73686F72 		.ascii	"short int\000"
+ 1302      7420696E 
+ 1302      7400
+ 1303              	.LASF33:
+ 1304 022c 44696554 		.ascii	"DieTemp_1_Stop\000"
+ 1304      656D705F 
+ 1304      315F5374 
+ 1304      6F7000
+ 1305              	.LASF4:
+ 1306 023b 6C6F6E67 		.ascii	"long int\000"
+ 1306      20696E74 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccs74bve.s 			page 30
+
+
+ 1306      00
+ 1307              	.LASF0:
+ 1308 0244 7369676E 		.ascii	"signed char\000"
+ 1308      65642063 
+ 1308      68617200 
+ 1309              	.LASF19:
+ 1310 0250 44696554 		.ascii	"DieTemp_1_Start\000"
+ 1310      656D705F 
+ 1310      315F5374 
+ 1310      61727400 
+ 1311              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

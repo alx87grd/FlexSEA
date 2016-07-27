@@ -1,0 +1,5 @@
+C:\FlexSEA_alx87grd\execute\execute_1_0.cydsn\execute_1_0.cyprj|675027e3-1335-4e92-8159-f845693269c1
+C:\Program Files (x86)\Cypress\PSoC Creator\3.3\PSoC Creator\psoc\content\default\CyAnnotationLibrary\CyAnnotationLibrary.cylib\CyAnnotationLibrary.cyprj|9ab9c2c7-2e43-4e14-87fb-66779925fd8d
+C:\Program Files (x86)\Cypress\PSoC Creator\3.3\PSoC Creator\psoc\content\cycomponentlibraryupdates\CyComponentLibraryUpdates.cylib\CyComponentLibraryUpdates.cyprj|7693a958-bd98-4fed-8b3c-ec8f4d99350d
+C:\Program Files (x86)\Cypress\PSoC Creator\3.3\PSoC Creator\psoc\content\cycomponentlibrary\CyComponentLibrary.cylib\CyComponentLibrary.cyprj|e7bcb27d-f2eb-4ff6-91ee-8f86ed6579b9
+C:\Program Files (x86)\Cypress\PSoC Creator\3.3\PSoC Creator\psoc\content\cyprimitives\CyPrimitives.cylib\CyPrimitives.cyprj|57bf3cdc-1908-434c-898d-ecc875c8eb5d

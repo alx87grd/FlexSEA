@@ -1,0 +1,652 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"user_dsdm.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.global _printf_float
+  19              		.thumb
+  20              		.section	.text.init_dsdm,"ax",%progbits
+  21              		.align	2
+  22              		.global	init_dsdm
+  23              		.thumb
+  24              		.thumb_func
+  25              		.type	init_dsdm, %function
+  26              	init_dsdm:
+  27              	.LFB63:
+  28              		.file 1 "..\\src\\user_dsdm.c"
+   1:..\src/user_dsdm.c **** //****************************************************************************
+   2:..\src/user_dsdm.c **** // MIT Media Lab - Biomechatronics
+   3:..\src/user_dsdm.c **** // Jean-Francois (Jeff) Duval
+   4:..\src/user_dsdm.c **** // jfduval@media.mit.edu
+   5:..\src/user_dsdm.c **** // 06/2016
+   6:..\src/user_dsdm.c **** //****************************************************************************
+   7:..\src/user_dsdm.c **** // user_dsdm: Dual-Speed Dual-Motor Actuator Functions
+   8:..\src/user_dsdm.c **** //****************************************************************************
+   9:..\src/user_dsdm.c **** 
+  10:..\src/user_dsdm.c **** //****************************************************************************
+  11:..\src/user_dsdm.c **** // Include(s)
+  12:..\src/user_dsdm.c **** //****************************************************************************
+  13:..\src/user_dsdm.c **** 
+  14:..\src/user_dsdm.c **** #include "main.h"
+  15:..\src/user_dsdm.c **** #include "user_dsdm.h"
+  16:..\src/user_dsdm.c **** 
+  17:..\src/user_dsdm.c **** //****************************************************************************
+  18:..\src/user_dsdm.c **** // Variable(s)
+  19:..\src/user_dsdm.c **** //****************************************************************************
+  20:..\src/user_dsdm.c **** 
+  21:..\src/user_dsdm.c **** //****************************************************************************
+  22:..\src/user_dsdm.c **** // Private Function Prototype(s):
+  23:..\src/user_dsdm.c **** //****************************************************************************	
+  24:..\src/user_dsdm.c **** 
+  25:..\src/user_dsdm.c **** static void dsdm_refresh_values(void);
+  26:..\src/user_dsdm.c **** 
+  27:..\src/user_dsdm.c **** //****************************************************************************
+  28:..\src/user_dsdm.c **** // Public Function(s)
+  29:..\src/user_dsdm.c **** //****************************************************************************
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 2
+
+
+  30:..\src/user_dsdm.c **** 
+  31:..\src/user_dsdm.c **** //Call this function once in main.c, just before the while()
+  32:..\src/user_dsdm.c **** void init_dsdm(void)
+  33:..\src/user_dsdm.c **** {	
+  29              		.loc 1 33 0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  34:..\src/user_dsdm.c **** 	board_id = SLAVE_ID;
+  34              		.loc 1 34 0
+  35 0000 2922     		movs	r2, #41
+  36 0002 014B     		ldr	r3, .L2
+  37 0004 1A70     		strb	r2, [r3]
+  38 0006 7047     		bx	lr
+  39              	.L3:
+  40              		.align	2
+  41              	.L2:
+  42 0008 00000000 		.word	board_id
+  43              		.cfi_endproc
+  44              	.LFE63:
+  45              		.size	init_dsdm, .-init_dsdm
+  46              		.section	.text.dsdm_fsm,"ax",%progbits
+  47              		.align	2
+  48              		.global	dsdm_fsm
+  49              		.thumb
+  50              		.thumb_func
+  51              		.type	dsdm_fsm, %function
+  52              	dsdm_fsm:
+  53              	.LFB64:
+  35:..\src/user_dsdm.c **** }
+  36:..\src/user_dsdm.c **** 
+  37:..\src/user_dsdm.c **** //Ankle 2-DoF Finite State Machine.
+  38:..\src/user_dsdm.c **** //Call this function in one of the main while time slots.
+  39:..\src/user_dsdm.c **** void dsdm_fsm(void)
+  40:..\src/user_dsdm.c **** {
+  54              		.loc 1 40 0
+  55              		.cfi_startproc
+  56              		@ args = 0, pretend = 0, frame = 0
+  57              		@ frame_needed = 0, uses_anonymous_args = 0
+  58              		@ link register save eliminated.
+  41:..\src/user_dsdm.c **** 	#if(ACTIVE_PROJECT == PROJECT_DSDM)
+  42:..\src/user_dsdm.c ****     static uint32 time = 0;
+  43:..\src/user_dsdm.c ****     static uint8 state = 0;
+  44:..\src/user_dsdm.c **** 	
+  45:..\src/user_dsdm.c ****     //Increment time (1 tick = 1ms)
+  46:..\src/user_dsdm.c ****     time++;
+  59              		.loc 1 46 0
+  60 0000 024A     		ldr	r2, .L5
+  61 0002 1368     		ldr	r3, [r2]
+  62 0004 0133     		adds	r3, r3, #1
+  63 0006 1360     		str	r3, [r2]
+  64 0008 7047     		bx	lr
+  65              	.L6:
+  66 000a 00BF     		.align	2
+  67              	.L5:
+  68 000c 00000000 		.word	.LANCHOR0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 3
+
+
+  69              		.cfi_endproc
+  70              	.LFE64:
+  71              		.size	dsdm_fsm, .-dsdm_fsm
+  72              		.bss
+  73              		.align	2
+  74              		.set	.LANCHOR0,. + 0
+  75              		.type	time.10476, %object
+  76              		.size	time.10476, 4
+  77              	time.10476:
+  78 0000 00000000 		.space	4
+  79              		.text
+  80              	.Letext0:
+  81              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+  82              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+  83              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+  84              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+  85              		.file 6 "..\\inc/flexsea_board.h"
+  86              		.section	.debug_info,"",%progbits
+  87              	.Ldebug_info0:
+  88 0000 2D010000 		.4byte	0x12d
+  89 0004 0400     		.2byte	0x4
+  90 0006 00000000 		.4byte	.Ldebug_abbrev0
+  91 000a 04       		.byte	0x4
+  92 000b 01       		.uleb128 0x1
+  93 000c 8C000000 		.4byte	.LASF24
+  94 0010 01       		.byte	0x1
+  95 0011 22000000 		.4byte	.LASF25
+  96 0015 94010000 		.4byte	.LASF26
+  97 0019 00000000 		.4byte	.Ldebug_ranges0+0
+  98 001d 00000000 		.4byte	0
+  99 0021 00000000 		.4byte	.Ldebug_line0
+ 100 0025 02       		.uleb128 0x2
+ 101 0026 01       		.byte	0x1
+ 102 0027 06       		.byte	0x6
+ 103 0028 72010000 		.4byte	.LASF0
+ 104 002c 03       		.uleb128 0x3
+ 105 002d 52010000 		.4byte	.LASF4
+ 106 0031 02       		.byte	0x2
+ 107 0032 1D       		.byte	0x1d
+ 108 0033 37000000 		.4byte	0x37
+ 109 0037 02       		.uleb128 0x2
+ 110 0038 01       		.byte	0x1
+ 111 0039 08       		.byte	0x8
+ 112 003a 22010000 		.4byte	.LASF1
+ 113 003e 02       		.uleb128 0x2
+ 114 003f 02       		.byte	0x2
+ 115 0040 05       		.byte	0x5
+ 116 0041 C8010000 		.4byte	.LASF2
+ 117 0045 02       		.uleb128 0x2
+ 118 0046 02       		.byte	0x2
+ 119 0047 07       		.byte	0x7
+ 120 0048 79000000 		.4byte	.LASF3
+ 121 004c 03       		.uleb128 0x3
+ 122 004d 8A010000 		.4byte	.LASF5
+ 123 0051 02       		.byte	0x2
+ 124 0052 3F       		.byte	0x3f
+ 125 0053 57000000 		.4byte	0x57
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 4
+
+
+ 126 0057 02       		.uleb128 0x2
+ 127 0058 04       		.byte	0x4
+ 128 0059 05       		.byte	0x5
+ 129 005a 42010000 		.4byte	.LASF6
+ 130 005e 02       		.uleb128 0x2
+ 131 005f 04       		.byte	0x4
+ 132 0060 07       		.byte	0x7
+ 133 0061 4B000000 		.4byte	.LASF7
+ 134 0065 02       		.uleb128 0x2
+ 135 0066 08       		.byte	0x8
+ 136 0067 05       		.byte	0x5
+ 137 0068 00000000 		.4byte	.LASF8
+ 138 006c 02       		.uleb128 0x2
+ 139 006d 08       		.byte	0x8
+ 140 006e 07       		.byte	0x7
+ 141 006f 5D000000 		.4byte	.LASF9
+ 142 0073 04       		.uleb128 0x4
+ 143 0074 04       		.byte	0x4
+ 144 0075 05       		.byte	0x5
+ 145 0076 696E7400 		.ascii	"int\000"
+ 146 007a 02       		.uleb128 0x2
+ 147 007b 04       		.byte	0x4
+ 148 007c 07       		.byte	0x7
+ 149 007d 15000000 		.4byte	.LASF10
+ 150 0081 03       		.uleb128 0x3
+ 151 0082 1A010000 		.4byte	.LASF11
+ 152 0086 03       		.byte	0x3
+ 153 0087 15       		.byte	0x15
+ 154 0088 2C000000 		.4byte	0x2c
+ 155 008c 03       		.uleb128 0x3
+ 156 008d D2010000 		.4byte	.LASF12
+ 157 0091 03       		.byte	0x3
+ 158 0092 2C       		.byte	0x2c
+ 159 0093 4C000000 		.4byte	0x4c
+ 160 0097 03       		.uleb128 0x3
+ 161 0098 45000000 		.4byte	.LASF13
+ 162 009c 04       		.byte	0x4
+ 163 009d C2       		.byte	0xc2
+ 164 009e 37000000 		.4byte	0x37
+ 165 00a2 03       		.uleb128 0x3
+ 166 00a3 0E000000 		.4byte	.LASF14
+ 167 00a7 04       		.byte	0x4
+ 168 00a8 C4       		.byte	0xc4
+ 169 00a9 5E000000 		.4byte	0x5e
+ 170 00ad 02       		.uleb128 0x2
+ 171 00ae 04       		.byte	0x4
+ 172 00af 04       		.byte	0x4
+ 173 00b0 C2010000 		.4byte	.LASF15
+ 174 00b4 02       		.uleb128 0x2
+ 175 00b5 08       		.byte	0x8
+ 176 00b6 04       		.byte	0x4
+ 177 00b7 4B010000 		.4byte	.LASF16
+ 178 00bb 02       		.uleb128 0x2
+ 179 00bc 01       		.byte	0x1
+ 180 00bd 08       		.byte	0x8
+ 181 00be DA010000 		.4byte	.LASF17
+ 182 00c2 02       		.uleb128 0x2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 5
+
+
+ 183 00c3 04       		.byte	0x4
+ 184 00c4 07       		.byte	0x7
+ 185 00c5 5C010000 		.4byte	.LASF18
+ 186 00c9 02       		.uleb128 0x2
+ 187 00ca 08       		.byte	0x8
+ 188 00cb 04       		.byte	0x4
+ 189 00cc 7E010000 		.4byte	.LASF19
+ 190 00d0 05       		.uleb128 0x5
+ 191 00d1 35000000 		.4byte	.LASF27
+ 192 00d5 01       		.byte	0x1
+ 193 00d6 20       		.byte	0x20
+ 194 00d7 00000000 		.4byte	.LFB63
+ 195 00db 0C000000 		.4byte	.LFE63-.LFB63
+ 196 00df 01       		.uleb128 0x1
+ 197 00e0 9C       		.byte	0x9c
+ 198 00e1 06       		.uleb128 0x6
+ 199 00e2 39010000 		.4byte	.LASF28
+ 200 00e6 01       		.byte	0x1
+ 201 00e7 27       		.byte	0x27
+ 202 00e8 00000000 		.4byte	.LFB64
+ 203 00ec 10000000 		.4byte	.LFE64-.LFB64
+ 204 00f0 01       		.uleb128 0x1
+ 205 00f1 9C       		.byte	0x9c
+ 206 00f2 14010000 		.4byte	0x114
+ 207 00f6 07       		.uleb128 0x7
+ 208 00f7 74000000 		.4byte	.LASF20
+ 209 00fb 01       		.byte	0x1
+ 210 00fc 2A       		.byte	0x2a
+ 211 00fd A2000000 		.4byte	0xa2
+ 212 0101 05       		.uleb128 0x5
+ 213 0102 03       		.byte	0x3
+ 214 0103 00000000 		.4byte	time.10476
+ 215 0107 08       		.uleb128 0x8
+ 216 0108 3F000000 		.4byte	.LASF21
+ 217 010c 01       		.byte	0x1
+ 218 010d 2B       		.byte	0x2b
+ 219 010e 97000000 		.4byte	0x97
+ 220 0112 00       		.byte	0
+ 221 0113 00       		.byte	0
+ 222 0114 09       		.uleb128 0x9
+ 223 0115 65010000 		.4byte	.LASF22
+ 224 0119 05       		.byte	0x5
+ 225 011a 2A06     		.2byte	0x62a
+ 226 011c 20010000 		.4byte	0x120
+ 227 0120 0A       		.uleb128 0xa
+ 228 0121 8C000000 		.4byte	0x8c
+ 229 0125 0B       		.uleb128 0xb
+ 230 0126 30010000 		.4byte	.LASF23
+ 231 012a 06       		.byte	0x6
+ 232 012b 54       		.byte	0x54
+ 233 012c 81000000 		.4byte	0x81
+ 234 0130 00       		.byte	0
+ 235              		.section	.debug_abbrev,"",%progbits
+ 236              	.Ldebug_abbrev0:
+ 237 0000 01       		.uleb128 0x1
+ 238 0001 11       		.uleb128 0x11
+ 239 0002 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 6
+
+
+ 240 0003 25       		.uleb128 0x25
+ 241 0004 0E       		.uleb128 0xe
+ 242 0005 13       		.uleb128 0x13
+ 243 0006 0B       		.uleb128 0xb
+ 244 0007 03       		.uleb128 0x3
+ 245 0008 0E       		.uleb128 0xe
+ 246 0009 1B       		.uleb128 0x1b
+ 247 000a 0E       		.uleb128 0xe
+ 248 000b 55       		.uleb128 0x55
+ 249 000c 17       		.uleb128 0x17
+ 250 000d 11       		.uleb128 0x11
+ 251 000e 01       		.uleb128 0x1
+ 252 000f 10       		.uleb128 0x10
+ 253 0010 17       		.uleb128 0x17
+ 254 0011 00       		.byte	0
+ 255 0012 00       		.byte	0
+ 256 0013 02       		.uleb128 0x2
+ 257 0014 24       		.uleb128 0x24
+ 258 0015 00       		.byte	0
+ 259 0016 0B       		.uleb128 0xb
+ 260 0017 0B       		.uleb128 0xb
+ 261 0018 3E       		.uleb128 0x3e
+ 262 0019 0B       		.uleb128 0xb
+ 263 001a 03       		.uleb128 0x3
+ 264 001b 0E       		.uleb128 0xe
+ 265 001c 00       		.byte	0
+ 266 001d 00       		.byte	0
+ 267 001e 03       		.uleb128 0x3
+ 268 001f 16       		.uleb128 0x16
+ 269 0020 00       		.byte	0
+ 270 0021 03       		.uleb128 0x3
+ 271 0022 0E       		.uleb128 0xe
+ 272 0023 3A       		.uleb128 0x3a
+ 273 0024 0B       		.uleb128 0xb
+ 274 0025 3B       		.uleb128 0x3b
+ 275 0026 0B       		.uleb128 0xb
+ 276 0027 49       		.uleb128 0x49
+ 277 0028 13       		.uleb128 0x13
+ 278 0029 00       		.byte	0
+ 279 002a 00       		.byte	0
+ 280 002b 04       		.uleb128 0x4
+ 281 002c 24       		.uleb128 0x24
+ 282 002d 00       		.byte	0
+ 283 002e 0B       		.uleb128 0xb
+ 284 002f 0B       		.uleb128 0xb
+ 285 0030 3E       		.uleb128 0x3e
+ 286 0031 0B       		.uleb128 0xb
+ 287 0032 03       		.uleb128 0x3
+ 288 0033 08       		.uleb128 0x8
+ 289 0034 00       		.byte	0
+ 290 0035 00       		.byte	0
+ 291 0036 05       		.uleb128 0x5
+ 292 0037 2E       		.uleb128 0x2e
+ 293 0038 00       		.byte	0
+ 294 0039 3F       		.uleb128 0x3f
+ 295 003a 19       		.uleb128 0x19
+ 296 003b 03       		.uleb128 0x3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 7
+
+
+ 297 003c 0E       		.uleb128 0xe
+ 298 003d 3A       		.uleb128 0x3a
+ 299 003e 0B       		.uleb128 0xb
+ 300 003f 3B       		.uleb128 0x3b
+ 301 0040 0B       		.uleb128 0xb
+ 302 0041 27       		.uleb128 0x27
+ 303 0042 19       		.uleb128 0x19
+ 304 0043 11       		.uleb128 0x11
+ 305 0044 01       		.uleb128 0x1
+ 306 0045 12       		.uleb128 0x12
+ 307 0046 06       		.uleb128 0x6
+ 308 0047 40       		.uleb128 0x40
+ 309 0048 18       		.uleb128 0x18
+ 310 0049 9742     		.uleb128 0x2117
+ 311 004b 19       		.uleb128 0x19
+ 312 004c 00       		.byte	0
+ 313 004d 00       		.byte	0
+ 314 004e 06       		.uleb128 0x6
+ 315 004f 2E       		.uleb128 0x2e
+ 316 0050 01       		.byte	0x1
+ 317 0051 3F       		.uleb128 0x3f
+ 318 0052 19       		.uleb128 0x19
+ 319 0053 03       		.uleb128 0x3
+ 320 0054 0E       		.uleb128 0xe
+ 321 0055 3A       		.uleb128 0x3a
+ 322 0056 0B       		.uleb128 0xb
+ 323 0057 3B       		.uleb128 0x3b
+ 324 0058 0B       		.uleb128 0xb
+ 325 0059 27       		.uleb128 0x27
+ 326 005a 19       		.uleb128 0x19
+ 327 005b 11       		.uleb128 0x11
+ 328 005c 01       		.uleb128 0x1
+ 329 005d 12       		.uleb128 0x12
+ 330 005e 06       		.uleb128 0x6
+ 331 005f 40       		.uleb128 0x40
+ 332 0060 18       		.uleb128 0x18
+ 333 0061 9742     		.uleb128 0x2117
+ 334 0063 19       		.uleb128 0x19
+ 335 0064 01       		.uleb128 0x1
+ 336 0065 13       		.uleb128 0x13
+ 337 0066 00       		.byte	0
+ 338 0067 00       		.byte	0
+ 339 0068 07       		.uleb128 0x7
+ 340 0069 34       		.uleb128 0x34
+ 341 006a 00       		.byte	0
+ 342 006b 03       		.uleb128 0x3
+ 343 006c 0E       		.uleb128 0xe
+ 344 006d 3A       		.uleb128 0x3a
+ 345 006e 0B       		.uleb128 0xb
+ 346 006f 3B       		.uleb128 0x3b
+ 347 0070 0B       		.uleb128 0xb
+ 348 0071 49       		.uleb128 0x49
+ 349 0072 13       		.uleb128 0x13
+ 350 0073 02       		.uleb128 0x2
+ 351 0074 18       		.uleb128 0x18
+ 352 0075 00       		.byte	0
+ 353 0076 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 8
+
+
+ 354 0077 08       		.uleb128 0x8
+ 355 0078 34       		.uleb128 0x34
+ 356 0079 00       		.byte	0
+ 357 007a 03       		.uleb128 0x3
+ 358 007b 0E       		.uleb128 0xe
+ 359 007c 3A       		.uleb128 0x3a
+ 360 007d 0B       		.uleb128 0xb
+ 361 007e 3B       		.uleb128 0x3b
+ 362 007f 0B       		.uleb128 0xb
+ 363 0080 49       		.uleb128 0x49
+ 364 0081 13       		.uleb128 0x13
+ 365 0082 1C       		.uleb128 0x1c
+ 366 0083 0B       		.uleb128 0xb
+ 367 0084 00       		.byte	0
+ 368 0085 00       		.byte	0
+ 369 0086 09       		.uleb128 0x9
+ 370 0087 34       		.uleb128 0x34
+ 371 0088 00       		.byte	0
+ 372 0089 03       		.uleb128 0x3
+ 373 008a 0E       		.uleb128 0xe
+ 374 008b 3A       		.uleb128 0x3a
+ 375 008c 0B       		.uleb128 0xb
+ 376 008d 3B       		.uleb128 0x3b
+ 377 008e 05       		.uleb128 0x5
+ 378 008f 49       		.uleb128 0x49
+ 379 0090 13       		.uleb128 0x13
+ 380 0091 3F       		.uleb128 0x3f
+ 381 0092 19       		.uleb128 0x19
+ 382 0093 3C       		.uleb128 0x3c
+ 383 0094 19       		.uleb128 0x19
+ 384 0095 00       		.byte	0
+ 385 0096 00       		.byte	0
+ 386 0097 0A       		.uleb128 0xa
+ 387 0098 35       		.uleb128 0x35
+ 388 0099 00       		.byte	0
+ 389 009a 49       		.uleb128 0x49
+ 390 009b 13       		.uleb128 0x13
+ 391 009c 00       		.byte	0
+ 392 009d 00       		.byte	0
+ 393 009e 0B       		.uleb128 0xb
+ 394 009f 34       		.uleb128 0x34
+ 395 00a0 00       		.byte	0
+ 396 00a1 03       		.uleb128 0x3
+ 397 00a2 0E       		.uleb128 0xe
+ 398 00a3 3A       		.uleb128 0x3a
+ 399 00a4 0B       		.uleb128 0xb
+ 400 00a5 3B       		.uleb128 0x3b
+ 401 00a6 0B       		.uleb128 0xb
+ 402 00a7 49       		.uleb128 0x49
+ 403 00a8 13       		.uleb128 0x13
+ 404 00a9 3F       		.uleb128 0x3f
+ 405 00aa 19       		.uleb128 0x19
+ 406 00ab 3C       		.uleb128 0x3c
+ 407 00ac 19       		.uleb128 0x19
+ 408 00ad 00       		.byte	0
+ 409 00ae 00       		.byte	0
+ 410 00af 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 9
+
+
+ 411              		.section	.debug_aranges,"",%progbits
+ 412 0000 24000000 		.4byte	0x24
+ 413 0004 0200     		.2byte	0x2
+ 414 0006 00000000 		.4byte	.Ldebug_info0
+ 415 000a 04       		.byte	0x4
+ 416 000b 00       		.byte	0
+ 417 000c 0000     		.2byte	0
+ 418 000e 0000     		.2byte	0
+ 419 0010 00000000 		.4byte	.LFB63
+ 420 0014 0C000000 		.4byte	.LFE63-.LFB63
+ 421 0018 00000000 		.4byte	.LFB64
+ 422 001c 10000000 		.4byte	.LFE64-.LFB64
+ 423 0020 00000000 		.4byte	0
+ 424 0024 00000000 		.4byte	0
+ 425              		.section	.debug_ranges,"",%progbits
+ 426              	.Ldebug_ranges0:
+ 427 0000 00000000 		.4byte	.LFB63
+ 428 0004 0C000000 		.4byte	.LFE63
+ 429 0008 00000000 		.4byte	.LFB64
+ 430 000c 10000000 		.4byte	.LFE64
+ 431 0010 00000000 		.4byte	0
+ 432 0014 00000000 		.4byte	0
+ 433              		.section	.debug_line,"",%progbits
+ 434              	.Ldebug_line0:
+ 435 0000 93010000 		.section	.debug_str,"MS",%progbits,1
+ 435      02006D01 
+ 435      00000201 
+ 435      FB0E0D00 
+ 435      01010101 
+ 436              	.LASF8:
+ 437 0000 6C6F6E67 		.ascii	"long long int\000"
+ 437      206C6F6E 
+ 437      6720696E 
+ 437      7400
+ 438              	.LASF14:
+ 439 000e 75696E74 		.ascii	"uint32\000"
+ 439      333200
+ 440              	.LASF10:
+ 441 0015 756E7369 		.ascii	"unsigned int\000"
+ 441      676E6564 
+ 441      20696E74 
+ 441      00
+ 442              	.LASF25:
+ 443 0022 2E2E5C73 		.ascii	"..\\src\\user_dsdm.c\000"
+ 443      72635C75 
+ 443      7365725F 
+ 443      6473646D 
+ 443      2E6300
+ 444              	.LASF27:
+ 445 0035 696E6974 		.ascii	"init_dsdm\000"
+ 445      5F647364 
+ 445      6D00
+ 446              	.LASF21:
+ 447 003f 73746174 		.ascii	"state\000"
+ 447      6500
+ 448              	.LASF13:
+ 449 0045 75696E74 		.ascii	"uint8\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 10
+
+
+ 449      3800
+ 450              	.LASF7:
+ 451 004b 6C6F6E67 		.ascii	"long unsigned int\000"
+ 451      20756E73 
+ 451      69676E65 
+ 451      6420696E 
+ 451      7400
+ 452              	.LASF9:
+ 453 005d 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 453      206C6F6E 
+ 453      6720756E 
+ 453      7369676E 
+ 453      65642069 
+ 454              	.LASF20:
+ 455 0074 74696D65 		.ascii	"time\000"
+ 455      00
+ 456              	.LASF3:
+ 457 0079 73686F72 		.ascii	"short unsigned int\000"
+ 457      7420756E 
+ 457      7369676E 
+ 457      65642069 
+ 457      6E7400
+ 458              	.LASF24:
+ 459 008c 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 459      4320342E 
+ 459      392E3320 
+ 459      32303135 
+ 459      30333033 
+ 460 00bf 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 460      20726576 
+ 460      6973696F 
+ 460      6E203232 
+ 460      31323230 
+ 461 00f2 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 461      66756E63 
+ 461      74696F6E 
+ 461      2D736563 
+ 461      74696F6E 
+ 462              	.LASF11:
+ 463 011a 75696E74 		.ascii	"uint8_t\000"
+ 463      385F7400 
+ 464              	.LASF1:
+ 465 0122 756E7369 		.ascii	"unsigned char\000"
+ 465      676E6564 
+ 465      20636861 
+ 465      7200
+ 466              	.LASF23:
+ 467 0130 626F6172 		.ascii	"board_id\000"
+ 467      645F6964 
+ 467      00
+ 468              	.LASF28:
+ 469 0139 6473646D 		.ascii	"dsdm_fsm\000"
+ 469      5F66736D 
+ 469      00
+ 470              	.LASF6:
+ 471 0142 6C6F6E67 		.ascii	"long int\000"
+ 471      20696E74 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccsFVJMD.s 			page 11
+
+
+ 471      00
+ 472              	.LASF16:
+ 473 014b 646F7562 		.ascii	"double\000"
+ 473      6C6500
+ 474              	.LASF4:
+ 475 0152 5F5F7569 		.ascii	"__uint8_t\000"
+ 475      6E74385F 
+ 475      7400
+ 476              	.LASF18:
+ 477 015c 73697A65 		.ascii	"sizetype\000"
+ 477      74797065 
+ 477      00
+ 478              	.LASF22:
+ 479 0165 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 479      52784275 
+ 479      66666572 
+ 479      00
+ 480              	.LASF0:
+ 481 0172 7369676E 		.ascii	"signed char\000"
+ 481      65642063 
+ 481      68617200 
+ 482              	.LASF19:
+ 483 017e 6C6F6E67 		.ascii	"long double\000"
+ 483      20646F75 
+ 483      626C6500 
+ 484              	.LASF5:
+ 485 018a 5F5F696E 		.ascii	"__int32_t\000"
+ 485      7433325F 
+ 485      7400
+ 486              	.LASF26:
+ 487 0194 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 487      6C657853 
+ 487      45415F61 
+ 487      6C783837 
+ 487      6772645C 
+ 488              	.LASF15:
+ 489 01c2 666C6F61 		.ascii	"float\000"
+ 489      7400
+ 490              	.LASF2:
+ 491 01c8 73686F72 		.ascii	"short int\000"
+ 491      7420696E 
+ 491      7400
+ 492              	.LASF12:
+ 493 01d2 696E7433 		.ascii	"int32_t\000"
+ 493      325F7400 
+ 494              	.LASF17:
+ 495 01da 63686172 		.ascii	"char\000"
+ 495      00
+ 496              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

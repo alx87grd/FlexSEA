@@ -1,0 +1,1625 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"user_ricnu_knee.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.global _printf_float
+  19              		.thumb
+  20              		.section	.text.init_ricnu_knee,"ax",%progbits
+  21              		.align	2
+  22              		.global	init_ricnu_knee
+  23              		.thumb
+  24              		.thumb_func
+  25              		.type	init_ricnu_knee, %function
+  26              	init_ricnu_knee:
+  27              	.LFB63:
+  28              		.file 1 "..\\src\\user_ricnu_knee.c"
+   1:..\src/user_ricnu_knee.c **** //****************************************************************************
+   2:..\src/user_ricnu_knee.c **** // MIT Media Lab - Biomechatronics
+   3:..\src/user_ricnu_knee.c **** // Jean-Francois (Jeff) Duval & Luke Mooney & Elliott Rouse
+   4:..\src/user_ricnu_knee.c **** // jfduval@mit.edu & lmooney@mit.edu & erouse@northwestern.edu
+   5:..\src/user_ricnu_knee.c **** // 05/2016
+   6:..\src/user_ricnu_knee.c **** //****************************************************************************
+   7:..\src/user_ricnu_knee.c **** // knee: knee functions
+   8:..\src/user_ricnu_knee.c **** //****************************************************************************
+   9:..\src/user_ricnu_knee.c **** 
+  10:..\src/user_ricnu_knee.c **** //****************************************************************************
+  11:..\src/user_ricnu_knee.c **** // Include(s)
+  12:..\src/user_ricnu_knee.c **** //****************************************************************************
+  13:..\src/user_ricnu_knee.c **** 
+  14:..\src/user_ricnu_knee.c **** #include "main.h"
+  15:..\src/user_ricnu_knee.c **** #include "user_ricnu_knee.h"
+  16:..\src/user_ricnu_knee.c **** 
+  17:..\src/user_ricnu_knee.c **** //****************************************************************************
+  18:..\src/user_ricnu_knee.c **** // Variable(s)
+  19:..\src/user_ricnu_knee.c **** //****************************************************************************
+  20:..\src/user_ricnu_knee.c **** 
+  21:..\src/user_ricnu_knee.c **** //****************************************************************************
+  22:..\src/user_ricnu_knee.c **** // Private Function Prototype(s):
+  23:..\src/user_ricnu_knee.c **** //****************************************************************************	
+  24:..\src/user_ricnu_knee.c **** 
+  25:..\src/user_ricnu_knee.c **** static void ricnu_knee_refresh_values(void);
+  26:..\src/user_ricnu_knee.c **** 
+  27:..\src/user_ricnu_knee.c **** //****************************************************************************
+  28:..\src/user_ricnu_knee.c **** // Public Function(s)
+  29:..\src/user_ricnu_knee.c **** //****************************************************************************
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 2
+
+
+  30:..\src/user_ricnu_knee.c **** 
+  31:..\src/user_ricnu_knee.c **** //Call this function once in main.c, just before the while()
+  32:..\src/user_ricnu_knee.c **** void init_ricnu_knee(void)
+  33:..\src/user_ricnu_knee.c **** {	
+  29              		.loc 1 33 0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 10B5     		push	{r4, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  34:..\src/user_ricnu_knee.c **** 	//FlexSEA-Execute setup:
+  35:..\src/user_ricnu_knee.c ****     //Example:	ctrl.active_ctrl = CTRL_OPEN;	//Open controller
+  36:..\src/user_ricnu_knee.c ****     //Example: motor_open_speed_1(0);			//0% PWM
+  37:..\src/user_ricnu_knee.c **** 	ctrl.active_ctrl = CTRL_POSITION;	//Position controller
+  37              		.loc 1 37 0
+  38 0002 0C4C     		ldr	r4, .L3
+  39 0004 0223     		movs	r3, #2
+  40 0006 2370     		strb	r3, [r4]
+  38:..\src/user_ricnu_knee.c ****     motor_open_speed_1(0);			//0% PWM
+  41              		.loc 1 38 0
+  42 0008 0020     		movs	r0, #0
+  43 000a FFF7FEFF 		bl	motor_open_speed_1
+  44              	.LVL0:
+  39:..\src/user_ricnu_knee.c **** 	Coast_Brake_Write(1);			//Brake (rather than Coast)
+  45              		.loc 1 39 0
+  46 000e 0120     		movs	r0, #1
+  47 0010 FFF7FEFF 		bl	Coast_Brake_Write
+  48              	.LVL1:
+  40:..\src/user_ricnu_knee.c **** 	   
+  41:..\src/user_ricnu_knee.c ****     //Position PID gains:
+  42:..\src/user_ricnu_knee.c **** 	ctrl.position.gain.P_KP = 22;
+  49              		.loc 1 42 0
+  50 0014 1623     		movs	r3, #22
+  51 0016 A4F84C30 		strh	r3, [r4, #76]	@ movhi
+  43:..\src/user_ricnu_knee.c **** 	ctrl.position.gain.P_KI = 5;
+  52              		.loc 1 43 0
+  53 001a 0523     		movs	r3, #5
+  54 001c A4F84E30 		strh	r3, [r4, #78]	@ movhi
+  44:..\src/user_ricnu_knee.c ****     
+  45:..\src/user_ricnu_knee.c ****     //Starts off:
+  46:..\src/user_ricnu_knee.c **** 	LED_R_Write(1);
+  55              		.loc 1 46 0
+  56 0020 0120     		movs	r0, #1
+  57 0022 FFF7FEFF 		bl	LED_R_Write
+  58              	.LVL2:
+  47:..\src/user_ricnu_knee.c **** 	LED_G_Write(1);
+  59              		.loc 1 47 0
+  60 0026 0120     		movs	r0, #1
+  61 0028 FFF7FEFF 		bl	LED_G_Write
+  62              	.LVL3:
+  48:..\src/user_ricnu_knee.c **** 	LED_B_Write(1);    
+  63              		.loc 1 48 0
+  64 002c 0120     		movs	r0, #1
+  65 002e FFF7FEFF 		bl	LED_B_Write
+  66              	.LVL4:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 3
+
+
+  67 0032 10BD     		pop	{r4, pc}
+  68              	.L4:
+  69              		.align	2
+  70              	.L3:
+  71 0034 00000000 		.word	ctrl
+  72              		.cfi_endproc
+  73              	.LFE63:
+  74              		.size	init_ricnu_knee, .-init_ricnu_knee
+  75              		.section	.text.ricnu_knee_fsm,"ax",%progbits
+  76              		.align	2
+  77              		.global	ricnu_knee_fsm
+  78              		.thumb
+  79              		.thumb_func
+  80              		.type	ricnu_knee_fsm, %function
+  81              	ricnu_knee_fsm:
+  82              	.LFB64:
+  49:..\src/user_ricnu_knee.c **** }
+  50:..\src/user_ricnu_knee.c **** 
+  51:..\src/user_ricnu_knee.c **** //Knee Finite State Machine.
+  52:..\src/user_ricnu_knee.c **** //Call this function in one of the main while time slots.
+  53:..\src/user_ricnu_knee.c **** void ricnu_knee_fsm(void)
+  54:..\src/user_ricnu_knee.c **** {
+  83              		.loc 1 54 0
+  84              		.cfi_startproc
+  85              		@ args = 0, pretend = 0, frame = 0
+  86              		@ frame_needed = 0, uses_anonymous_args = 0
+  87 0000 30B5     		push	{r4, r5, lr}
+  88              		.cfi_def_cfa_offset 12
+  89              		.cfi_offset 4, -12
+  90              		.cfi_offset 5, -8
+  91              		.cfi_offset 14, -4
+  92 0002 85B0     		sub	sp, sp, #20
+  93              		.cfi_def_cfa_offset 32
+  55:..\src/user_ricnu_knee.c ****     static uint16 time = 0;
+  56:..\src/user_ricnu_knee.c ****     static uint8 state = 0;
+  57:..\src/user_ricnu_knee.c ****     static uint16 tmp_posi = 0;
+  58:..\src/user_ricnu_knee.c **** 	static uint16 tmp_posf = 0;
+  59:..\src/user_ricnu_knee.c **** 	static uint16 tmp_spdm = 0;
+  60:..\src/user_ricnu_knee.c **** 	static uint16 tmp_acc = 0;
+  61:..\src/user_ricnu_knee.c **** 	
+  62:..\src/user_ricnu_knee.c ****     //Increment time
+  63:..\src/user_ricnu_knee.c ****     time++;
+  94              		.loc 1 63 0
+  95 0004 2D4A     		ldr	r2, .L12
+  96 0006 1388     		ldrh	r3, [r2]
+  97 0008 0133     		adds	r3, r3, #1
+  98 000a 9BB2     		uxth	r3, r3
+  99 000c 1380     		strh	r3, [r2]	@ movhi
+  64:..\src/user_ricnu_knee.c ****     
+  65:..\src/user_ricnu_knee.c **** 	//Before going to a state we refresh values:
+  66:..\src/user_ricnu_knee.c **** 	ricnu_knee_refresh_values();
+  67:..\src/user_ricnu_knee.c **** 	
+  68:..\src/user_ricnu_knee.c ****     if (time == 0)
+ 100              		.loc 1 68 0
+ 101 000e 5BB9     		cbnz	r3, .L6
+  69:..\src/user_ricnu_knee.c ****     {
+  70:..\src/user_ricnu_knee.c ****         state = 0;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 4
+
+
+ 102              		.loc 1 70 0
+ 103 0010 0021     		movs	r1, #0
+ 104 0012 9170     		strb	r1, [r2, #2]
+  71:..\src/user_ricnu_knee.c ****         tmp_posi = encoder.count;
+ 105              		.loc 1 71 0
+ 106 0014 2A49     		ldr	r1, .L12+4
+ 107 0016 0968     		ldr	r1, [r1]
+ 108 0018 9180     		strh	r1, [r2, #4]	@ movhi
+  72:..\src/user_ricnu_knee.c ****         tmp_posf = 1000;
+ 109              		.loc 1 72 0
+ 110 001a 4FF47A71 		mov	r1, #1000
+ 111 001e D180     		strh	r1, [r2, #6]	@ movhi
+  73:..\src/user_ricnu_knee.c ****         tmp_spdm = 10000;
+ 112              		.loc 1 73 0
+ 113 0020 42F21071 		movw	r1, #10000
+ 114 0024 1181     		strh	r1, [r2, #8]	@ movhi
+  74:..\src/user_ricnu_knee.c ****         tmp_acc = 10000;
+ 115              		.loc 1 74 0
+ 116 0026 5181     		strh	r1, [r2, #10]	@ movhi
+ 117              	.L6:
+  75:..\src/user_ricnu_knee.c ****     }
+  76:..\src/user_ricnu_knee.c ****     
+  77:..\src/user_ricnu_knee.c ****     if (time == 2000) 
+ 118              		.loc 1 77 0
+ 119 0028 B3F5FA6F 		cmp	r3, #2000
+ 120 002c 0CD1     		bne	.L7
+  78:..\src/user_ricnu_knee.c ****     {
+  79:..\src/user_ricnu_knee.c ****         state = 1;
+ 121              		.loc 1 79 0
+ 122 002e 234B     		ldr	r3, .L12
+ 123 0030 0122     		movs	r2, #1
+ 124 0032 9A70     		strb	r2, [r3, #2]
+  80:..\src/user_ricnu_knee.c ****         tmp_posi = encoder.count;
+ 125              		.loc 1 80 0
+ 126 0034 224A     		ldr	r2, .L12+4
+ 127 0036 1268     		ldr	r2, [r2]
+ 128 0038 9A80     		strh	r2, [r3, #4]	@ movhi
+  81:..\src/user_ricnu_knee.c ****         tmp_posf = -2000;
+ 129              		.loc 1 81 0
+ 130 003a 4FF63002 		movw	r2, #63536
+ 131 003e DA80     		strh	r2, [r3, #6]	@ movhi
+  82:..\src/user_ricnu_knee.c ****         tmp_spdm = 20000;
+ 132              		.loc 1 82 0
+ 133 0040 44F62062 		movw	r2, #20000
+ 134 0044 1A81     		strh	r2, [r3, #8]	@ movhi
+  83:..\src/user_ricnu_knee.c ****         tmp_acc = 20000;
+ 135              		.loc 1 83 0
+ 136 0046 5A81     		strh	r2, [r3, #10]	@ movhi
+ 137              	.L7:
+  84:..\src/user_ricnu_knee.c ****     }    
+  85:..\src/user_ricnu_knee.c ****     
+  86:..\src/user_ricnu_knee.c **** 	switch(state)
+ 138              		.loc 1 86 0
+ 139 0048 1C4B     		ldr	r3, .L12
+ 140 004a 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+ 141 004c 13B1     		cbz	r3, .L9
+ 142 004e 012B     		cmp	r3, #1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 5
+
+
+ 143 0050 18D0     		beq	.L10
+ 144 0052 31E0     		b	.L5
+ 145              	.L9:
+  87:..\src/user_ricnu_knee.c **** 	{
+  88:..\src/user_ricnu_knee.c **** 		case 0:
+  89:..\src/user_ricnu_knee.c **** 			//Put some code here...
+  90:..\src/user_ricnu_knee.c ****             //Example: motor_open_speed_1(85);			//0% PWM
+  91:..\src/user_ricnu_knee.c ****             ctrl.position.posi = tmp_posi;
+ 146              		.loc 1 91 0
+ 147 0054 194C     		ldr	r4, .L12
+ 148 0056 A088     		ldrh	r0, [r4, #4]
+ 149 0058 1A4D     		ldr	r5, .L12+8
+ 150 005a 2866     		str	r0, [r5, #96]
+  92:..\src/user_ricnu_knee.c **** 			ctrl.position.posf = tmp_posf;
+ 151              		.loc 1 92 0
+ 152 005c E288     		ldrh	r2, [r4, #6]
+ 153 005e 6A66     		str	r2, [r5, #100]
+  93:..\src/user_ricnu_knee.c **** 			ctrl.position.spdm = tmp_spdm;
+ 154              		.loc 1 93 0
+ 155 0060 2189     		ldrh	r1, [r4, #8]
+ 156 0062 A966     		str	r1, [r5, #104]
+  94:..\src/user_ricnu_knee.c **** 			ctrl.position.acc = tmp_acc;
+ 157              		.loc 1 94 0
+ 158 0064 6389     		ldrh	r3, [r4, #10]
+ 159 0066 EB66     		str	r3, [r5, #108]
+  95:..\src/user_ricnu_knee.c ****             steps = trapez_gen_motion_1(tmp_posi, tmp_posf, tmp_spdm, tmp_acc);
+ 160              		.loc 1 95 0
+ 161 0068 0091     		str	r1, [sp]
+ 162 006a 0021     		movs	r1, #0
+ 163 006c 0191     		str	r1, [sp, #4]
+ 164 006e 0293     		str	r3, [sp, #8]
+ 165 0070 0391     		str	r1, [sp, #12]
+ 166 0072 0021     		movs	r1, #0
+ 167 0074 0023     		movs	r3, #0
+ 168 0076 FFF7FEFF 		bl	trapez_gen_motion_1
+ 169              	.LVL5:
+ 170 007a 134B     		ldr	r3, .L12+12
+ 171 007c 1860     		str	r0, [r3]
+  96:..\src/user_ricnu_knee.c **** 			state = 2;
+ 172              		.loc 1 96 0
+ 173 007e 0223     		movs	r3, #2
+ 174 0080 A370     		strb	r3, [r4, #2]
+  97:..\src/user_ricnu_knee.c ****             break;
+ 175              		.loc 1 97 0
+ 176 0082 19E0     		b	.L5
+ 177              	.L10:
+  98:..\src/user_ricnu_knee.c **** 		case 1:
+  99:..\src/user_ricnu_knee.c **** 			ctrl.position.posi = tmp_posi;
+ 178              		.loc 1 99 0
+ 179 0084 0D4C     		ldr	r4, .L12
+ 180 0086 A088     		ldrh	r0, [r4, #4]
+ 181 0088 0E4D     		ldr	r5, .L12+8
+ 182 008a 2866     		str	r0, [r5, #96]
+ 100:..\src/user_ricnu_knee.c **** 			ctrl.position.posf = tmp_posf;
+ 183              		.loc 1 100 0
+ 184 008c E288     		ldrh	r2, [r4, #6]
+ 185 008e 6A66     		str	r2, [r5, #100]
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 6
+
+
+ 101:..\src/user_ricnu_knee.c **** 			ctrl.position.spdm = tmp_spdm;
+ 186              		.loc 1 101 0
+ 187 0090 2189     		ldrh	r1, [r4, #8]
+ 188 0092 A966     		str	r1, [r5, #104]
+ 102:..\src/user_ricnu_knee.c **** 			ctrl.position.acc = tmp_acc;
+ 189              		.loc 1 102 0
+ 190 0094 6389     		ldrh	r3, [r4, #10]
+ 191 0096 EB66     		str	r3, [r5, #108]
+ 103:..\src/user_ricnu_knee.c ****             steps = trapez_gen_motion_1(tmp_posi, tmp_posf, tmp_spdm, tmp_acc);          
+ 192              		.loc 1 103 0
+ 193 0098 0091     		str	r1, [sp]
+ 194 009a 0021     		movs	r1, #0
+ 195 009c 0191     		str	r1, [sp, #4]
+ 196 009e 0293     		str	r3, [sp, #8]
+ 197 00a0 0391     		str	r1, [sp, #12]
+ 198 00a2 0021     		movs	r1, #0
+ 199 00a4 0023     		movs	r3, #0
+ 200 00a6 FFF7FEFF 		bl	trapez_gen_motion_1
+ 201              	.LVL6:
+ 202 00aa 074B     		ldr	r3, .L12+12
+ 203 00ac 1860     		str	r0, [r3]
+ 104:..\src/user_ricnu_knee.c ****             
+ 105:..\src/user_ricnu_knee.c ****             time = -1000;
+ 204              		.loc 1 105 0
+ 205 00ae 4FF61843 		movw	r3, #64536
+ 206 00b2 2380     		strh	r3, [r4]	@ movhi
+ 106:..\src/user_ricnu_knee.c ****             state = 2;
+ 207              		.loc 1 106 0
+ 208 00b4 0223     		movs	r3, #2
+ 209 00b6 A370     		strb	r3, [r4, #2]
+ 210              	.L5:
+ 107:..\src/user_ricnu_knee.c ****             break;
+ 108:..\src/user_ricnu_knee.c ****         case 2:
+ 109:..\src/user_ricnu_knee.c ****             break;
+ 110:..\src/user_ricnu_knee.c ****         default:
+ 111:..\src/user_ricnu_knee.c **** 			//Handle exceptions here
+ 112:..\src/user_ricnu_knee.c **** 			break;
+ 113:..\src/user_ricnu_knee.c **** 	}
+ 114:..\src/user_ricnu_knee.c **** }
+ 211              		.loc 1 114 0
+ 212 00b8 05B0     		add	sp, sp, #20
+ 213              		.cfi_def_cfa_offset 12
+ 214              		@ sp needed
+ 215 00ba 30BD     		pop	{r4, r5, pc}
+ 216              	.L13:
+ 217              		.align	2
+ 218              	.L12:
+ 219 00bc 00000000 		.word	.LANCHOR0
+ 220 00c0 00000000 		.word	encoder
+ 221 00c4 00000000 		.word	ctrl
+ 222 00c8 00000000 		.word	steps
+ 223              		.cfi_endproc
+ 224              	.LFE64:
+ 225              		.size	ricnu_knee_fsm, .-ricnu_knee_fsm
+ 226              		.bss
+ 227              		.align	1
+ 228              		.set	.LANCHOR0,. + 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 7
+
+
+ 229              		.type	time.10476, %object
+ 230              		.size	time.10476, 2
+ 231              	time.10476:
+ 232 0000 0000     		.space	2
+ 233              		.type	state.10477, %object
+ 234              		.size	state.10477, 1
+ 235              	state.10477:
+ 236 0002 00       		.space	1
+ 237 0003 00       		.space	1
+ 238              		.type	tmp_posi.10478, %object
+ 239              		.size	tmp_posi.10478, 2
+ 240              	tmp_posi.10478:
+ 241 0004 0000     		.space	2
+ 242              		.type	tmp_posf.10479, %object
+ 243              		.size	tmp_posf.10479, 2
+ 244              	tmp_posf.10479:
+ 245 0006 0000     		.space	2
+ 246              		.type	tmp_spdm.10480, %object
+ 247              		.size	tmp_spdm.10480, 2
+ 248              	tmp_spdm.10480:
+ 249 0008 0000     		.space	2
+ 250              		.type	tmp_acc.10481, %object
+ 251              		.size	tmp_acc.10481, 2
+ 252              	tmp_acc.10481:
+ 253 000a 0000     		.space	2
+ 254              		.text
+ 255              	.Letext0:
+ 256              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 257              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 258              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 259              		.file 5 "..\\inc/../../flexsea-system/inc/flexsea_cmd_control.h"
+ 260              		.file 6 "Generated_Source\\PSoC5/core_cm3.h"
+ 261              		.file 7 "..\\inc/main_fsm.h"
+ 262              		.file 8 "..\\inc/control.h"
+ 263              		.file 9 "..\\inc/ext_input.h"
+ 264              		.file 10 "..\\inc/motor.h"
+ 265              		.file 11 "Generated_Source\\PSoC5/Coast_Brake.h"
+ 266              		.file 12 "Generated_Source\\PSoC5/LED_R.h"
+ 267              		.file 13 "Generated_Source\\PSoC5/LED_G.h"
+ 268              		.file 14 "Generated_Source\\PSoC5/LED_B.h"
+ 269              		.file 15 "..\\inc/trapez.h"
+ 270              		.section	.debug_info,"",%progbits
+ 271              	.Ldebug_info0:
+ 272 0000 82040000 		.4byte	0x482
+ 273 0004 0400     		.2byte	0x4
+ 274 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 275 000a 04       		.byte	0x4
+ 276 000b 01       		.uleb128 0x1
+ 277 000c AA020000 		.4byte	.LASF68
+ 278 0010 01       		.byte	0x1
+ 279 0011 5C000000 		.4byte	.LASF69
+ 280 0015 89000000 		.4byte	.LASF70
+ 281 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 282 001d 00000000 		.4byte	0
+ 283 0021 00000000 		.4byte	.Ldebug_line0
+ 284 0025 02       		.uleb128 0x2
+ 285 0026 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 8
+
+
+ 286 0027 06       		.byte	0x6
+ 287 0028 AA010000 		.4byte	.LASF0
+ 288 002c 03       		.uleb128 0x3
+ 289 002d 65010000 		.4byte	.LASF3
+ 290 0031 02       		.byte	0x2
+ 291 0032 1D       		.byte	0x1d
+ 292 0033 37000000 		.4byte	0x37
+ 293 0037 02       		.uleb128 0x2
+ 294 0038 01       		.byte	0x1
+ 295 0039 08       		.byte	0x8
+ 296 003a 9C010000 		.4byte	.LASF1
+ 297 003e 02       		.uleb128 0x2
+ 298 003f 02       		.byte	0x2
+ 299 0040 05       		.byte	0x5
+ 300 0041 44000000 		.4byte	.LASF2
+ 301 0045 03       		.uleb128 0x3
+ 302 0046 75000000 		.4byte	.LASF4
+ 303 004a 02       		.byte	0x2
+ 304 004b 2B       		.byte	0x2b
+ 305 004c 50000000 		.4byte	0x50
+ 306 0050 02       		.uleb128 0x2
+ 307 0051 02       		.byte	0x2
+ 308 0052 07       		.byte	0x7
+ 309 0053 07020000 		.4byte	.LASF5
+ 310 0057 03       		.uleb128 0x3
+ 311 0058 A0020000 		.4byte	.LASF6
+ 312 005c 02       		.byte	0x2
+ 313 005d 3F       		.byte	0x3f
+ 314 005e 62000000 		.4byte	0x62
+ 315 0062 02       		.uleb128 0x2
+ 316 0063 04       		.byte	0x4
+ 317 0064 05       		.byte	0x5
+ 318 0065 4A010000 		.4byte	.LASF7
+ 319 0069 03       		.uleb128 0x3
+ 320 006a 8F020000 		.4byte	.LASF8
+ 321 006e 02       		.byte	0x2
+ 322 006f 41       		.byte	0x41
+ 323 0070 74000000 		.4byte	0x74
+ 324 0074 02       		.uleb128 0x2
+ 325 0075 04       		.byte	0x4
+ 326 0076 07       		.byte	0x7
+ 327 0077 53010000 		.4byte	.LASF9
+ 328 007b 02       		.uleb128 0x2
+ 329 007c 08       		.byte	0x8
+ 330 007d 05       		.byte	0x5
+ 331 007e 2A010000 		.4byte	.LASF10
+ 332 0082 02       		.uleb128 0x2
+ 333 0083 08       		.byte	0x8
+ 334 0084 07       		.byte	0x7
+ 335 0085 B6010000 		.4byte	.LASF11
+ 336 0089 04       		.uleb128 0x4
+ 337 008a 04       		.byte	0x4
+ 338 008b 05       		.byte	0x5
+ 339 008c 696E7400 		.ascii	"int\000"
+ 340 0090 02       		.uleb128 0x2
+ 341 0091 04       		.byte	0x4
+ 342 0092 07       		.byte	0x7
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 9
+
+
+ 343 0093 D6010000 		.4byte	.LASF12
+ 344 0097 03       		.uleb128 0x3
+ 345 0098 D5000000 		.4byte	.LASF13
+ 346 009c 03       		.byte	0x3
+ 347 009d 15       		.byte	0x15
+ 348 009e 2C000000 		.4byte	0x2c
+ 349 00a2 03       		.uleb128 0x3
+ 350 00a3 E3010000 		.4byte	.LASF14
+ 351 00a7 03       		.byte	0x3
+ 352 00a8 21       		.byte	0x21
+ 353 00a9 45000000 		.4byte	0x45
+ 354 00ad 03       		.uleb128 0x3
+ 355 00ae 34020000 		.4byte	.LASF15
+ 356 00b2 03       		.byte	0x3
+ 357 00b3 2C       		.byte	0x2c
+ 358 00b4 57000000 		.4byte	0x57
+ 359 00b8 03       		.uleb128 0x3
+ 360 00b9 CD010000 		.4byte	.LASF16
+ 361 00bd 03       		.byte	0x3
+ 362 00be 2D       		.byte	0x2d
+ 363 00bf 69000000 		.4byte	0x69
+ 364 00c3 03       		.uleb128 0x3
+ 365 00c4 E3000000 		.4byte	.LASF17
+ 366 00c8 04       		.byte	0x4
+ 367 00c9 C2       		.byte	0xc2
+ 368 00ca 37000000 		.4byte	0x37
+ 369 00ce 03       		.uleb128 0x3
+ 370 00cf 6B020000 		.4byte	.LASF18
+ 371 00d3 04       		.byte	0x4
+ 372 00d4 C3       		.byte	0xc3
+ 373 00d5 50000000 		.4byte	0x50
+ 374 00d9 03       		.uleb128 0x3
+ 375 00da DD000000 		.4byte	.LASF19
+ 376 00de 04       		.byte	0x4
+ 377 00df C6       		.byte	0xc6
+ 378 00e0 3E000000 		.4byte	0x3e
+ 379 00e4 02       		.uleb128 0x2
+ 380 00e5 04       		.byte	0x4
+ 381 00e6 04       		.byte	0x4
+ 382 00e7 13010000 		.4byte	.LASF20
+ 383 00eb 02       		.uleb128 0x2
+ 384 00ec 08       		.byte	0x8
+ 385 00ed 04       		.byte	0x4
+ 386 00ee 53030000 		.4byte	.LASF21
+ 387 00f2 02       		.uleb128 0x2
+ 388 00f3 01       		.byte	0x1
+ 389 00f4 08       		.byte	0x8
+ 390 00f5 25020000 		.4byte	.LASF22
+ 391 00f9 02       		.uleb128 0x2
+ 392 00fa 04       		.byte	0x4
+ 393 00fb 07       		.byte	0x7
+ 394 00fc 4E000000 		.4byte	.LASF23
+ 395 0100 02       		.uleb128 0x2
+ 396 0101 08       		.byte	0x8
+ 397 0102 04       		.byte	0x4
+ 398 0103 80010000 		.4byte	.LASF24
+ 399 0107 05       		.uleb128 0x5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 10
+
+
+ 400 0108 1E000000 		.4byte	.LASF25
+ 401 010c 0C       		.byte	0xc
+ 402 010d 05       		.byte	0x5
+ 403 010e 43       		.byte	0x43
+ 404 010f 56010000 		.4byte	0x156
+ 405 0113 06       		.uleb128 0x6
+ 406 0114 673000   		.ascii	"g0\000"
+ 407 0117 05       		.byte	0x5
+ 408 0118 45       		.byte	0x45
+ 409 0119 A2000000 		.4byte	0xa2
+ 410 011d 00       		.byte	0
+ 411 011e 06       		.uleb128 0x6
+ 412 011f 673100   		.ascii	"g1\000"
+ 413 0122 05       		.byte	0x5
+ 414 0123 45       		.byte	0x45
+ 415 0124 A2000000 		.4byte	0xa2
+ 416 0128 02       		.byte	0x2
+ 417 0129 06       		.uleb128 0x6
+ 418 012a 673200   		.ascii	"g2\000"
+ 419 012d 05       		.byte	0x5
+ 420 012e 45       		.byte	0x45
+ 421 012f A2000000 		.4byte	0xa2
+ 422 0133 04       		.byte	0x4
+ 423 0134 06       		.uleb128 0x6
+ 424 0135 673300   		.ascii	"g3\000"
+ 425 0138 05       		.byte	0x5
+ 426 0139 45       		.byte	0x45
+ 427 013a A2000000 		.4byte	0xa2
+ 428 013e 06       		.byte	0x6
+ 429 013f 06       		.uleb128 0x6
+ 430 0140 673400   		.ascii	"g4\000"
+ 431 0143 05       		.byte	0x5
+ 432 0144 45       		.byte	0x45
+ 433 0145 A2000000 		.4byte	0xa2
+ 434 0149 08       		.byte	0x8
+ 435 014a 06       		.uleb128 0x6
+ 436 014b 673500   		.ascii	"g5\000"
+ 437 014e 05       		.byte	0x5
+ 438 014f 45       		.byte	0x45
+ 439 0150 A2000000 		.4byte	0xa2
+ 440 0154 0A       		.byte	0xa
+ 441 0155 00       		.byte	0
+ 442 0156 05       		.uleb128 0x5
+ 443 0157 75010000 		.4byte	.LASF26
+ 444 015b 24       		.byte	0x24
+ 445 015c 05       		.byte	0x5
+ 446 015d 49       		.byte	0x49
+ 447 015e B7010000 		.4byte	0x1b7
+ 448 0162 07       		.uleb128 0x7
+ 449 0163 FC010000 		.4byte	.LASF27
+ 450 0167 05       		.byte	0x5
+ 451 0168 4C       		.byte	0x4c
+ 452 0169 07010000 		.4byte	0x107
+ 453 016d 00       		.byte	0
+ 454 016e 07       		.uleb128 0x7
+ 455 016f 39000000 		.4byte	.LASF28
+ 456 0173 05       		.byte	0x5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 11
+
+
+ 457 0174 4F       		.byte	0x4f
+ 458 0175 AD000000 		.4byte	0xad
+ 459 0179 0C       		.byte	0xc
+ 460 017a 07       		.uleb128 0x7
+ 461 017b 46030000 		.4byte	.LASF29
+ 462 017f 05       		.byte	0x5
+ 463 0180 50       		.byte	0x50
+ 464 0181 AD000000 		.4byte	0xad
+ 465 0185 10       		.byte	0x10
+ 466 0186 07       		.uleb128 0x7
+ 467 0187 40030000 		.4byte	.LASF30
+ 468 018b 05       		.byte	0x5
+ 469 018c 53       		.byte	0x53
+ 470 018d AD000000 		.4byte	0xad
+ 471 0191 14       		.byte	0x14
+ 472 0192 07       		.uleb128 0x7
+ 473 0193 F1010000 		.4byte	.LASF31
+ 474 0197 05       		.byte	0x5
+ 475 0198 54       		.byte	0x54
+ 476 0199 AD000000 		.4byte	0xad
+ 477 019d 18       		.byte	0x18
+ 478 019e 07       		.uleb128 0x7
+ 479 019f 2A020000 		.4byte	.LASF32
+ 480 01a3 05       		.byte	0x5
+ 481 01a4 55       		.byte	0x55
+ 482 01a5 AD000000 		.4byte	0xad
+ 483 01a9 1C       		.byte	0x1c
+ 484 01aa 07       		.uleb128 0x7
+ 485 01ab 71030000 		.4byte	.LASF33
+ 486 01af 05       		.byte	0x5
+ 487 01b0 56       		.byte	0x56
+ 488 01b1 AD000000 		.4byte	0xad
+ 489 01b5 20       		.byte	0x20
+ 490 01b6 00       		.byte	0
+ 491 01b7 05       		.uleb128 0x5
+ 492 01b8 1A020000 		.4byte	.LASF34
+ 493 01bc 34       		.byte	0x34
+ 494 01bd 05       		.byte	0x5
+ 495 01be 5A       		.byte	0x5a
+ 496 01bf 48020000 		.4byte	0x248
+ 497 01c3 07       		.uleb128 0x7
+ 498 01c4 FC010000 		.4byte	.LASF27
+ 499 01c8 05       		.byte	0x5
+ 500 01c9 5D       		.byte	0x5d
+ 501 01ca 07010000 		.4byte	0x107
+ 502 01ce 00       		.byte	0
+ 503 01cf 06       		.uleb128 0x6
+ 504 01d0 706F7300 		.ascii	"pos\000"
+ 505 01d4 05       		.byte	0x5
+ 506 01d5 60       		.byte	0x60
+ 507 01d6 AD000000 		.4byte	0xad
+ 508 01da 0C       		.byte	0xc
+ 509 01db 07       		.uleb128 0x7
+ 510 01dc 5C020000 		.4byte	.LASF35
+ 511 01e0 05       		.byte	0x5
+ 512 01e1 61       		.byte	0x61
+ 513 01e2 AD000000 		.4byte	0xad
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 12
+
+
+ 514 01e6 10       		.byte	0x10
+ 515 01e7 07       		.uleb128 0x7
+ 516 01e8 6C030000 		.4byte	.LASF36
+ 517 01ec 05       		.byte	0x5
+ 518 01ed 62       		.byte	0x62
+ 519 01ee AD000000 		.4byte	0xad
+ 520 01f2 14       		.byte	0x14
+ 521 01f3 07       		.uleb128 0x7
+ 522 01f4 67030000 		.4byte	.LASF37
+ 523 01f8 05       		.byte	0x5
+ 524 01f9 63       		.byte	0x63
+ 525 01fa AD000000 		.4byte	0xad
+ 526 01fe 18       		.byte	0x18
+ 527 01ff 07       		.uleb128 0x7
+ 528 0200 57000000 		.4byte	.LASF38
+ 529 0204 05       		.byte	0x5
+ 530 0205 64       		.byte	0x64
+ 531 0206 AD000000 		.4byte	0xad
+ 532 020a 1C       		.byte	0x1c
+ 533 020b 06       		.uleb128 0x6
+ 534 020c 61636300 		.ascii	"acc\000"
+ 535 0210 05       		.byte	0x5
+ 536 0211 65       		.byte	0x65
+ 537 0212 AD000000 		.4byte	0xad
+ 538 0216 20       		.byte	0x20
+ 539 0217 07       		.uleb128 0x7
+ 540 0218 40030000 		.4byte	.LASF30
+ 541 021c 05       		.byte	0x5
+ 542 021d 68       		.byte	0x68
+ 543 021e AD000000 		.4byte	0xad
+ 544 0222 24       		.byte	0x24
+ 545 0223 07       		.uleb128 0x7
+ 546 0224 F1010000 		.4byte	.LASF31
+ 547 0228 05       		.byte	0x5
+ 548 0229 69       		.byte	0x69
+ 549 022a AD000000 		.4byte	0xad
+ 550 022e 28       		.byte	0x28
+ 551 022f 07       		.uleb128 0x7
+ 552 0230 2A020000 		.4byte	.LASF32
+ 553 0234 05       		.byte	0x5
+ 554 0235 6A       		.byte	0x6a
+ 555 0236 AD000000 		.4byte	0xad
+ 556 023a 2C       		.byte	0x2c
+ 557 023b 07       		.uleb128 0x7
+ 558 023c 71030000 		.4byte	.LASF33
+ 559 0240 05       		.byte	0x5
+ 560 0241 6B       		.byte	0x6b
+ 561 0242 AD000000 		.4byte	0xad
+ 562 0246 30       		.byte	0x30
+ 563 0247 00       		.byte	0
+ 564 0248 05       		.uleb128 0x5
+ 565 0249 3C020000 		.4byte	.LASF39
+ 566 024d A4       		.byte	0xa4
+ 567 024e 05       		.byte	0x5
+ 568 024f 6F       		.byte	0x6f
+ 569 0250 9D020000 		.4byte	0x29d
+ 570 0254 07       		.uleb128 0x7
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 13
+
+
+ 571 0255 72020000 		.4byte	.LASF40
+ 572 0259 05       		.byte	0x5
+ 573 025a 71       		.byte	0x71
+ 574 025b 97000000 		.4byte	0x97
+ 575 025f 00       		.byte	0
+ 576 0260 06       		.uleb128 0x6
+ 577 0261 70776D00 		.ascii	"pwm\000"
+ 578 0265 05       		.byte	0x5
+ 579 0266 72       		.byte	0x72
+ 580 0267 97000000 		.4byte	0x97
+ 581 026b 01       		.byte	0x1
+ 582 026c 07       		.uleb128 0x7
+ 583 026d 43020000 		.4byte	.LASF41
+ 584 0271 05       		.byte	0x5
+ 585 0272 73       		.byte	0x73
+ 586 0273 56010000 		.4byte	0x156
+ 587 0277 04       		.byte	0x4
+ 588 0278 07       		.uleb128 0x7
+ 589 0279 B7000000 		.4byte	.LASF42
+ 590 027d 05       		.byte	0x5
+ 591 027e 74       		.byte	0x74
+ 592 027f 56010000 		.4byte	0x156
+ 593 0283 28       		.byte	0x28
+ 594 0284 07       		.uleb128 0x7
+ 595 0285 80000000 		.4byte	.LASF43
+ 596 0289 05       		.byte	0x5
+ 597 028a 75       		.byte	0x75
+ 598 028b B7010000 		.4byte	0x1b7
+ 599 028f 4C       		.byte	0x4c
+ 600 0290 07       		.uleb128 0x7
+ 601 0291 CB000000 		.4byte	.LASF44
+ 602 0295 05       		.byte	0x5
+ 603 0296 76       		.byte	0x76
+ 604 0297 56010000 		.4byte	0x156
+ 605 029b 80       		.byte	0x80
+ 606 029c 00       		.byte	0
+ 607 029d 05       		.uleb128 0x5
+ 608 029e 24010000 		.4byte	.LASF45
+ 609 02a2 10       		.byte	0x10
+ 610 02a3 05       		.byte	0x5
+ 611 02a4 7A       		.byte	0x7a
+ 612 02a5 DA020000 		.4byte	0x2da
+ 613 02a9 07       		.uleb128 0x7
+ 614 02aa 9A020000 		.4byte	.LASF46
+ 615 02ae 05       		.byte	0x5
+ 616 02af 7C       		.byte	0x7c
+ 617 02b0 AD000000 		.4byte	0xad
+ 618 02b4 00       		.byte	0
+ 619 02b5 07       		.uleb128 0x7
+ 620 02b6 19010000 		.4byte	.LASF47
+ 621 02ba 05       		.byte	0x5
+ 622 02bb 7D       		.byte	0x7d
+ 623 02bc AD000000 		.4byte	0xad
+ 624 02c0 04       		.byte	0x4
+ 625 02c1 07       		.uleb128 0x7
+ 626 02c2 61020000 		.4byte	.LASF48
+ 627 02c6 05       		.byte	0x5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 14
+
+
+ 628 02c7 7E       		.byte	0x7e
+ 629 02c8 AD000000 		.4byte	0xad
+ 630 02cc 08       		.byte	0x8
+ 631 02cd 07       		.uleb128 0x7
+ 632 02ce FD000000 		.4byte	.LASF49
+ 633 02d2 05       		.byte	0x5
+ 634 02d3 7F       		.byte	0x7f
+ 635 02d4 B8000000 		.4byte	0xb8
+ 636 02d8 0C       		.byte	0xc
+ 637 02d9 00       		.byte	0
+ 638 02da 08       		.uleb128 0x8
+ 639 02db 8C010000 		.4byte	.LASF50
+ 640 02df 01       		.byte	0x1
+ 641 02e0 20       		.byte	0x20
+ 642 02e1 00000000 		.4byte	.LFB63
+ 643 02e5 38000000 		.4byte	.LFE63-.LFB63
+ 644 02e9 01       		.uleb128 0x1
+ 645 02ea 9C       		.byte	0x9c
+ 646 02eb 4B030000 		.4byte	0x34b
+ 647 02ef 09       		.uleb128 0x9
+ 648 02f0 0E000000 		.4byte	.LVL0
+ 649 02f4 10040000 		.4byte	0x410
+ 650 02f8 02030000 		.4byte	0x302
+ 651 02fc 0A       		.uleb128 0xa
+ 652 02fd 01       		.uleb128 0x1
+ 653 02fe 50       		.byte	0x50
+ 654 02ff 01       		.uleb128 0x1
+ 655 0300 30       		.byte	0x30
+ 656 0301 00       		.byte	0
+ 657 0302 09       		.uleb128 0x9
+ 658 0303 14000000 		.4byte	.LVL1
+ 659 0307 21040000 		.4byte	0x421
+ 660 030b 15030000 		.4byte	0x315
+ 661 030f 0A       		.uleb128 0xa
+ 662 0310 01       		.uleb128 0x1
+ 663 0311 50       		.byte	0x50
+ 664 0312 01       		.uleb128 0x1
+ 665 0313 31       		.byte	0x31
+ 666 0314 00       		.byte	0
+ 667 0315 09       		.uleb128 0x9
+ 668 0316 26000000 		.4byte	.LVL2
+ 669 031a 32040000 		.4byte	0x432
+ 670 031e 28030000 		.4byte	0x328
+ 671 0322 0A       		.uleb128 0xa
+ 672 0323 01       		.uleb128 0x1
+ 673 0324 50       		.byte	0x50
+ 674 0325 01       		.uleb128 0x1
+ 675 0326 31       		.byte	0x31
+ 676 0327 00       		.byte	0
+ 677 0328 09       		.uleb128 0x9
+ 678 0329 2C000000 		.4byte	.LVL3
+ 679 032d 43040000 		.4byte	0x443
+ 680 0331 3B030000 		.4byte	0x33b
+ 681 0335 0A       		.uleb128 0xa
+ 682 0336 01       		.uleb128 0x1
+ 683 0337 50       		.byte	0x50
+ 684 0338 01       		.uleb128 0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 15
+
+
+ 685 0339 31       		.byte	0x31
+ 686 033a 00       		.byte	0
+ 687 033b 0B       		.uleb128 0xb
+ 688 033c 32000000 		.4byte	.LVL4
+ 689 0340 54040000 		.4byte	0x454
+ 690 0344 0A       		.uleb128 0xa
+ 691 0345 01       		.uleb128 0x1
+ 692 0346 50       		.byte	0x50
+ 693 0347 01       		.uleb128 0x1
+ 694 0348 31       		.byte	0x31
+ 695 0349 00       		.byte	0
+ 696 034a 00       		.byte	0
+ 697 034b 08       		.uleb128 0x8
+ 698 034c 04010000 		.4byte	.LASF51
+ 699 0350 01       		.byte	0x1
+ 700 0351 35       		.byte	0x35
+ 701 0352 00000000 		.4byte	.LFB64
+ 702 0356 CC000000 		.4byte	.LFE64-.LFB64
+ 703 035a 01       		.uleb128 0x1
+ 704 035b 9C       		.byte	0x9c
+ 705 035c D9030000 		.4byte	0x3d9
+ 706 0360 0C       		.uleb128 0xc
+ 707 0361 EC010000 		.4byte	.LASF52
+ 708 0365 01       		.byte	0x1
+ 709 0366 37       		.byte	0x37
+ 710 0367 CE000000 		.4byte	0xce
+ 711 036b 05       		.uleb128 0x5
+ 712 036c 03       		.byte	0x3
+ 713 036d 00000000 		.4byte	time.10476
+ 714 0371 0C       		.uleb128 0xc
+ 715 0372 6F010000 		.4byte	.LASF53
+ 716 0376 01       		.byte	0x1
+ 717 0377 38       		.byte	0x38
+ 718 0378 C3000000 		.4byte	0xc3
+ 719 037c 05       		.uleb128 0x5
+ 720 037d 03       		.byte	0x3
+ 721 037e 02000000 		.4byte	state.10477
+ 722 0382 0C       		.uleb128 0xc
+ 723 0383 09000000 		.4byte	.LASF54
+ 724 0387 01       		.byte	0x1
+ 725 0388 39       		.byte	0x39
+ 726 0389 CE000000 		.4byte	0xce
+ 727 038d 05       		.uleb128 0x5
+ 728 038e 03       		.byte	0x3
+ 729 038f 04000000 		.4byte	tmp_posi.10478
+ 730 0393 0C       		.uleb128 0xc
+ 731 0394 00000000 		.4byte	.LASF55
+ 732 0398 01       		.byte	0x1
+ 733 0399 3A       		.byte	0x3a
+ 734 039a CE000000 		.4byte	0xce
+ 735 039e 05       		.uleb128 0x5
+ 736 039f 03       		.byte	0x3
+ 737 03a0 06000000 		.4byte	tmp_posf.10479
+ 738 03a4 0C       		.uleb128 0xc
+ 739 03a5 53020000 		.4byte	.LASF56
+ 740 03a9 01       		.byte	0x1
+ 741 03aa 3B       		.byte	0x3b
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 16
+
+
+ 742 03ab CE000000 		.4byte	0xce
+ 743 03af 05       		.uleb128 0x5
+ 744 03b0 03       		.byte	0x3
+ 745 03b1 08000000 		.4byte	tmp_spdm.10480
+ 746 03b5 0C       		.uleb128 0xc
+ 747 03b6 4B020000 		.4byte	.LASF57
+ 748 03ba 01       		.byte	0x1
+ 749 03bb 3C       		.byte	0x3c
+ 750 03bc CE000000 		.4byte	0xce
+ 751 03c0 05       		.uleb128 0x5
+ 752 03c1 03       		.byte	0x3
+ 753 03c2 0A000000 		.4byte	tmp_acc.10481
+ 754 03c6 0D       		.uleb128 0xd
+ 755 03c7 7A000000 		.4byte	.LVL5
+ 756 03cb 65040000 		.4byte	0x465
+ 757 03cf 0D       		.uleb128 0xd
+ 758 03d0 AA000000 		.4byte	.LVL6
+ 759 03d4 65040000 		.4byte	0x465
+ 760 03d8 00       		.byte	0
+ 761 03d9 0E       		.uleb128 0xe
+ 762 03da 5A030000 		.4byte	.LASF58
+ 763 03de 06       		.byte	0x6
+ 764 03df 2A06     		.2byte	0x62a
+ 765 03e1 E5030000 		.4byte	0x3e5
+ 766 03e5 0F       		.uleb128 0xf
+ 767 03e6 AD000000 		.4byte	0xad
+ 768 03ea 10       		.uleb128 0x10
+ 769 03eb 01020000 		.4byte	.LASF59
+ 770 03ef 07       		.byte	0x7
+ 771 03f0 17       		.byte	0x17
+ 772 03f1 89000000 		.4byte	0x89
+ 773 03f5 10       		.uleb128 0x10
+ 774 03f6 8A020000 		.4byte	.LASF60
+ 775 03fa 08       		.byte	0x8
+ 776 03fb 17       		.byte	0x17
+ 777 03fc 00040000 		.4byte	0x400
+ 778 0400 0F       		.uleb128 0xf
+ 779 0401 48020000 		.4byte	0x248
+ 780 0405 10       		.uleb128 0x10
+ 781 0406 38030000 		.4byte	.LASF61
+ 782 040a 09       		.byte	0x9
+ 783 040b 17       		.byte	0x17
+ 784 040c 9D020000 		.4byte	0x29d
+ 785 0410 11       		.uleb128 0x11
+ 786 0411 26000000 		.4byte	.LASF62
+ 787 0415 0A       		.byte	0xa
+ 788 0416 1C       		.byte	0x1c
+ 789 0417 21040000 		.4byte	0x421
+ 790 041b 12       		.uleb128 0x12
+ 791 041c D9000000 		.4byte	0xd9
+ 792 0420 00       		.byte	0
+ 793 0421 11       		.uleb128 0x11
+ 794 0422 38010000 		.4byte	.LASF63
+ 795 0426 0B       		.byte	0xb
+ 796 0427 27       		.byte	0x27
+ 797 0428 32040000 		.4byte	0x432
+ 798 042c 12       		.uleb128 0x12
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 17
+
+
+ 799 042d C3000000 		.4byte	0xc3
+ 800 0431 00       		.byte	0
+ 801 0432 11       		.uleb128 0x11
+ 802 0433 BF000000 		.4byte	.LASF64
+ 803 0437 0C       		.byte	0xc
+ 804 0438 28       		.byte	0x28
+ 805 0439 43040000 		.4byte	0x443
+ 806 043d 12       		.uleb128 0x12
+ 807 043e C3000000 		.4byte	0xc3
+ 808 0442 00       		.byte	0
+ 809 0443 11       		.uleb128 0x11
+ 810 0444 7E020000 		.4byte	.LASF65
+ 811 0448 0D       		.byte	0xd
+ 812 0449 28       		.byte	0x28
+ 813 044a 54040000 		.4byte	0x454
+ 814 044e 12       		.uleb128 0x12
+ 815 044f C3000000 		.4byte	0xc3
+ 816 0453 00       		.byte	0
+ 817 0454 11       		.uleb128 0x11
+ 818 0455 12000000 		.4byte	.LASF66
+ 819 0459 0E       		.byte	0xe
+ 820 045a 28       		.byte	0x28
+ 821 045b 65040000 		.4byte	0x465
+ 822 045f 12       		.uleb128 0x12
+ 823 0460 C3000000 		.4byte	0xc3
+ 824 0464 00       		.byte	0
+ 825 0465 13       		.uleb128 0x13
+ 826 0466 E9000000 		.4byte	.LASF67
+ 827 046a 0F       		.byte	0xf
+ 828 046b 15       		.byte	0x15
+ 829 046c 7B000000 		.4byte	0x7b
+ 830 0470 12       		.uleb128 0x12
+ 831 0471 7B000000 		.4byte	0x7b
+ 832 0475 12       		.uleb128 0x12
+ 833 0476 7B000000 		.4byte	0x7b
+ 834 047a 12       		.uleb128 0x12
+ 835 047b 7B000000 		.4byte	0x7b
+ 836 047f 12       		.uleb128 0x12
+ 837 0480 7B000000 		.4byte	0x7b
+ 838 0484 00       		.byte	0
+ 839 0485 00       		.byte	0
+ 840              		.section	.debug_abbrev,"",%progbits
+ 841              	.Ldebug_abbrev0:
+ 842 0000 01       		.uleb128 0x1
+ 843 0001 11       		.uleb128 0x11
+ 844 0002 01       		.byte	0x1
+ 845 0003 25       		.uleb128 0x25
+ 846 0004 0E       		.uleb128 0xe
+ 847 0005 13       		.uleb128 0x13
+ 848 0006 0B       		.uleb128 0xb
+ 849 0007 03       		.uleb128 0x3
+ 850 0008 0E       		.uleb128 0xe
+ 851 0009 1B       		.uleb128 0x1b
+ 852 000a 0E       		.uleb128 0xe
+ 853 000b 55       		.uleb128 0x55
+ 854 000c 17       		.uleb128 0x17
+ 855 000d 11       		.uleb128 0x11
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 18
+
+
+ 856 000e 01       		.uleb128 0x1
+ 857 000f 10       		.uleb128 0x10
+ 858 0010 17       		.uleb128 0x17
+ 859 0011 00       		.byte	0
+ 860 0012 00       		.byte	0
+ 861 0013 02       		.uleb128 0x2
+ 862 0014 24       		.uleb128 0x24
+ 863 0015 00       		.byte	0
+ 864 0016 0B       		.uleb128 0xb
+ 865 0017 0B       		.uleb128 0xb
+ 866 0018 3E       		.uleb128 0x3e
+ 867 0019 0B       		.uleb128 0xb
+ 868 001a 03       		.uleb128 0x3
+ 869 001b 0E       		.uleb128 0xe
+ 870 001c 00       		.byte	0
+ 871 001d 00       		.byte	0
+ 872 001e 03       		.uleb128 0x3
+ 873 001f 16       		.uleb128 0x16
+ 874 0020 00       		.byte	0
+ 875 0021 03       		.uleb128 0x3
+ 876 0022 0E       		.uleb128 0xe
+ 877 0023 3A       		.uleb128 0x3a
+ 878 0024 0B       		.uleb128 0xb
+ 879 0025 3B       		.uleb128 0x3b
+ 880 0026 0B       		.uleb128 0xb
+ 881 0027 49       		.uleb128 0x49
+ 882 0028 13       		.uleb128 0x13
+ 883 0029 00       		.byte	0
+ 884 002a 00       		.byte	0
+ 885 002b 04       		.uleb128 0x4
+ 886 002c 24       		.uleb128 0x24
+ 887 002d 00       		.byte	0
+ 888 002e 0B       		.uleb128 0xb
+ 889 002f 0B       		.uleb128 0xb
+ 890 0030 3E       		.uleb128 0x3e
+ 891 0031 0B       		.uleb128 0xb
+ 892 0032 03       		.uleb128 0x3
+ 893 0033 08       		.uleb128 0x8
+ 894 0034 00       		.byte	0
+ 895 0035 00       		.byte	0
+ 896 0036 05       		.uleb128 0x5
+ 897 0037 13       		.uleb128 0x13
+ 898 0038 01       		.byte	0x1
+ 899 0039 03       		.uleb128 0x3
+ 900 003a 0E       		.uleb128 0xe
+ 901 003b 0B       		.uleb128 0xb
+ 902 003c 0B       		.uleb128 0xb
+ 903 003d 3A       		.uleb128 0x3a
+ 904 003e 0B       		.uleb128 0xb
+ 905 003f 3B       		.uleb128 0x3b
+ 906 0040 0B       		.uleb128 0xb
+ 907 0041 01       		.uleb128 0x1
+ 908 0042 13       		.uleb128 0x13
+ 909 0043 00       		.byte	0
+ 910 0044 00       		.byte	0
+ 911 0045 06       		.uleb128 0x6
+ 912 0046 0D       		.uleb128 0xd
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 19
+
+
+ 913 0047 00       		.byte	0
+ 914 0048 03       		.uleb128 0x3
+ 915 0049 08       		.uleb128 0x8
+ 916 004a 3A       		.uleb128 0x3a
+ 917 004b 0B       		.uleb128 0xb
+ 918 004c 3B       		.uleb128 0x3b
+ 919 004d 0B       		.uleb128 0xb
+ 920 004e 49       		.uleb128 0x49
+ 921 004f 13       		.uleb128 0x13
+ 922 0050 38       		.uleb128 0x38
+ 923 0051 0B       		.uleb128 0xb
+ 924 0052 00       		.byte	0
+ 925 0053 00       		.byte	0
+ 926 0054 07       		.uleb128 0x7
+ 927 0055 0D       		.uleb128 0xd
+ 928 0056 00       		.byte	0
+ 929 0057 03       		.uleb128 0x3
+ 930 0058 0E       		.uleb128 0xe
+ 931 0059 3A       		.uleb128 0x3a
+ 932 005a 0B       		.uleb128 0xb
+ 933 005b 3B       		.uleb128 0x3b
+ 934 005c 0B       		.uleb128 0xb
+ 935 005d 49       		.uleb128 0x49
+ 936 005e 13       		.uleb128 0x13
+ 937 005f 38       		.uleb128 0x38
+ 938 0060 0B       		.uleb128 0xb
+ 939 0061 00       		.byte	0
+ 940 0062 00       		.byte	0
+ 941 0063 08       		.uleb128 0x8
+ 942 0064 2E       		.uleb128 0x2e
+ 943 0065 01       		.byte	0x1
+ 944 0066 3F       		.uleb128 0x3f
+ 945 0067 19       		.uleb128 0x19
+ 946 0068 03       		.uleb128 0x3
+ 947 0069 0E       		.uleb128 0xe
+ 948 006a 3A       		.uleb128 0x3a
+ 949 006b 0B       		.uleb128 0xb
+ 950 006c 3B       		.uleb128 0x3b
+ 951 006d 0B       		.uleb128 0xb
+ 952 006e 27       		.uleb128 0x27
+ 953 006f 19       		.uleb128 0x19
+ 954 0070 11       		.uleb128 0x11
+ 955 0071 01       		.uleb128 0x1
+ 956 0072 12       		.uleb128 0x12
+ 957 0073 06       		.uleb128 0x6
+ 958 0074 40       		.uleb128 0x40
+ 959 0075 18       		.uleb128 0x18
+ 960 0076 9742     		.uleb128 0x2117
+ 961 0078 19       		.uleb128 0x19
+ 962 0079 01       		.uleb128 0x1
+ 963 007a 13       		.uleb128 0x13
+ 964 007b 00       		.byte	0
+ 965 007c 00       		.byte	0
+ 966 007d 09       		.uleb128 0x9
+ 967 007e 898201   		.uleb128 0x4109
+ 968 0081 01       		.byte	0x1
+ 969 0082 11       		.uleb128 0x11
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 20
+
+
+ 970 0083 01       		.uleb128 0x1
+ 971 0084 31       		.uleb128 0x31
+ 972 0085 13       		.uleb128 0x13
+ 973 0086 01       		.uleb128 0x1
+ 974 0087 13       		.uleb128 0x13
+ 975 0088 00       		.byte	0
+ 976 0089 00       		.byte	0
+ 977 008a 0A       		.uleb128 0xa
+ 978 008b 8A8201   		.uleb128 0x410a
+ 979 008e 00       		.byte	0
+ 980 008f 02       		.uleb128 0x2
+ 981 0090 18       		.uleb128 0x18
+ 982 0091 9142     		.uleb128 0x2111
+ 983 0093 18       		.uleb128 0x18
+ 984 0094 00       		.byte	0
+ 985 0095 00       		.byte	0
+ 986 0096 0B       		.uleb128 0xb
+ 987 0097 898201   		.uleb128 0x4109
+ 988 009a 01       		.byte	0x1
+ 989 009b 11       		.uleb128 0x11
+ 990 009c 01       		.uleb128 0x1
+ 991 009d 31       		.uleb128 0x31
+ 992 009e 13       		.uleb128 0x13
+ 993 009f 00       		.byte	0
+ 994 00a0 00       		.byte	0
+ 995 00a1 0C       		.uleb128 0xc
+ 996 00a2 34       		.uleb128 0x34
+ 997 00a3 00       		.byte	0
+ 998 00a4 03       		.uleb128 0x3
+ 999 00a5 0E       		.uleb128 0xe
+ 1000 00a6 3A       		.uleb128 0x3a
+ 1001 00a7 0B       		.uleb128 0xb
+ 1002 00a8 3B       		.uleb128 0x3b
+ 1003 00a9 0B       		.uleb128 0xb
+ 1004 00aa 49       		.uleb128 0x49
+ 1005 00ab 13       		.uleb128 0x13
+ 1006 00ac 02       		.uleb128 0x2
+ 1007 00ad 18       		.uleb128 0x18
+ 1008 00ae 00       		.byte	0
+ 1009 00af 00       		.byte	0
+ 1010 00b0 0D       		.uleb128 0xd
+ 1011 00b1 898201   		.uleb128 0x4109
+ 1012 00b4 00       		.byte	0
+ 1013 00b5 11       		.uleb128 0x11
+ 1014 00b6 01       		.uleb128 0x1
+ 1015 00b7 31       		.uleb128 0x31
+ 1016 00b8 13       		.uleb128 0x13
+ 1017 00b9 00       		.byte	0
+ 1018 00ba 00       		.byte	0
+ 1019 00bb 0E       		.uleb128 0xe
+ 1020 00bc 34       		.uleb128 0x34
+ 1021 00bd 00       		.byte	0
+ 1022 00be 03       		.uleb128 0x3
+ 1023 00bf 0E       		.uleb128 0xe
+ 1024 00c0 3A       		.uleb128 0x3a
+ 1025 00c1 0B       		.uleb128 0xb
+ 1026 00c2 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 21
+
+
+ 1027 00c3 05       		.uleb128 0x5
+ 1028 00c4 49       		.uleb128 0x49
+ 1029 00c5 13       		.uleb128 0x13
+ 1030 00c6 3F       		.uleb128 0x3f
+ 1031 00c7 19       		.uleb128 0x19
+ 1032 00c8 3C       		.uleb128 0x3c
+ 1033 00c9 19       		.uleb128 0x19
+ 1034 00ca 00       		.byte	0
+ 1035 00cb 00       		.byte	0
+ 1036 00cc 0F       		.uleb128 0xf
+ 1037 00cd 35       		.uleb128 0x35
+ 1038 00ce 00       		.byte	0
+ 1039 00cf 49       		.uleb128 0x49
+ 1040 00d0 13       		.uleb128 0x13
+ 1041 00d1 00       		.byte	0
+ 1042 00d2 00       		.byte	0
+ 1043 00d3 10       		.uleb128 0x10
+ 1044 00d4 34       		.uleb128 0x34
+ 1045 00d5 00       		.byte	0
+ 1046 00d6 03       		.uleb128 0x3
+ 1047 00d7 0E       		.uleb128 0xe
+ 1048 00d8 3A       		.uleb128 0x3a
+ 1049 00d9 0B       		.uleb128 0xb
+ 1050 00da 3B       		.uleb128 0x3b
+ 1051 00db 0B       		.uleb128 0xb
+ 1052 00dc 49       		.uleb128 0x49
+ 1053 00dd 13       		.uleb128 0x13
+ 1054 00de 3F       		.uleb128 0x3f
+ 1055 00df 19       		.uleb128 0x19
+ 1056 00e0 3C       		.uleb128 0x3c
+ 1057 00e1 19       		.uleb128 0x19
+ 1058 00e2 00       		.byte	0
+ 1059 00e3 00       		.byte	0
+ 1060 00e4 11       		.uleb128 0x11
+ 1061 00e5 2E       		.uleb128 0x2e
+ 1062 00e6 01       		.byte	0x1
+ 1063 00e7 3F       		.uleb128 0x3f
+ 1064 00e8 19       		.uleb128 0x19
+ 1065 00e9 03       		.uleb128 0x3
+ 1066 00ea 0E       		.uleb128 0xe
+ 1067 00eb 3A       		.uleb128 0x3a
+ 1068 00ec 0B       		.uleb128 0xb
+ 1069 00ed 3B       		.uleb128 0x3b
+ 1070 00ee 0B       		.uleb128 0xb
+ 1071 00ef 27       		.uleb128 0x27
+ 1072 00f0 19       		.uleb128 0x19
+ 1073 00f1 3C       		.uleb128 0x3c
+ 1074 00f2 19       		.uleb128 0x19
+ 1075 00f3 01       		.uleb128 0x1
+ 1076 00f4 13       		.uleb128 0x13
+ 1077 00f5 00       		.byte	0
+ 1078 00f6 00       		.byte	0
+ 1079 00f7 12       		.uleb128 0x12
+ 1080 00f8 05       		.uleb128 0x5
+ 1081 00f9 00       		.byte	0
+ 1082 00fa 49       		.uleb128 0x49
+ 1083 00fb 13       		.uleb128 0x13
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 22
+
+
+ 1084 00fc 00       		.byte	0
+ 1085 00fd 00       		.byte	0
+ 1086 00fe 13       		.uleb128 0x13
+ 1087 00ff 2E       		.uleb128 0x2e
+ 1088 0100 01       		.byte	0x1
+ 1089 0101 3F       		.uleb128 0x3f
+ 1090 0102 19       		.uleb128 0x19
+ 1091 0103 03       		.uleb128 0x3
+ 1092 0104 0E       		.uleb128 0xe
+ 1093 0105 3A       		.uleb128 0x3a
+ 1094 0106 0B       		.uleb128 0xb
+ 1095 0107 3B       		.uleb128 0x3b
+ 1096 0108 0B       		.uleb128 0xb
+ 1097 0109 27       		.uleb128 0x27
+ 1098 010a 19       		.uleb128 0x19
+ 1099 010b 49       		.uleb128 0x49
+ 1100 010c 13       		.uleb128 0x13
+ 1101 010d 3C       		.uleb128 0x3c
+ 1102 010e 19       		.uleb128 0x19
+ 1103 010f 00       		.byte	0
+ 1104 0110 00       		.byte	0
+ 1105 0111 00       		.byte	0
+ 1106              		.section	.debug_aranges,"",%progbits
+ 1107 0000 24000000 		.4byte	0x24
+ 1108 0004 0200     		.2byte	0x2
+ 1109 0006 00000000 		.4byte	.Ldebug_info0
+ 1110 000a 04       		.byte	0x4
+ 1111 000b 00       		.byte	0
+ 1112 000c 0000     		.2byte	0
+ 1113 000e 0000     		.2byte	0
+ 1114 0010 00000000 		.4byte	.LFB63
+ 1115 0014 38000000 		.4byte	.LFE63-.LFB63
+ 1116 0018 00000000 		.4byte	.LFB64
+ 1117 001c CC000000 		.4byte	.LFE64-.LFB64
+ 1118 0020 00000000 		.4byte	0
+ 1119 0024 00000000 		.4byte	0
+ 1120              		.section	.debug_ranges,"",%progbits
+ 1121              	.Ldebug_ranges0:
+ 1122 0000 00000000 		.4byte	.LFB63
+ 1123 0004 38000000 		.4byte	.LFE63
+ 1124 0008 00000000 		.4byte	.LFB64
+ 1125 000c CC000000 		.4byte	.LFE64
+ 1126 0010 00000000 		.4byte	0
+ 1127 0014 00000000 		.4byte	0
+ 1128              		.section	.debug_line,"",%progbits
+ 1129              	.Ldebug_line0:
+ 1130 0000 57020000 		.section	.debug_str,"MS",%progbits,1
+ 1130      02000C02 
+ 1130      00000201 
+ 1130      FB0E0D00 
+ 1130      01010101 
+ 1131              	.LASF55:
+ 1132 0000 746D705F 		.ascii	"tmp_posf\000"
+ 1132      706F7366 
+ 1132      00
+ 1133              	.LASF54:
+ 1134 0009 746D705F 		.ascii	"tmp_posi\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 23
+
+
+ 1134      706F7369 
+ 1134      00
+ 1135              	.LASF66:
+ 1136 0012 4C45445F 		.ascii	"LED_B_Write\000"
+ 1136      425F5772 
+ 1136      69746500 
+ 1137              	.LASF25:
+ 1138 001e 6761696E 		.ascii	"gains_s\000"
+ 1138      735F7300 
+ 1139              	.LASF62:
+ 1140 0026 6D6F746F 		.ascii	"motor_open_speed_1\000"
+ 1140      725F6F70 
+ 1140      656E5F73 
+ 1140      70656564 
+ 1140      5F3100
+ 1141              	.LASF28:
+ 1142 0039 61637475 		.ascii	"actual_val\000"
+ 1142      616C5F76 
+ 1142      616C00
+ 1143              	.LASF2:
+ 1144 0044 73686F72 		.ascii	"short int\000"
+ 1144      7420696E 
+ 1144      7400
+ 1145              	.LASF23:
+ 1146 004e 73697A65 		.ascii	"sizetype\000"
+ 1146      74797065 
+ 1146      00
+ 1147              	.LASF38:
+ 1148 0057 7370646D 		.ascii	"spdm\000"
+ 1148      00
+ 1149              	.LASF69:
+ 1150 005c 2E2E5C73 		.ascii	"..\\src\\user_ricnu_knee.c\000"
+ 1150      72635C75 
+ 1150      7365725F 
+ 1150      7269636E 
+ 1150      755F6B6E 
+ 1151              	.LASF4:
+ 1152 0075 5F5F7569 		.ascii	"__uint16_t\000"
+ 1152      6E743136 
+ 1152      5F7400
+ 1153              	.LASF43:
+ 1154 0080 706F7369 		.ascii	"position\000"
+ 1154      74696F6E 
+ 1154      00
+ 1155              	.LASF70:
+ 1156 0089 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 1156      6C657853 
+ 1156      45415F61 
+ 1156      6C783837 
+ 1156      6772645C 
+ 1157              	.LASF42:
+ 1158 00b7 63757272 		.ascii	"current\000"
+ 1158      656E7400 
+ 1159              	.LASF64:
+ 1160 00bf 4C45445F 		.ascii	"LED_R_Write\000"
+ 1160      525F5772 
+ 1160      69746500 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 24
+
+
+ 1161              	.LASF44:
+ 1162 00cb 696D7065 		.ascii	"impedance\000"
+ 1162      64616E63 
+ 1162      6500
+ 1163              	.LASF13:
+ 1164 00d5 75696E74 		.ascii	"uint8_t\000"
+ 1164      385F7400 
+ 1165              	.LASF19:
+ 1166 00dd 696E7431 		.ascii	"int16\000"
+ 1166      3600
+ 1167              	.LASF17:
+ 1168 00e3 75696E74 		.ascii	"uint8\000"
+ 1168      3800
+ 1169              	.LASF67:
+ 1170 00e9 74726170 		.ascii	"trapez_gen_motion_1\000"
+ 1170      657A5F67 
+ 1170      656E5F6D 
+ 1170      6F74696F 
+ 1170      6E5F3100 
+ 1171              	.LASF49:
+ 1172 00fd 636F6E66 		.ascii	"config\000"
+ 1172      696700
+ 1173              	.LASF51:
+ 1174 0104 7269636E 		.ascii	"ricnu_knee_fsm\000"
+ 1174      755F6B6E 
+ 1174      65655F66 
+ 1174      736D00
+ 1175              	.LASF20:
+ 1176 0113 666C6F61 		.ascii	"float\000"
+ 1176      7400
+ 1177              	.LASF47:
+ 1178 0119 636F756E 		.ascii	"count_last\000"
+ 1178      745F6C61 
+ 1178      737400
+ 1179              	.LASF45:
+ 1180 0124 656E635F 		.ascii	"enc_s\000"
+ 1180      7300
+ 1181              	.LASF10:
+ 1182 012a 6C6F6E67 		.ascii	"long long int\000"
+ 1182      206C6F6E 
+ 1182      6720696E 
+ 1182      7400
+ 1183              	.LASF63:
+ 1184 0138 436F6173 		.ascii	"Coast_Brake_Write\000"
+ 1184      745F4272 
+ 1184      616B655F 
+ 1184      57726974 
+ 1184      6500
+ 1185              	.LASF7:
+ 1186 014a 6C6F6E67 		.ascii	"long int\000"
+ 1186      20696E74 
+ 1186      00
+ 1187              	.LASF9:
+ 1188 0153 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1188      20756E73 
+ 1188      69676E65 
+ 1188      6420696E 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 25
+
+
+ 1188      7400
+ 1189              	.LASF3:
+ 1190 0165 5F5F7569 		.ascii	"__uint8_t\000"
+ 1190      6E74385F 
+ 1190      7400
+ 1191              	.LASF53:
+ 1192 016f 73746174 		.ascii	"state\000"
+ 1192      6500
+ 1193              	.LASF26:
+ 1194 0175 67656E5F 		.ascii	"gen_ctrl_s\000"
+ 1194      6374726C 
+ 1194      5F7300
+ 1195              	.LASF24:
+ 1196 0180 6C6F6E67 		.ascii	"long double\000"
+ 1196      20646F75 
+ 1196      626C6500 
+ 1197              	.LASF50:
+ 1198 018c 696E6974 		.ascii	"init_ricnu_knee\000"
+ 1198      5F726963 
+ 1198      6E755F6B 
+ 1198      6E656500 
+ 1199              	.LASF1:
+ 1200 019c 756E7369 		.ascii	"unsigned char\000"
+ 1200      676E6564 
+ 1200      20636861 
+ 1200      7200
+ 1201              	.LASF0:
+ 1202 01aa 7369676E 		.ascii	"signed char\000"
+ 1202      65642063 
+ 1202      68617200 
+ 1203              	.LASF11:
+ 1204 01b6 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1204      206C6F6E 
+ 1204      6720756E 
+ 1204      7369676E 
+ 1204      65642069 
+ 1205              	.LASF16:
+ 1206 01cd 75696E74 		.ascii	"uint32_t\000"
+ 1206      33325F74 
+ 1206      00
+ 1207              	.LASF12:
+ 1208 01d6 756E7369 		.ascii	"unsigned int\000"
+ 1208      676E6564 
+ 1208      20696E74 
+ 1208      00
+ 1209              	.LASF14:
+ 1210 01e3 75696E74 		.ascii	"uint16_t\000"
+ 1210      31365F74 
+ 1210      00
+ 1211              	.LASF52:
+ 1212 01ec 74696D65 		.ascii	"time\000"
+ 1212      00
+ 1213              	.LASF31:
+ 1214 01f1 6572726F 		.ascii	"error_prev\000"
+ 1214      725F7072 
+ 1214      657600
+ 1215              	.LASF27:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 26
+
+
+ 1216 01fc 6761696E 		.ascii	"gain\000"
+ 1216      00
+ 1217              	.LASF59:
+ 1218 0201 73746570 		.ascii	"steps\000"
+ 1218      7300
+ 1219              	.LASF5:
+ 1220 0207 73686F72 		.ascii	"short unsigned int\000"
+ 1220      7420756E 
+ 1220      7369676E 
+ 1220      65642069 
+ 1220      6E7400
+ 1221              	.LASF34:
+ 1222 021a 706F735F 		.ascii	"pos_ctrl_s\000"
+ 1222      6374726C 
+ 1222      5F7300
+ 1223              	.LASF22:
+ 1224 0225 63686172 		.ascii	"char\000"
+ 1224      00
+ 1225              	.LASF32:
+ 1226 022a 6572726F 		.ascii	"error_sum\000"
+ 1226      725F7375 
+ 1226      6D00
+ 1227              	.LASF15:
+ 1228 0234 696E7433 		.ascii	"int32_t\000"
+ 1228      325F7400 
+ 1229              	.LASF39:
+ 1230 023c 6374726C 		.ascii	"ctrl_s\000"
+ 1230      5F7300
+ 1231              	.LASF41:
+ 1232 0243 67656E65 		.ascii	"generic\000"
+ 1232      72696300 
+ 1233              	.LASF57:
+ 1234 024b 746D705F 		.ascii	"tmp_acc\000"
+ 1234      61636300 
+ 1235              	.LASF56:
+ 1236 0253 746D705F 		.ascii	"tmp_spdm\000"
+ 1236      7370646D 
+ 1236      00
+ 1237              	.LASF35:
+ 1238 025c 73657470 		.ascii	"setp\000"
+ 1238      00
+ 1239              	.LASF48:
+ 1240 0261 636F756E 		.ascii	"count_dif\000"
+ 1240      745F6469 
+ 1240      6600
+ 1241              	.LASF18:
+ 1242 026b 75696E74 		.ascii	"uint16\000"
+ 1242      313600
+ 1243              	.LASF40:
+ 1244 0272 61637469 		.ascii	"active_ctrl\000"
+ 1244      76655F63 
+ 1244      74726C00 
+ 1245              	.LASF65:
+ 1246 027e 4C45445F 		.ascii	"LED_G_Write\000"
+ 1246      475F5772 
+ 1246      69746500 
+ 1247              	.LASF60:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 27
+
+
+ 1248 028a 6374726C 		.ascii	"ctrl\000"
+ 1248      00
+ 1249              	.LASF8:
+ 1250 028f 5F5F7569 		.ascii	"__uint32_t\000"
+ 1250      6E743332 
+ 1250      5F7400
+ 1251              	.LASF46:
+ 1252 029a 636F756E 		.ascii	"count\000"
+ 1252      7400
+ 1253              	.LASF6:
+ 1254 02a0 5F5F696E 		.ascii	"__int32_t\000"
+ 1254      7433325F 
+ 1254      7400
+ 1255              	.LASF68:
+ 1256 02aa 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 1256      4320342E 
+ 1256      392E3320 
+ 1256      32303135 
+ 1256      30333033 
+ 1257 02dd 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 1257      20726576 
+ 1257      6973696F 
+ 1257      6E203232 
+ 1257      31323230 
+ 1258 0310 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1258      66756E63 
+ 1258      74696F6E 
+ 1258      2D736563 
+ 1258      74696F6E 
+ 1259              	.LASF61:
+ 1260 0338 656E636F 		.ascii	"encoder\000"
+ 1260      64657200 
+ 1261              	.LASF30:
+ 1262 0340 6572726F 		.ascii	"error\000"
+ 1262      7200
+ 1263              	.LASF29:
+ 1264 0346 73657470 		.ascii	"setpoint_val\000"
+ 1264      6F696E74 
+ 1264      5F76616C 
+ 1264      00
+ 1265              	.LASF21:
+ 1266 0353 646F7562 		.ascii	"double\000"
+ 1266      6C6500
+ 1267              	.LASF58:
+ 1268 035a 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 1268      52784275 
+ 1268      66666572 
+ 1268      00
+ 1269              	.LASF37:
+ 1270 0367 706F7366 		.ascii	"posf\000"
+ 1270      00
+ 1271              	.LASF36:
+ 1272 036c 706F7369 		.ascii	"posi\000"
+ 1272      00
+ 1273              	.LASF33:
+ 1274 0371 6572726F 		.ascii	"error_dif\000"
+ 1274      725F6469 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfz3wNk.s 			page 28
+
+
+ 1274      6600
+ 1275              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

@@ -1,0 +1,2436 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"analog.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.global _printf_float
+  19              		.thumb
+  20              		.section	.text.adc_avg8,"ax",%progbits
+  21              		.align	2
+  22              		.global	adc_avg8
+  23              		.thumb
+  24              		.thumb_func
+  25              		.type	adc_avg8, %function
+  26              	adc_avg8:
+  27              	.LFB64:
+  28              		.file 1 "..\\src\\analog.c"
+   1:..\src/analog.c **** //****************************************************************************
+   2:..\src/analog.c **** // MIT Media Lab - Biomechatronics
+   3:..\src/analog.c **** // Jean-Francois (Jeff) Duval
+   4:..\src/analog.c **** // jfduval@mit.edu
+   5:..\src/analog.c **** // 02/2015
+   6:..\src/analog.c **** //****************************************************************************
+   7:..\src/analog.c **** // analog: ADC configurations, read & filter functions
+   8:..\src/analog.c **** //****************************************************************************
+   9:..\src/analog.c **** 
+  10:..\src/analog.c **** //Note: this is for the analog functionality of the expansion connector
+  11:..\src/analog.c **** // Current sensing and strain gauge amplification are in other files.
+  12:..\src/analog.c **** 
+  13:..\src/analog.c **** //****************************************************************************
+  14:..\src/analog.c **** // Include(s)
+  15:..\src/analog.c **** //****************************************************************************
+  16:..\src/analog.c **** 
+  17:..\src/analog.c **** #include "main.h"
+  18:..\src/analog.c **** #include "analog.h"
+  19:..\src/analog.c **** 
+  20:..\src/analog.c **** //****************************************************************************
+  21:..\src/analog.c **** // Variable(s)
+  22:..\src/analog.c **** //****************************************************************************
+  23:..\src/analog.c **** 
+  24:..\src/analog.c **** volatile uint16 adc1_res[ADC1_CHANNELS][ADC1_BUF_LEN];
+  25:..\src/analog.c **** volatile uint16 adc1_dbuf[ADC1_CHANNELS][ADC1_BUF_LEN];
+  26:..\src/analog.c **** volatile uint16 adc1_res_filtered[ADC1_CHANNELS];
+  27:..\src/analog.c **** 
+  28:..\src/analog.c **** int16 adc_dma_array[ADC2_BUF_LEN];
+  29:..\src/analog.c **** uint16 adc_sar1_dma_array[ADC1_BUF_LEN + 1];
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 2
+
+
+  30:..\src/analog.c **** volatile uint8 amux_ch = 0;
+  31:..\src/analog.c **** 
+  32:..\src/analog.c **** //****************************************************************************
+  33:..\src/analog.c **** // Function(s)
+  34:..\src/analog.c **** //****************************************************************************
+  35:..\src/analog.c **** 
+  36:..\src/analog.c **** void init_analog(void)
+  37:..\src/analog.c **** {
+  38:..\src/analog.c **** 	//Analog amplifiers & multiplexer(s):
+  39:..\src/analog.c **** 	AMux_1_Start();				//Start the MUX
+  40:..\src/analog.c **** 	PGA_1_Start();
+  41:..\src/analog.c **** 	PGA_2_Start();
+  42:..\src/analog.c **** 	
+  43:..\src/analog.c **** 	//ADC1:
+  44:..\src/analog.c **** 	ADC_SAR_1_Start();
+  45:..\src/analog.c **** 	adc_sar1_dma_config();
+  46:..\src/analog.c **** 	isr_sar1_dma_Start();
+  47:..\src/analog.c **** 	ADC_SAR_1_StartConvert();	//Start converting
+  48:..\src/analog.c **** }
+  49:..\src/analog.c **** 
+  50:..\src/analog.c **** uint16 adc_avg8(uint16 new_data)
+  51:..\src/analog.c **** {
+  29              		.loc 1 51 0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  34              	.LVL0:
+  35 0000 30B4     		push	{r4, r5}
+  36              		.cfi_def_cfa_offset 8
+  37              		.cfi_offset 4, -8
+  38              		.cfi_offset 5, -4
+  39              	.LVL1:
+  52:..\src/analog.c **** 	uint32 sum = 0;
+  53:..\src/analog.c **** 	static uint16 adc_avg_buf[8] = {0,0,0,0,0,0,0,0};
+  54:..\src/analog.c **** 	static uint8 cnt = 0;
+  55:..\src/analog.c **** 	uint16 avg = 0;
+  56:..\src/analog.c **** 	
+  57:..\src/analog.c **** 	//Shift buffer and sum 7/8 terms
+  58:..\src/analog.c **** 	for(cnt = 1; cnt < 8; cnt++)
+  40              		.loc 1 58 0
+  41 0002 0122     		movs	r2, #1
+  42 0004 0C4B     		ldr	r3, .L5
+  43 0006 1A70     		strb	r2, [r3]
+  52:..\src/analog.c **** 	uint32 sum = 0;
+  44              		.loc 1 52 0
+  45 0008 0024     		movs	r4, #0
+  46              		.loc 1 58 0
+  47 000a 09E0     		b	.L2
+  48              	.LVL2:
+  49              	.L3:
+  59:..\src/analog.c **** 	{
+  60:..\src/analog.c **** 		adc_avg_buf[cnt-1] = adc_avg_buf[cnt];
+  50              		.loc 1 60 0 discriminator 3
+  51 000c 0A4A     		ldr	r2, .L5
+  52 000e 02EB4301 		add	r1, r2, r3, lsl #1
+  53 0012 8988     		ldrh	r1, [r1, #4]
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 3
+
+
+  54 0014 02EB4305 		add	r5, r2, r3, lsl #1
+  55 0018 6980     		strh	r1, [r5, #2]	@ movhi
+  61:..\src/analog.c **** 		sum += adc_avg_buf[cnt-1];
+  56              		.loc 1 61 0 discriminator 3
+  57 001a 0C44     		add	r4, r4, r1
+  58              	.LVL3:
+  58:..\src/analog.c **** 	{
+  59              		.loc 1 58 0 discriminator 3
+  60 001c 0133     		adds	r3, r3, #1
+  61 001e 1370     		strb	r3, [r2]
+  62              	.LVL4:
+  63              	.L2:
+  58:..\src/analog.c **** 	{
+  64              		.loc 1 58 0 is_stmt 0 discriminator 1
+  65 0020 054B     		ldr	r3, .L5
+  66 0022 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  67 0024 072B     		cmp	r3, #7
+  68 0026 F1D9     		bls	.L3
+  62:..\src/analog.c **** 	}
+  63:..\src/analog.c **** 	adc_avg_buf[7] = new_data;
+  69              		.loc 1 63 0 is_stmt 1
+  70 0028 034B     		ldr	r3, .L5
+  71 002a 5882     		strh	r0, [r3, #18]	@ movhi
+  64:..\src/analog.c **** 	sum += new_data;
+  72              		.loc 1 64 0
+  73 002c 2044     		add	r0, r0, r4
+  74              	.LVL5:
+  65:..\src/analog.c **** 		
+  66:..\src/analog.c **** 	//Average
+  67:..\src/analog.c **** 	avg = (uint16)(sum >> 3);
+  68:..\src/analog.c **** 	
+  69:..\src/analog.c **** 	return avg;	
+  70:..\src/analog.c **** }
+  75              		.loc 1 70 0
+  76 002e C0F3CF00 		ubfx	r0, r0, #3, #16
+  77              	.LVL6:
+  78 0032 30BC     		pop	{r4, r5}
+  79              		.cfi_restore 5
+  80              		.cfi_restore 4
+  81              		.cfi_def_cfa_offset 0
+  82 0034 7047     		bx	lr
+  83              	.L6:
+  84 0036 00BF     		.align	2
+  85              	.L5:
+  86 0038 00000000 		.word	.LANCHOR0
+  87              		.cfi_endproc
+  88              	.LFE64:
+  89              		.size	adc_avg8, .-adc_avg8
+  90              		.section	.text.filter_sar_adc,"ax",%progbits
+  91              		.align	2
+  92              		.global	filter_sar_adc
+  93              		.thumb
+  94              		.thumb_func
+  95              		.type	filter_sar_adc, %function
+  96              	filter_sar_adc:
+  97              	.LFB65:
+  71:..\src/analog.c **** 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 4
+
+
+  72:..\src/analog.c **** //Filters the ADC buffer
+  73:..\src/analog.c **** void filter_sar_adc(void)
+  74:..\src/analog.c **** {
+  98              		.loc 1 74 0
+  99              		.cfi_startproc
+ 100              		@ args = 0, pretend = 0, frame = 0
+ 101              		@ frame_needed = 0, uses_anonymous_args = 0
+ 102              		@ link register save eliminated.
+ 103 0000 10B4     		push	{r4}
+ 104              		.cfi_def_cfa_offset 4
+ 105              		.cfi_offset 4, -4
+ 106              	.LVL7:
+  75:..\src/analog.c **** 	uint8 i = 0, j = 0;
+  76:..\src/analog.c **** 	uint32 adc_sum = 0;
+  77:..\src/analog.c **** 	
+  78:..\src/analog.c **** 	//For each channel:
+  79:..\src/analog.c **** 	for(i = 0; i < ADC1_CHANNELS; i++)
+ 107              		.loc 1 79 0
+ 108 0002 0024     		movs	r4, #0
+ 109 0004 14E0     		b	.L8
+ 110              	.LVL8:
+ 111              	.L9:
+  80:..\src/analog.c **** 	{
+  81:..\src/analog.c **** 		//For each value in the channel:
+  82:..\src/analog.c **** 		adc_sum = 0;
+  83:..\src/analog.c **** 		for(j = 0; j < ADC1_BUF_LEN; j++)
+  84:..\src/analog.c **** 		{
+  85:..\src/analog.c **** 			//Add the values
+  86:..\src/analog.c **** 			adc_sum += (uint32)adc1_dbuf[i][j];
+ 112              		.loc 1 86 0 discriminator 3
+ 113 0006 03EBC400 		add	r0, r3, r4, lsl #3
+ 114 000a 0C4A     		ldr	r2, .L13
+ 115 000c 32F81020 		ldrh	r2, [r2, r0, lsl #1]
+ 116 0010 92B2     		uxth	r2, r2
+ 117 0012 1144     		add	r1, r1, r2
+ 118              	.LVL9:
+  83:..\src/analog.c **** 		{
+ 119              		.loc 1 83 0 discriminator 3
+ 120 0014 0133     		adds	r3, r3, #1
+ 121              	.LVL10:
+ 122 0016 DBB2     		uxtb	r3, r3
+ 123              	.LVL11:
+ 124 0018 01E0     		b	.L10
+ 125              	.LVL12:
+ 126              	.L11:
+ 127 001a 0021     		movs	r1, #0
+ 128 001c 0B46     		mov	r3, r1
+ 129              	.L10:
+ 130              	.LVL13:
+  83:..\src/analog.c **** 		{
+ 131              		.loc 1 83 0 is_stmt 0 discriminator 1
+ 132 001e 072B     		cmp	r3, #7
+ 133 0020 F1D9     		bls	.L9
+  87:..\src/analog.c **** 		}
+  88:..\src/analog.c **** 		
+  89:..\src/analog.c **** 		//And divide to get mean
+  90:..\src/analog.c **** 		adc1_res_filtered[i] = (uint16) ((uint32)adc_sum >> ADC1_SHIFT);
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 5
+
+
+ 134              		.loc 1 90 0 is_stmt 1 discriminator 2
+ 135 0022 C1F3CF01 		ubfx	r1, r1, #3, #16
+ 136              	.LVL14:
+ 137 0026 064B     		ldr	r3, .L13+4
+ 138              	.LVL15:
+ 139 0028 23F81410 		strh	r1, [r3, r4, lsl #1]	@ movhi
+  79:..\src/analog.c **** 	{
+ 140              		.loc 1 79 0 discriminator 2
+ 141 002c 0134     		adds	r4, r4, #1
+ 142              	.LVL16:
+ 143 002e E4B2     		uxtb	r4, r4
+ 144              	.LVL17:
+ 145              	.L8:
+  79:..\src/analog.c **** 	{
+ 146              		.loc 1 79 0 is_stmt 0 discriminator 1
+ 147 0030 052C     		cmp	r4, #5
+ 148 0032 F2D9     		bls	.L11
+  91:..\src/analog.c **** 	}
+  92:..\src/analog.c **** }
+ 149              		.loc 1 92 0 is_stmt 1
+ 150 0034 5DF8044B 		ldr	r4, [sp], #4
+ 151              		.cfi_restore 4
+ 152              		.cfi_def_cfa_offset 0
+ 153              	.LVL18:
+ 154 0038 7047     		bx	lr
+ 155              	.L14:
+ 156 003a 00BF     		.align	2
+ 157              	.L13:
+ 158 003c 00000000 		.word	adc1_dbuf
+ 159 0040 00000000 		.word	adc1_res_filtered
+ 160              		.cfi_endproc
+ 161              	.LFE65:
+ 162              		.size	filter_sar_adc, .-filter_sar_adc
+ 163              		.section	.text.double_buffer_adc,"ax",%progbits
+ 164              		.align	2
+ 165              		.global	double_buffer_adc
+ 166              		.thumb
+ 167              		.thumb_func
+ 168              		.type	double_buffer_adc, %function
+ 169              	double_buffer_adc:
+ 170              	.LFB66:
+  93:..\src/analog.c **** 
+  94:..\src/analog.c **** //To avoid data corruption we copy the buffer during the interrupt:
+  95:..\src/analog.c **** void double_buffer_adc(void)
+  96:..\src/analog.c **** {
+ 171              		.loc 1 96 0
+ 172              		.cfi_startproc
+ 173              		@ args = 0, pretend = 0, frame = 0
+ 174              		@ frame_needed = 0, uses_anonymous_args = 0
+ 175              		@ link register save eliminated.
+ 176 0000 10B4     		push	{r4}
+ 177              		.cfi_def_cfa_offset 4
+ 178              		.cfi_offset 4, -4
+ 179              	.LVL19:
+  97:..\src/analog.c **** 	uint16 i = 0, j = 0;
+  98:..\src/analog.c **** 	
+  99:..\src/analog.c **** 	//For each channel:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 6
+
+
+ 100:..\src/analog.c **** 	for(i = 0; i < ADC1_CHANNELS; i++)
+ 180              		.loc 1 100 0
+ 181 0002 0024     		movs	r4, #0
+ 182 0004 10E0     		b	.L16
+ 183              	.LVL20:
+ 184              	.L17:
+ 101:..\src/analog.c **** 	{
+ 102:..\src/analog.c **** 		//For each value in the channel:
+ 103:..\src/analog.c **** 		for(j = 0; j < ADC1_BUF_LEN; j++)
+ 104:..\src/analog.c **** 		{	
+ 105:..\src/analog.c **** 			adc1_dbuf[i][j] = adc1_res[i][j];
+ 185              		.loc 1 105 0 discriminator 3
+ 186 0006 03EBC401 		add	r1, r3, r4, lsl #3
+ 187 000a 0A4A     		ldr	r2, .L21
+ 188 000c 32F81120 		ldrh	r2, [r2, r1, lsl #1]
+ 189 0010 92B2     		uxth	r2, r2
+ 190 0012 0948     		ldr	r0, .L21+4
+ 191 0014 20F81120 		strh	r2, [r0, r1, lsl #1]	@ movhi
+ 103:..\src/analog.c **** 		{	
+ 192              		.loc 1 103 0 discriminator 3
+ 193 0018 0133     		adds	r3, r3, #1
+ 194              	.LVL21:
+ 195 001a 9BB2     		uxth	r3, r3
+ 196              	.LVL22:
+ 197 001c 00E0     		b	.L18
+ 198              	.LVL23:
+ 199              	.L19:
+ 200 001e 0023     		movs	r3, #0
+ 201              	.L18:
+ 202              	.LVL24:
+ 103:..\src/analog.c **** 		{	
+ 203              		.loc 1 103 0 is_stmt 0 discriminator 1
+ 204 0020 072B     		cmp	r3, #7
+ 205 0022 F0D9     		bls	.L17
+ 100:..\src/analog.c **** 	{
+ 206              		.loc 1 100 0 is_stmt 1 discriminator 2
+ 207 0024 0134     		adds	r4, r4, #1
+ 208              	.LVL25:
+ 209 0026 A4B2     		uxth	r4, r4
+ 210              	.LVL26:
+ 211              	.L16:
+ 100:..\src/analog.c **** 	{
+ 212              		.loc 1 100 0 is_stmt 0 discriminator 1
+ 213 0028 052C     		cmp	r4, #5
+ 214 002a F8D9     		bls	.L19
+ 106:..\src/analog.c **** 		}
+ 107:..\src/analog.c **** 	}
+ 108:..\src/analog.c **** }
+ 215              		.loc 1 108 0 is_stmt 1
+ 216 002c 5DF8044B 		ldr	r4, [sp], #4
+ 217              		.cfi_restore 4
+ 218              		.cfi_def_cfa_offset 0
+ 219              	.LVL27:
+ 220 0030 7047     		bx	lr
+ 221              	.L22:
+ 222 0032 00BF     		.align	2
+ 223              	.L21:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 7
+
+
+ 224 0034 00000000 		.word	adc1_res
+ 225 0038 00000000 		.word	adc1_dbuf
+ 226              		.cfi_endproc
+ 227              	.LFE66:
+ 228              		.size	double_buffer_adc, .-double_buffer_adc
+ 229              		.section	.text.read_analog,"ax",%progbits
+ 230              		.align	2
+ 231              		.global	read_analog
+ 232              		.thumb
+ 233              		.thumb_func
+ 234              		.type	read_analog, %function
+ 235              	read_analog:
+ 236              	.LFB67:
+ 109:..\src/analog.c **** 
+ 110:..\src/analog.c **** //Returns one filtered value
+ 111:..\src/analog.c **** int16 read_analog(uint8 ch)
+ 112:..\src/analog.c **** {
+ 237              		.loc 1 112 0
+ 238              		.cfi_startproc
+ 239              		@ args = 0, pretend = 0, frame = 0
+ 240              		@ frame_needed = 0, uses_anonymous_args = 0
+ 241              		@ link register save eliminated.
+ 242              	.LVL28:
+ 113:..\src/analog.c **** 	if(ch < ADC1_CHANNELS)
+ 243              		.loc 1 113 0
+ 244 0000 0528     		cmp	r0, #5
+ 245 0002 04D8     		bhi	.L25
+ 114:..\src/analog.c **** 	{
+ 115:..\src/analog.c **** 		//Valid channel, return value
+ 116:..\src/analog.c **** 		return adc1_res_filtered[ch];
+ 246              		.loc 1 116 0
+ 247 0004 034B     		ldr	r3, .L26
+ 248 0006 33F81000 		ldrh	r0, [r3, r0, lsl #1]
+ 249              	.LVL29:
+ 250 000a 80B2     		uxth	r0, r0
+ 251 000c 00E0     		b	.L24
+ 252              	.LVL30:
+ 253              	.L25:
+ 117:..\src/analog.c **** 	}
+ 118:..\src/analog.c **** 
+ 119:..\src/analog.c **** 	//Otherwise return 0
+ 120:..\src/analog.c **** 	return 0;
+ 254              		.loc 1 120 0
+ 255 000e 0020     		movs	r0, #0
+ 256              	.LVL31:
+ 257              	.L24:
+ 121:..\src/analog.c **** }
+ 258              		.loc 1 121 0
+ 259 0010 00B2     		sxth	r0, r0
+ 260 0012 7047     		bx	lr
+ 261              	.L27:
+ 262              		.align	2
+ 263              	.L26:
+ 264 0014 00000000 		.word	adc1_res_filtered
+ 265              		.cfi_endproc
+ 266              	.LFE67:
+ 267              		.size	read_analog, .-read_analog
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 8
+
+
+ 268              		.section	.text.adc_sar1_dma_config,"ax",%progbits
+ 269              		.align	2
+ 270              		.global	adc_sar1_dma_config
+ 271              		.thumb
+ 272              		.thumb_func
+ 273              		.type	adc_sar1_dma_config, %function
+ 274              	adc_sar1_dma_config:
+ 275              	.LFB68:
+ 122:..\src/analog.c **** 
+ 123:..\src/analog.c **** //DMA for ADC SAR 1 transfers (Expansion, VB_SNS, etc.)
+ 124:..\src/analog.c **** //Triggers an ISR after 9 samples
+ 125:..\src/analog.c **** void adc_sar1_dma_config(void)
+ 126:..\src/analog.c **** {
+ 276              		.loc 1 126 0
+ 277              		.cfi_startproc
+ 278              		@ args = 0, pretend = 0, frame = 0
+ 279              		@ frame_needed = 0, uses_anonymous_args = 0
+ 280 0000 38B5     		push	{r3, r4, r5, lr}
+ 281              		.cfi_def_cfa_offset 16
+ 282              		.cfi_offset 3, -16
+ 283              		.cfi_offset 4, -12
+ 284              		.cfi_offset 5, -8
+ 285              		.cfi_offset 14, -4
+ 127:..\src/analog.c **** 	/* Variable declarations for DMA_5 */
+ 128:..\src/analog.c **** 	/* Move these variable declarations to the top of the function */
+ 129:..\src/analog.c **** 	uint8 DMA_5_Chan;
+ 130:..\src/analog.c **** 	uint8 DMA_5_TD[1];
+ 131:..\src/analog.c **** 
+ 132:..\src/analog.c **** 	/* DMA Configuration for DMA_1 */
+ 133:..\src/analog.c **** 	#define DMA_5_BYTES_PER_BURST 		2
+ 134:..\src/analog.c **** 	#define DMA_5_REQUEST_PER_BURST 	1
+ 135:..\src/analog.c **** 	#define DMA_5_SRC_BASE 				(CYDEV_PERIPH_BASE)
+ 136:..\src/analog.c **** 	#define DMA_5_DST_BASE 				(CYDEV_SRAM_BASE)
+ 137:..\src/analog.c **** 	
+ 138:..\src/analog.c **** 	DMA_5_Chan = DMA_5_DmaInitialize(DMA_5_BYTES_PER_BURST, DMA_5_REQUEST_PER_BURST,
+ 286              		.loc 1 138 0
+ 287 0002 0220     		movs	r0, #2
+ 288 0004 0121     		movs	r1, #1
+ 289 0006 4FF48042 		mov	r2, #16384
+ 290 000a 41F6FF73 		movw	r3, #8191
+ 291 000e FFF7FEFF 		bl	DMA_5_DmaInitialize
+ 292              	.LVL32:
+ 293 0012 0546     		mov	r5, r0
+ 294              	.LVL33:
+ 139:..\src/analog.c **** 	    HI16(DMA_5_SRC_BASE), HI16(DMA_5_DST_BASE));
+ 140:..\src/analog.c **** 	DMA_5_TD[0] = CyDmaTdAllocate();
+ 295              		.loc 1 140 0
+ 296 0014 FFF7FEFF 		bl	CyDmaTdAllocate
+ 297              	.LVL34:
+ 298 0018 0446     		mov	r4, r0
+ 141:..\src/analog.c **** 	CyDmaTdSetConfiguration(DMA_5_TD[0], 18, DMA_5_TD[0], DMA_5__TD_TERMOUT_EN | TD_INC_DST_ADR);
+ 299              		.loc 1 141 0
+ 300 001a 1221     		movs	r1, #18
+ 301 001c 0246     		mov	r2, r0
+ 302 001e 0623     		movs	r3, #6
+ 303 0020 FFF7FEFF 		bl	CyDmaTdSetConfiguration
+ 304              	.LVL35:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 9
+
+
+ 142:..\src/analog.c **** 	CyDmaTdSetAddress(DMA_5_TD[0], LO16((uint32)ADC_SAR_1_SAR_WRK0_PTR), LO16((uint32)adc_sar1_dma_arr
+ 305              		.loc 1 142 0
+ 306 0024 2046     		mov	r0, r4
+ 307 0026 45F6A031 		movw	r1, #23456
+ 308 002a 064A     		ldr	r2, .L30
+ 309 002c 92B2     		uxth	r2, r2
+ 310 002e FFF7FEFF 		bl	CyDmaTdSetAddress
+ 311              	.LVL36:
+ 143:..\src/analog.c **** 	CyDmaChSetInitialTd(DMA_5_Chan, DMA_5_TD[0]);
+ 312              		.loc 1 143 0
+ 313 0032 2846     		mov	r0, r5
+ 314 0034 2146     		mov	r1, r4
+ 315 0036 FFF7FEFF 		bl	CyDmaChSetInitialTd
+ 316              	.LVL37:
+ 144:..\src/analog.c **** 	CyDmaChEnable(DMA_5_Chan, 1);
+ 317              		.loc 1 144 0
+ 318 003a 2846     		mov	r0, r5
+ 319 003c 0121     		movs	r1, #1
+ 320 003e FFF7FEFF 		bl	CyDmaChEnable
+ 321              	.LVL38:
+ 322 0042 38BD     		pop	{r3, r4, r5, pc}
+ 323              	.LVL39:
+ 324              	.L31:
+ 325              		.align	2
+ 326              	.L30:
+ 327 0044 00000000 		.word	adc_sar1_dma_array
+ 328              		.cfi_endproc
+ 329              	.LFE68:
+ 330              		.size	adc_sar1_dma_config, .-adc_sar1_dma_config
+ 331              		.section	.text.init_analog,"ax",%progbits
+ 332              		.align	2
+ 333              		.global	init_analog
+ 334              		.thumb
+ 335              		.thumb_func
+ 336              		.type	init_analog, %function
+ 337              	init_analog:
+ 338              	.LFB63:
+  37:..\src/analog.c **** 	//Analog amplifiers & multiplexer(s):
+ 339              		.loc 1 37 0
+ 340              		.cfi_startproc
+ 341              		@ args = 0, pretend = 0, frame = 0
+ 342              		@ frame_needed = 0, uses_anonymous_args = 0
+ 343 0000 08B5     		push	{r3, lr}
+ 344              		.cfi_def_cfa_offset 8
+ 345              		.cfi_offset 3, -8
+ 346              		.cfi_offset 14, -4
+  39:..\src/analog.c **** 	PGA_1_Start();
+ 347              		.loc 1 39 0
+ 348 0002 FFF7FEFF 		bl	AMux_1_Start
+ 349              	.LVL40:
+  40:..\src/analog.c **** 	PGA_2_Start();
+ 350              		.loc 1 40 0
+ 351 0006 FFF7FEFF 		bl	PGA_1_Start
+ 352              	.LVL41:
+  41:..\src/analog.c **** 	
+ 353              		.loc 1 41 0
+ 354 000a FFF7FEFF 		bl	PGA_2_Start
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 10
+
+
+ 355              	.LVL42:
+  44:..\src/analog.c **** 	adc_sar1_dma_config();
+ 356              		.loc 1 44 0
+ 357 000e FFF7FEFF 		bl	ADC_SAR_1_Start
+ 358              	.LVL43:
+  45:..\src/analog.c **** 	isr_sar1_dma_Start();
+ 359              		.loc 1 45 0
+ 360 0012 FFF7FEFF 		bl	adc_sar1_dma_config
+ 361              	.LVL44:
+  46:..\src/analog.c **** 	ADC_SAR_1_StartConvert();	//Start converting
+ 362              		.loc 1 46 0
+ 363 0016 FFF7FEFF 		bl	isr_sar1_dma_Start
+ 364              	.LVL45:
+  47:..\src/analog.c **** }
+ 365              		.loc 1 47 0
+ 366 001a FFF7FEFF 		bl	ADC_SAR_1_StartConvert
+ 367              	.LVL46:
+ 368 001e 08BD     		pop	{r3, pc}
+ 369              		.cfi_endproc
+ 370              	.LFE63:
+ 371              		.size	init_analog, .-init_analog
+ 372              		.section	.text.adc_sar2_dma_config,"ax",%progbits
+ 373              		.align	2
+ 374              		.global	adc_sar2_dma_config
+ 375              		.thumb
+ 376              		.thumb_func
+ 377              		.type	adc_sar2_dma_config, %function
+ 378              	adc_sar2_dma_config:
+ 379              	.LFB69:
+ 145:..\src/analog.c **** 
+ 146:..\src/analog.c **** }
+ 147:..\src/analog.c **** 
+ 148:..\src/analog.c **** //DMA for ADC SAR 2 transfers (motor current sensing)
+ 149:..\src/analog.c **** //Triggers an ISR after 5 transfers
+ 150:..\src/analog.c **** void adc_sar2_dma_config(void)
+ 151:..\src/analog.c **** {
+ 380              		.loc 1 151 0
+ 381              		.cfi_startproc
+ 382              		@ args = 0, pretend = 0, frame = 0
+ 383              		@ frame_needed = 0, uses_anonymous_args = 0
+ 384 0000 38B5     		push	{r3, r4, r5, lr}
+ 385              		.cfi_def_cfa_offset 16
+ 386              		.cfi_offset 3, -16
+ 387              		.cfi_offset 4, -12
+ 388              		.cfi_offset 5, -8
+ 389              		.cfi_offset 14, -4
+ 152:..\src/analog.c **** 	/* Variable declarations for DMA_1 */
+ 153:..\src/analog.c **** 	/* Move these variable declarations to the top of the function */
+ 154:..\src/analog.c **** 	uint8 DMA_1_Chan;
+ 155:..\src/analog.c **** 	uint8 DMA_1_TD[1];
+ 156:..\src/analog.c **** 
+ 157:..\src/analog.c **** 	/* DMA Configuration for DMA_1 */
+ 158:..\src/analog.c **** 	#define DMA_1_BYTES_PER_BURST 		2
+ 159:..\src/analog.c **** 	#define DMA_1_REQUEST_PER_BURST 	1
+ 160:..\src/analog.c **** 	#define DMA_1_SRC_BASE 				(CYDEV_PERIPH_BASE)
+ 161:..\src/analog.c **** 	#define DMA_1_DST_BASE 				(CYDEV_SRAM_BASE)
+ 162:..\src/analog.c **** 	
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 11
+
+
+ 163:..\src/analog.c **** 	DMA_1_Chan = DMA_1_DmaInitialize(DMA_1_BYTES_PER_BURST, DMA_1_REQUEST_PER_BURST, 
+ 390              		.loc 1 163 0
+ 391 0002 0220     		movs	r0, #2
+ 392 0004 0121     		movs	r1, #1
+ 393 0006 4FF48042 		mov	r2, #16384
+ 394 000a 41F6FF73 		movw	r3, #8191
+ 395 000e FFF7FEFF 		bl	DMA_1_DmaInitialize
+ 396              	.LVL47:
+ 397 0012 0546     		mov	r5, r0
+ 398              	.LVL48:
+ 164:..\src/analog.c **** 	    HI16(DMA_1_SRC_BASE), HI16(DMA_1_DST_BASE));
+ 165:..\src/analog.c **** 	DMA_1_TD[0] = CyDmaTdAllocate();
+ 399              		.loc 1 165 0
+ 400 0014 FFF7FEFF 		bl	CyDmaTdAllocate
+ 401              	.LVL49:
+ 402 0018 0446     		mov	r4, r0
+ 166:..\src/analog.c **** 	CyDmaTdSetConfiguration(DMA_1_TD[0], 10, DMA_1_TD[0], DMA_1__TD_TERMOUT_EN | TD_INC_DST_ADR);
+ 403              		.loc 1 166 0
+ 404 001a 0A21     		movs	r1, #10
+ 405 001c 0246     		mov	r2, r0
+ 406 001e 0623     		movs	r3, #6
+ 407 0020 FFF7FEFF 		bl	CyDmaTdSetConfiguration
+ 408              	.LVL50:
+ 167:..\src/analog.c **** 	CyDmaTdSetAddress(DMA_1_TD[0], LO16((uint32)ADC_SAR_2_SAR_WRK0_PTR), LO16((uint32)adc_dma_array));
+ 409              		.loc 1 167 0
+ 410 0024 2046     		mov	r0, r4
+ 411 0026 45F6A231 		movw	r1, #23458
+ 412 002a 064A     		ldr	r2, .L36
+ 413 002c 92B2     		uxth	r2, r2
+ 414 002e FFF7FEFF 		bl	CyDmaTdSetAddress
+ 415              	.LVL51:
+ 168:..\src/analog.c **** 	CyDmaChSetInitialTd(DMA_1_Chan, DMA_1_TD[0]);
+ 416              		.loc 1 168 0
+ 417 0032 2846     		mov	r0, r5
+ 418 0034 2146     		mov	r1, r4
+ 419 0036 FFF7FEFF 		bl	CyDmaChSetInitialTd
+ 420              	.LVL52:
+ 169:..\src/analog.c **** 	CyDmaChEnable(DMA_1_Chan, 1);
+ 421              		.loc 1 169 0
+ 422 003a 2846     		mov	r0, r5
+ 423 003c 0121     		movs	r1, #1
+ 424 003e FFF7FEFF 		bl	CyDmaChEnable
+ 425              	.LVL53:
+ 426 0042 38BD     		pop	{r3, r4, r5, pc}
+ 427              	.LVL54:
+ 428              	.L37:
+ 429              		.align	2
+ 430              	.L36:
+ 431 0044 00000000 		.word	adc_dma_array
+ 432              		.cfi_endproc
+ 433              	.LFE69:
+ 434              		.size	adc_sar2_dma_config, .-adc_sar2_dma_config
+ 435              		.global	amux_ch
+ 436              		.comm	adc_sar1_dma_array,18,4
+ 437              		.comm	adc_dma_array,16,4
+ 438              		.comm	adc1_res_filtered,12,4
+ 439              		.comm	adc1_dbuf,96,4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 12
+
+
+ 440              		.comm	adc1_res,96,4
+ 441              		.bss
+ 442              		.align	2
+ 443              		.set	.LANCHOR0,. + 0
+ 444              		.type	cnt.10482, %object
+ 445              		.size	cnt.10482, 1
+ 446              	cnt.10482:
+ 447 0000 00       		.space	1
+ 448 0001 000000   		.space	3
+ 449              		.type	adc_avg_buf.10481, %object
+ 450              		.size	adc_avg_buf.10481, 16
+ 451              	adc_avg_buf.10481:
+ 452 0004 00000000 		.space	16
+ 452      00000000 
+ 452      00000000 
+ 452      00000000 
+ 453              		.type	amux_ch, %object
+ 454              		.size	amux_ch, 1
+ 455              	amux_ch:
+ 456 0014 00       		.space	1
+ 457 0015 000000   		.text
+ 458              	.Letext0:
+ 459              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 460              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 461              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 462              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 463              		.file 6 "Generated_Source\\PSoC5/DMA_5_dma.h"
+ 464              		.file 7 "Generated_Source\\PSoC5/CYDMAC.H"
+ 465              		.file 8 "Generated_Source\\PSoC5/AMux_1.h"
+ 466              		.file 9 "Generated_Source\\PSoC5/PGA_1.h"
+ 467              		.file 10 "Generated_Source\\PSoC5/PGA_2.h"
+ 468              		.file 11 "Generated_Source\\PSoC5/ADC_SAR_1.h"
+ 469              		.file 12 "Generated_Source\\PSoC5/isr_sar1_dma.h"
+ 470              		.file 13 "Generated_Source\\PSoC5/DMA_1_dma.h"
+ 471              		.section	.debug_info,"",%progbits
+ 472              	.Ldebug_info0:
+ 473 0000 C7050000 		.4byte	0x5c7
+ 474 0004 0400     		.2byte	0x4
+ 475 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 476 000a 04       		.byte	0x4
+ 477 000b 01       		.uleb128 0x1
+ 478 000c D6020000 		.4byte	.LASF54
+ 479 0010 01       		.byte	0x1
+ 480 0011 28020000 		.4byte	.LASF55
+ 481 0015 D8000000 		.4byte	.LASF56
+ 482 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 483 001d 00000000 		.4byte	0
+ 484 0021 00000000 		.4byte	.Ldebug_line0
+ 485 0025 02       		.uleb128 0x2
+ 486 0026 01       		.byte	0x1
+ 487 0027 06       		.byte	0x6
+ 488 0028 E6010000 		.4byte	.LASF0
+ 489 002c 02       		.uleb128 0x2
+ 490 002d 01       		.byte	0x1
+ 491 002e 08       		.byte	0x8
+ 492 002f D8010000 		.4byte	.LASF1
+ 493 0033 02       		.uleb128 0x2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 13
+
+
+ 494 0034 02       		.byte	0x2
+ 495 0035 05       		.byte	0x5
+ 496 0036 8E000000 		.4byte	.LASF2
+ 497 003a 02       		.uleb128 0x2
+ 498 003b 02       		.byte	0x2
+ 499 003c 07       		.byte	0x7
+ 500 003d 41020000 		.4byte	.LASF3
+ 501 0041 03       		.uleb128 0x3
+ 502 0042 CC020000 		.4byte	.LASF9
+ 503 0046 02       		.byte	0x2
+ 504 0047 3F       		.byte	0x3f
+ 505 0048 4C000000 		.4byte	0x4c
+ 506 004c 02       		.uleb128 0x2
+ 507 004d 04       		.byte	0x4
+ 508 004e 05       		.byte	0x5
+ 509 004f 59010000 		.4byte	.LASF4
+ 510 0053 02       		.uleb128 0x2
+ 511 0054 04       		.byte	0x4
+ 512 0055 07       		.byte	0x7
+ 513 0056 B3020000 		.4byte	.LASF5
+ 514 005a 02       		.uleb128 0x2
+ 515 005b 08       		.byte	0x8
+ 516 005c 05       		.byte	0x5
+ 517 005d 38010000 		.4byte	.LASF6
+ 518 0061 02       		.uleb128 0x2
+ 519 0062 08       		.byte	0x8
+ 520 0063 07       		.byte	0x7
+ 521 0064 F2010000 		.4byte	.LASF7
+ 522 0068 04       		.uleb128 0x4
+ 523 0069 04       		.byte	0x4
+ 524 006a 05       		.byte	0x5
+ 525 006b 696E7400 		.ascii	"int\000"
+ 526 006f 02       		.uleb128 0x2
+ 527 0070 04       		.byte	0x4
+ 528 0071 07       		.byte	0x7
+ 529 0072 09020000 		.4byte	.LASF8
+ 530 0076 03       		.uleb128 0x3
+ 531 0077 79020000 		.4byte	.LASF10
+ 532 007b 03       		.byte	0x3
+ 533 007c 2C       		.byte	0x2c
+ 534 007d 41000000 		.4byte	0x41
+ 535 0081 03       		.uleb128 0x3
+ 536 0082 81020000 		.4byte	.LASF11
+ 537 0086 04       		.byte	0x4
+ 538 0087 C2       		.byte	0xc2
+ 539 0088 2C000000 		.4byte	0x2c
+ 540 008c 03       		.uleb128 0x3
+ 541 008d BF000000 		.4byte	.LASF12
+ 542 0091 04       		.byte	0x4
+ 543 0092 C3       		.byte	0xc3
+ 544 0093 3A000000 		.4byte	0x3a
+ 545 0097 03       		.uleb128 0x3
+ 546 0098 C5020000 		.4byte	.LASF13
+ 547 009c 04       		.byte	0x4
+ 548 009d C4       		.byte	0xc4
+ 549 009e 53000000 		.4byte	0x53
+ 550 00a2 03       		.uleb128 0x3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 14
+
+
+ 551 00a3 D2000000 		.4byte	.LASF14
+ 552 00a7 04       		.byte	0x4
+ 553 00a8 C6       		.byte	0xc6
+ 554 00a9 33000000 		.4byte	0x33
+ 555 00ad 02       		.uleb128 0x2
+ 556 00ae 04       		.byte	0x4
+ 557 00af 04       		.byte	0x4
+ 558 00b0 27010000 		.4byte	.LASF15
+ 559 00b4 02       		.uleb128 0x2
+ 560 00b5 08       		.byte	0x8
+ 561 00b6 04       		.byte	0x4
+ 562 00b7 2C000000 		.4byte	.LASF16
+ 563 00bb 02       		.uleb128 0x2
+ 564 00bc 01       		.byte	0x1
+ 565 00bd 08       		.byte	0x8
+ 566 00be 54020000 		.4byte	.LASF17
+ 567 00c2 05       		.uleb128 0x5
+ 568 00c3 59020000 		.4byte	.LASF18
+ 569 00c7 04       		.byte	0x4
+ 570 00c8 6401     		.2byte	0x164
+ 571 00ca 53000000 		.4byte	0x53
+ 572 00ce 05       		.uleb128 0x5
+ 573 00cf AE020000 		.4byte	.LASF19
+ 574 00d3 04       		.byte	0x4
+ 575 00d4 6C01     		.2byte	0x16c
+ 576 00d6 DA000000 		.4byte	0xda
+ 577 00da 06       		.uleb128 0x6
+ 578 00db 81000000 		.4byte	0x81
+ 579 00df 02       		.uleb128 0x2
+ 580 00e0 04       		.byte	0x4
+ 581 00e1 07       		.byte	0x7
+ 582 00e2 6B000000 		.4byte	.LASF20
+ 583 00e6 02       		.uleb128 0x2
+ 584 00e7 08       		.byte	0x8
+ 585 00e8 04       		.byte	0x4
+ 586 00e9 CC010000 		.4byte	.LASF21
+ 587 00ed 07       		.uleb128 0x7
+ 588 00ee 38020000 		.4byte	.LASF26
+ 589 00f2 01       		.byte	0x1
+ 590 00f3 32       		.byte	0x32
+ 591 00f4 8C000000 		.4byte	0x8c
+ 592 00f8 00000000 		.4byte	.LFB64
+ 593 00fc 3C000000 		.4byte	.LFE64-.LFB64
+ 594 0100 01       		.uleb128 0x1
+ 595 0101 9C       		.byte	0x9c
+ 596 0102 56010000 		.4byte	0x156
+ 597 0106 08       		.uleb128 0x8
+ 598 0107 33000000 		.4byte	.LASF28
+ 599 010b 01       		.byte	0x1
+ 600 010c 32       		.byte	0x32
+ 601 010d 8C000000 		.4byte	0x8c
+ 602 0111 00000000 		.4byte	.LLST0
+ 603 0115 09       		.uleb128 0x9
+ 604 0116 73756D00 		.ascii	"sum\000"
+ 605 011a 01       		.byte	0x1
+ 606 011b 34       		.byte	0x34
+ 607 011c 97000000 		.4byte	0x97
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 15
+
+
+ 608 0120 22000000 		.4byte	.LLST1
+ 609 0124 0A       		.uleb128 0xa
+ 610 0125 10000000 		.4byte	.LASF22
+ 611 0129 01       		.byte	0x1
+ 612 012a 35       		.byte	0x35
+ 613 012b 56010000 		.4byte	0x156
+ 614 012f 05       		.uleb128 0x5
+ 615 0130 03       		.byte	0x3
+ 616 0131 04000000 		.4byte	adc_avg_buf.10481
+ 617 0135 0B       		.uleb128 0xb
+ 618 0136 636E7400 		.ascii	"cnt\000"
+ 619 013a 01       		.byte	0x1
+ 620 013b 36       		.byte	0x36
+ 621 013c 81000000 		.4byte	0x81
+ 622 0140 05       		.uleb128 0x5
+ 623 0141 03       		.byte	0x3
+ 624 0142 00000000 		.4byte	cnt.10482
+ 625 0146 09       		.uleb128 0x9
+ 626 0147 61766700 		.ascii	"avg\000"
+ 627 014b 01       		.byte	0x1
+ 628 014c 37       		.byte	0x37
+ 629 014d 8C000000 		.4byte	0x8c
+ 630 0151 4C000000 		.4byte	.LLST2
+ 631 0155 00       		.byte	0
+ 632 0156 0C       		.uleb128 0xc
+ 633 0157 8C000000 		.4byte	0x8c
+ 634 015b 66010000 		.4byte	0x166
+ 635 015f 0D       		.uleb128 0xd
+ 636 0160 DF000000 		.4byte	0xdf
+ 637 0164 07       		.byte	0x7
+ 638 0165 00       		.byte	0
+ 639 0166 0E       		.uleb128 0xe
+ 640 0167 9F020000 		.4byte	.LASF24
+ 641 016b 01       		.byte	0x1
+ 642 016c 49       		.byte	0x49
+ 643 016d 00000000 		.4byte	.LFB65
+ 644 0171 44000000 		.4byte	.LFE65-.LFB65
+ 645 0175 01       		.uleb128 0x1
+ 646 0176 9C       		.byte	0x9c
+ 647 0177 A5010000 		.4byte	0x1a5
+ 648 017b 09       		.uleb128 0x9
+ 649 017c 6900     		.ascii	"i\000"
+ 650 017e 01       		.byte	0x1
+ 651 017f 4B       		.byte	0x4b
+ 652 0180 81000000 		.4byte	0x81
+ 653 0184 73000000 		.4byte	.LLST3
+ 654 0188 09       		.uleb128 0x9
+ 655 0189 6A00     		.ascii	"j\000"
+ 656 018b 01       		.byte	0x1
+ 657 018c 4B       		.byte	0x4b
+ 658 018d 81000000 		.4byte	0x81
+ 659 0191 9D000000 		.4byte	.LLST4
+ 660 0195 0F       		.uleb128 0xf
+ 661 0196 86000000 		.4byte	.LASF23
+ 662 019a 01       		.byte	0x1
+ 663 019b 4C       		.byte	0x4c
+ 664 019c 97000000 		.4byte	0x97
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 16
+
+
+ 665 01a0 D2000000 		.4byte	.LLST5
+ 666 01a4 00       		.byte	0
+ 667 01a5 0E       		.uleb128 0xe
+ 668 01a6 7E010000 		.4byte	.LASF25
+ 669 01aa 01       		.byte	0x1
+ 670 01ab 5F       		.byte	0x5f
+ 671 01ac 00000000 		.4byte	.LFB66
+ 672 01b0 3C000000 		.4byte	.LFE66-.LFB66
+ 673 01b4 01       		.uleb128 0x1
+ 674 01b5 9C       		.byte	0x9c
+ 675 01b6 D5010000 		.4byte	0x1d5
+ 676 01ba 09       		.uleb128 0x9
+ 677 01bb 6900     		.ascii	"i\000"
+ 678 01bd 01       		.byte	0x1
+ 679 01be 61       		.byte	0x61
+ 680 01bf 8C000000 		.4byte	0x8c
+ 681 01c3 FC000000 		.4byte	.LLST6
+ 682 01c7 09       		.uleb128 0x9
+ 683 01c8 6A00     		.ascii	"j\000"
+ 684 01ca 01       		.byte	0x1
+ 685 01cb 61       		.byte	0x61
+ 686 01cc 8C000000 		.4byte	0x8c
+ 687 01d0 26010000 		.4byte	.LLST7
+ 688 01d4 00       		.byte	0
+ 689 01d5 07       		.uleb128 0x7
+ 690 01d6 87020000 		.4byte	.LASF27
+ 691 01da 01       		.byte	0x1
+ 692 01db 6F       		.byte	0x6f
+ 693 01dc A2000000 		.4byte	0xa2
+ 694 01e0 00000000 		.4byte	.LFB67
+ 695 01e4 18000000 		.4byte	.LFE67-.LFB67
+ 696 01e8 01       		.uleb128 0x1
+ 697 01e9 9C       		.byte	0x9c
+ 698 01ea FD010000 		.4byte	0x1fd
+ 699 01ee 10       		.uleb128 0x10
+ 700 01ef 636800   		.ascii	"ch\000"
+ 701 01f2 01       		.byte	0x1
+ 702 01f3 6F       		.byte	0x6f
+ 703 01f4 81000000 		.4byte	0x81
+ 704 01f8 5B010000 		.4byte	.LLST8
+ 705 01fc 00       		.byte	0
+ 706 01fd 0E       		.uleb128 0xe
+ 707 01fe 06010000 		.4byte	.LASF29
+ 708 0202 01       		.byte	0x1
+ 709 0203 7D       		.byte	0x7d
+ 710 0204 00000000 		.4byte	.LFB68
+ 711 0208 48000000 		.4byte	.LFE68-.LFB68
+ 712 020c 01       		.uleb128 0x1
+ 713 020d 9C       		.byte	0x9c
+ 714 020e D3020000 		.4byte	0x2d3
+ 715 0212 0F       		.uleb128 0xf
+ 716 0213 2D010000 		.4byte	.LASF30
+ 717 0217 01       		.byte	0x1
+ 718 0218 81       		.byte	0x81
+ 719 0219 81000000 		.4byte	0x81
+ 720 021d 95010000 		.4byte	.LLST9
+ 721 0221 11       		.uleb128 0x11
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 17
+
+
+ 722 0222 7D000000 		.4byte	.LASF34
+ 723 0226 01       		.byte	0x1
+ 724 0227 82       		.byte	0x82
+ 725 0228 D3020000 		.4byte	0x2d3
+ 726 022c 12       		.uleb128 0x12
+ 727 022d 12000000 		.4byte	.LVL32
+ 728 0231 DA040000 		.4byte	0x4da
+ 729 0235 52020000 		.4byte	0x252
+ 730 0239 13       		.uleb128 0x13
+ 731 023a 01       		.uleb128 0x1
+ 732 023b 53       		.byte	0x53
+ 733 023c 03       		.uleb128 0x3
+ 734 023d 0A       		.byte	0xa
+ 735 023e FF1F     		.2byte	0x1fff
+ 736 0240 13       		.uleb128 0x13
+ 737 0241 01       		.uleb128 0x1
+ 738 0242 52       		.byte	0x52
+ 739 0243 03       		.uleb128 0x3
+ 740 0244 0A       		.byte	0xa
+ 741 0245 0040     		.2byte	0x4000
+ 742 0247 13       		.uleb128 0x13
+ 743 0248 01       		.uleb128 0x1
+ 744 0249 51       		.byte	0x51
+ 745 024a 01       		.uleb128 0x1
+ 746 024b 31       		.byte	0x31
+ 747 024c 13       		.uleb128 0x13
+ 748 024d 01       		.uleb128 0x1
+ 749 024e 50       		.byte	0x50
+ 750 024f 01       		.uleb128 0x1
+ 751 0250 32       		.byte	0x32
+ 752 0251 00       		.byte	0
+ 753 0252 14       		.uleb128 0x14
+ 754 0253 18000000 		.4byte	.LVL34
+ 755 0257 FE040000 		.4byte	0x4fe
+ 756 025b 12       		.uleb128 0x12
+ 757 025c 24000000 		.4byte	.LVL35
+ 758 0260 09050000 		.4byte	0x509
+ 759 0264 7F020000 		.4byte	0x27f
+ 760 0268 13       		.uleb128 0x13
+ 761 0269 01       		.uleb128 0x1
+ 762 026a 53       		.byte	0x53
+ 763 026b 01       		.uleb128 0x1
+ 764 026c 36       		.byte	0x36
+ 765 026d 13       		.uleb128 0x13
+ 766 026e 01       		.uleb128 0x1
+ 767 026f 52       		.byte	0x52
+ 768 0270 02       		.uleb128 0x2
+ 769 0271 74       		.byte	0x74
+ 770 0272 00       		.sleb128 0
+ 771 0273 13       		.uleb128 0x13
+ 772 0274 01       		.uleb128 0x1
+ 773 0275 51       		.byte	0x51
+ 774 0276 01       		.uleb128 0x1
+ 775 0277 42       		.byte	0x42
+ 776 0278 13       		.uleb128 0x13
+ 777 0279 01       		.uleb128 0x1
+ 778 027a 50       		.byte	0x50
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 18
+
+
+ 779 027b 02       		.uleb128 0x2
+ 780 027c 74       		.byte	0x74
+ 781 027d 00       		.sleb128 0
+ 782 027e 00       		.byte	0
+ 783 027f 12       		.uleb128 0x12
+ 784 0280 32000000 		.4byte	.LVL36
+ 785 0284 2D050000 		.4byte	0x52d
+ 786 0288 A3020000 		.4byte	0x2a3
+ 787 028c 13       		.uleb128 0x13
+ 788 028d 01       		.uleb128 0x1
+ 789 028e 52       		.byte	0x52
+ 790 028f 05       		.uleb128 0x5
+ 791 0290 03       		.byte	0x3
+ 792 0291 00000000 		.4byte	adc_sar1_dma_array
+ 793 0295 13       		.uleb128 0x13
+ 794 0296 01       		.uleb128 0x1
+ 795 0297 51       		.byte	0x51
+ 796 0298 03       		.uleb128 0x3
+ 797 0299 0A       		.byte	0xa
+ 798 029a A05B     		.2byte	0x5ba0
+ 799 029c 13       		.uleb128 0x13
+ 800 029d 01       		.uleb128 0x1
+ 801 029e 50       		.byte	0x50
+ 802 029f 02       		.uleb128 0x2
+ 803 02a0 74       		.byte	0x74
+ 804 02a1 00       		.sleb128 0
+ 805 02a2 00       		.byte	0
+ 806 02a3 12       		.uleb128 0x12
+ 807 02a4 3A000000 		.4byte	.LVL37
+ 808 02a8 4C050000 		.4byte	0x54c
+ 809 02ac BD020000 		.4byte	0x2bd
+ 810 02b0 13       		.uleb128 0x13
+ 811 02b1 01       		.uleb128 0x1
+ 812 02b2 51       		.byte	0x51
+ 813 02b3 02       		.uleb128 0x2
+ 814 02b4 74       		.byte	0x74
+ 815 02b5 00       		.sleb128 0
+ 816 02b6 13       		.uleb128 0x13
+ 817 02b7 01       		.uleb128 0x1
+ 818 02b8 50       		.byte	0x50
+ 819 02b9 02       		.uleb128 0x2
+ 820 02ba 75       		.byte	0x75
+ 821 02bb 00       		.sleb128 0
+ 822 02bc 00       		.byte	0
+ 823 02bd 15       		.uleb128 0x15
+ 824 02be 42000000 		.4byte	.LVL38
+ 825 02c2 66050000 		.4byte	0x566
+ 826 02c6 13       		.uleb128 0x13
+ 827 02c7 01       		.uleb128 0x1
+ 828 02c8 51       		.byte	0x51
+ 829 02c9 01       		.uleb128 0x1
+ 830 02ca 31       		.byte	0x31
+ 831 02cb 13       		.uleb128 0x13
+ 832 02cc 01       		.uleb128 0x1
+ 833 02cd 50       		.byte	0x50
+ 834 02ce 02       		.uleb128 0x2
+ 835 02cf 75       		.byte	0x75
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 19
+
+
+ 836 02d0 00       		.sleb128 0
+ 837 02d1 00       		.byte	0
+ 838 02d2 00       		.byte	0
+ 839 02d3 0C       		.uleb128 0xc
+ 840 02d4 81000000 		.4byte	0x81
+ 841 02d8 E3020000 		.4byte	0x2e3
+ 842 02dc 0D       		.uleb128 0xd
+ 843 02dd DF000000 		.4byte	0xdf
+ 844 02e1 00       		.byte	0
+ 845 02e2 00       		.byte	0
+ 846 02e3 0E       		.uleb128 0xe
+ 847 02e4 92030000 		.4byte	.LASF31
+ 848 02e8 01       		.byte	0x1
+ 849 02e9 24       		.byte	0x24
+ 850 02ea 00000000 		.4byte	.LFB63
+ 851 02ee 20000000 		.4byte	.LFE63-.LFB63
+ 852 02f2 01       		.uleb128 0x1
+ 853 02f3 9C       		.byte	0x9c
+ 854 02f4 38030000 		.4byte	0x338
+ 855 02f8 14       		.uleb128 0x14
+ 856 02f9 06000000 		.4byte	.LVL40
+ 857 02fd 80050000 		.4byte	0x580
+ 858 0301 14       		.uleb128 0x14
+ 859 0302 0A000000 		.4byte	.LVL41
+ 860 0306 87050000 		.4byte	0x587
+ 861 030a 14       		.uleb128 0x14
+ 862 030b 0E000000 		.4byte	.LVL42
+ 863 030f 8E050000 		.4byte	0x58e
+ 864 0313 14       		.uleb128 0x14
+ 865 0314 12000000 		.4byte	.LVL43
+ 866 0318 95050000 		.4byte	0x595
+ 867 031c 14       		.uleb128 0x14
+ 868 031d 16000000 		.4byte	.LVL44
+ 869 0321 FD010000 		.4byte	0x1fd
+ 870 0325 14       		.uleb128 0x14
+ 871 0326 1A000000 		.4byte	.LVL45
+ 872 032a 9C050000 		.4byte	0x59c
+ 873 032e 14       		.uleb128 0x14
+ 874 032f 1E000000 		.4byte	.LVL46
+ 875 0333 A3050000 		.4byte	0x5a3
+ 876 0337 00       		.byte	0
+ 877 0338 0E       		.uleb128 0xe
+ 878 0339 A4010000 		.4byte	.LASF32
+ 879 033d 01       		.byte	0x1
+ 880 033e 96       		.byte	0x96
+ 881 033f 00000000 		.4byte	.LFB69
+ 882 0343 48000000 		.4byte	.LFE69-.LFB69
+ 883 0347 01       		.uleb128 0x1
+ 884 0348 9C       		.byte	0x9c
+ 885 0349 0E040000 		.4byte	0x40e
+ 886 034d 0F       		.uleb128 0xf
+ 887 034e 46010000 		.4byte	.LASF33
+ 888 0352 01       		.byte	0x1
+ 889 0353 9A       		.byte	0x9a
+ 890 0354 81000000 		.4byte	0x81
+ 891 0358 A8010000 		.4byte	.LLST10
+ 892 035c 11       		.uleb128 0x11
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 20
+
+
+ 893 035d 3C000000 		.4byte	.LASF35
+ 894 0361 01       		.byte	0x1
+ 895 0362 9B       		.byte	0x9b
+ 896 0363 D3020000 		.4byte	0x2d3
+ 897 0367 12       		.uleb128 0x12
+ 898 0368 12000000 		.4byte	.LVL47
+ 899 036c AA050000 		.4byte	0x5aa
+ 900 0370 8D030000 		.4byte	0x38d
+ 901 0374 13       		.uleb128 0x13
+ 902 0375 01       		.uleb128 0x1
+ 903 0376 53       		.byte	0x53
+ 904 0377 03       		.uleb128 0x3
+ 905 0378 0A       		.byte	0xa
+ 906 0379 FF1F     		.2byte	0x1fff
+ 907 037b 13       		.uleb128 0x13
+ 908 037c 01       		.uleb128 0x1
+ 909 037d 52       		.byte	0x52
+ 910 037e 03       		.uleb128 0x3
+ 911 037f 0A       		.byte	0xa
+ 912 0380 0040     		.2byte	0x4000
+ 913 0382 13       		.uleb128 0x13
+ 914 0383 01       		.uleb128 0x1
+ 915 0384 51       		.byte	0x51
+ 916 0385 01       		.uleb128 0x1
+ 917 0386 31       		.byte	0x31
+ 918 0387 13       		.uleb128 0x13
+ 919 0388 01       		.uleb128 0x1
+ 920 0389 50       		.byte	0x50
+ 921 038a 01       		.uleb128 0x1
+ 922 038b 32       		.byte	0x32
+ 923 038c 00       		.byte	0
+ 924 038d 14       		.uleb128 0x14
+ 925 038e 18000000 		.4byte	.LVL49
+ 926 0392 FE040000 		.4byte	0x4fe
+ 927 0396 12       		.uleb128 0x12
+ 928 0397 24000000 		.4byte	.LVL50
+ 929 039b 09050000 		.4byte	0x509
+ 930 039f BA030000 		.4byte	0x3ba
+ 931 03a3 13       		.uleb128 0x13
+ 932 03a4 01       		.uleb128 0x1
+ 933 03a5 53       		.byte	0x53
+ 934 03a6 01       		.uleb128 0x1
+ 935 03a7 36       		.byte	0x36
+ 936 03a8 13       		.uleb128 0x13
+ 937 03a9 01       		.uleb128 0x1
+ 938 03aa 52       		.byte	0x52
+ 939 03ab 02       		.uleb128 0x2
+ 940 03ac 74       		.byte	0x74
+ 941 03ad 00       		.sleb128 0
+ 942 03ae 13       		.uleb128 0x13
+ 943 03af 01       		.uleb128 0x1
+ 944 03b0 51       		.byte	0x51
+ 945 03b1 01       		.uleb128 0x1
+ 946 03b2 3A       		.byte	0x3a
+ 947 03b3 13       		.uleb128 0x13
+ 948 03b4 01       		.uleb128 0x1
+ 949 03b5 50       		.byte	0x50
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 21
+
+
+ 950 03b6 02       		.uleb128 0x2
+ 951 03b7 74       		.byte	0x74
+ 952 03b8 00       		.sleb128 0
+ 953 03b9 00       		.byte	0
+ 954 03ba 12       		.uleb128 0x12
+ 955 03bb 32000000 		.4byte	.LVL51
+ 956 03bf 2D050000 		.4byte	0x52d
+ 957 03c3 DE030000 		.4byte	0x3de
+ 958 03c7 13       		.uleb128 0x13
+ 959 03c8 01       		.uleb128 0x1
+ 960 03c9 52       		.byte	0x52
+ 961 03ca 05       		.uleb128 0x5
+ 962 03cb 03       		.byte	0x3
+ 963 03cc 00000000 		.4byte	adc_dma_array
+ 964 03d0 13       		.uleb128 0x13
+ 965 03d1 01       		.uleb128 0x1
+ 966 03d2 51       		.byte	0x51
+ 967 03d3 03       		.uleb128 0x3
+ 968 03d4 0A       		.byte	0xa
+ 969 03d5 A25B     		.2byte	0x5ba2
+ 970 03d7 13       		.uleb128 0x13
+ 971 03d8 01       		.uleb128 0x1
+ 972 03d9 50       		.byte	0x50
+ 973 03da 02       		.uleb128 0x2
+ 974 03db 74       		.byte	0x74
+ 975 03dc 00       		.sleb128 0
+ 976 03dd 00       		.byte	0
+ 977 03de 12       		.uleb128 0x12
+ 978 03df 3A000000 		.4byte	.LVL52
+ 979 03e3 4C050000 		.4byte	0x54c
+ 980 03e7 F8030000 		.4byte	0x3f8
+ 981 03eb 13       		.uleb128 0x13
+ 982 03ec 01       		.uleb128 0x1
+ 983 03ed 51       		.byte	0x51
+ 984 03ee 02       		.uleb128 0x2
+ 985 03ef 74       		.byte	0x74
+ 986 03f0 00       		.sleb128 0
+ 987 03f1 13       		.uleb128 0x13
+ 988 03f2 01       		.uleb128 0x1
+ 989 03f3 50       		.byte	0x50
+ 990 03f4 02       		.uleb128 0x2
+ 991 03f5 75       		.byte	0x75
+ 992 03f6 00       		.sleb128 0
+ 993 03f7 00       		.byte	0
+ 994 03f8 15       		.uleb128 0x15
+ 995 03f9 42000000 		.4byte	.LVL53
+ 996 03fd 66050000 		.4byte	0x566
+ 997 0401 13       		.uleb128 0x13
+ 998 0402 01       		.uleb128 0x1
+ 999 0403 51       		.byte	0x51
+ 1000 0404 01       		.uleb128 0x1
+ 1001 0405 31       		.byte	0x31
+ 1002 0406 13       		.uleb128 0x13
+ 1003 0407 01       		.uleb128 0x1
+ 1004 0408 50       		.byte	0x50
+ 1005 0409 02       		.uleb128 0x2
+ 1006 040a 75       		.byte	0x75
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 22
+
+
+ 1007 040b 00       		.sleb128 0
+ 1008 040c 00       		.byte	0
+ 1009 040d 00       		.byte	0
+ 1010 040e 16       		.uleb128 0x16
+ 1011 040f 85030000 		.4byte	.LASF36
+ 1012 0413 05       		.byte	0x5
+ 1013 0414 2A06     		.2byte	0x62a
+ 1014 0416 1A040000 		.4byte	0x41a
+ 1015 041a 06       		.uleb128 0x6
+ 1016 041b 76000000 		.4byte	0x76
+ 1017 041f 0C       		.uleb128 0xc
+ 1018 0420 8C000000 		.4byte	0x8c
+ 1019 0424 35040000 		.4byte	0x435
+ 1020 0428 0D       		.uleb128 0xd
+ 1021 0429 DF000000 		.4byte	0xdf
+ 1022 042d 05       		.byte	0x5
+ 1023 042e 0D       		.uleb128 0xd
+ 1024 042f DF000000 		.4byte	0xdf
+ 1025 0433 07       		.byte	0x7
+ 1026 0434 00       		.byte	0
+ 1027 0435 17       		.uleb128 0x17
+ 1028 0436 74000000 		.4byte	.LASF37
+ 1029 043a 01       		.byte	0x1
+ 1030 043b 18       		.byte	0x18
+ 1031 043c 46040000 		.4byte	0x446
+ 1032 0440 05       		.uleb128 0x5
+ 1033 0441 03       		.byte	0x3
+ 1034 0442 00000000 		.4byte	adc1_res
+ 1035 0446 06       		.uleb128 0x6
+ 1036 0447 1F040000 		.4byte	0x41f
+ 1037 044b 0C       		.uleb128 0xc
+ 1038 044c 8C000000 		.4byte	0x8c
+ 1039 0450 5B040000 		.4byte	0x45b
+ 1040 0454 0D       		.uleb128 0xd
+ 1041 0455 DF000000 		.4byte	0xdf
+ 1042 0459 05       		.byte	0x5
+ 1043 045a 00       		.byte	0
+ 1044 045b 17       		.uleb128 0x17
+ 1045 045c 6C010000 		.4byte	.LASF38
+ 1046 0460 01       		.byte	0x1
+ 1047 0461 1A       		.byte	0x1a
+ 1048 0462 6C040000 		.4byte	0x46c
+ 1049 0466 05       		.uleb128 0x5
+ 1050 0467 03       		.byte	0x3
+ 1051 0468 00000000 		.4byte	adc1_res_filtered
+ 1052 046c 06       		.uleb128 0x6
+ 1053 046d 4B040000 		.4byte	0x44b
+ 1054 0471 17       		.uleb128 0x17
+ 1055 0472 62010000 		.4byte	.LASF39
+ 1056 0476 01       		.byte	0x1
+ 1057 0477 19       		.byte	0x19
+ 1058 0478 82040000 		.4byte	0x482
+ 1059 047c 05       		.uleb128 0x5
+ 1060 047d 03       		.byte	0x3
+ 1061 047e 00000000 		.4byte	adc1_dbuf
+ 1062 0482 06       		.uleb128 0x6
+ 1063 0483 1F040000 		.4byte	0x41f
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 23
+
+
+ 1064 0487 0C       		.uleb128 0xc
+ 1065 0488 A2000000 		.4byte	0xa2
+ 1066 048c 97040000 		.4byte	0x497
+ 1067 0490 0D       		.uleb128 0xd
+ 1068 0491 DF000000 		.4byte	0xdf
+ 1069 0495 07       		.byte	0x7
+ 1070 0496 00       		.byte	0
+ 1071 0497 17       		.uleb128 0x17
+ 1072 0498 64030000 		.4byte	.LASF40
+ 1073 049c 01       		.byte	0x1
+ 1074 049d 1C       		.byte	0x1c
+ 1075 049e 87040000 		.4byte	0x487
+ 1076 04a2 05       		.uleb128 0x5
+ 1077 04a3 03       		.byte	0x3
+ 1078 04a4 00000000 		.4byte	adc_dma_array
+ 1079 04a8 0C       		.uleb128 0xc
+ 1080 04a9 8C000000 		.4byte	0x8c
+ 1081 04ad B8040000 		.4byte	0x4b8
+ 1082 04b1 0D       		.uleb128 0xd
+ 1083 04b2 DF000000 		.4byte	0xdf
+ 1084 04b6 08       		.byte	0x8
+ 1085 04b7 00       		.byte	0
+ 1086 04b8 17       		.uleb128 0x17
+ 1087 04b9 98000000 		.4byte	.LASF41
+ 1088 04bd 01       		.byte	0x1
+ 1089 04be 1D       		.byte	0x1d
+ 1090 04bf A8040000 		.4byte	0x4a8
+ 1091 04c3 05       		.uleb128 0x5
+ 1092 04c4 03       		.byte	0x3
+ 1093 04c5 00000000 		.4byte	adc_sar1_dma_array
+ 1094 04c9 17       		.uleb128 0x17
+ 1095 04ca 51010000 		.4byte	.LASF42
+ 1096 04ce 01       		.byte	0x1
+ 1097 04cf 1E       		.byte	0x1e
+ 1098 04d0 DA000000 		.4byte	0xda
+ 1099 04d4 05       		.uleb128 0x5
+ 1100 04d5 03       		.byte	0x3
+ 1101 04d6 00000000 		.4byte	amux_ch
+ 1102 04da 18       		.uleb128 0x18
+ 1103 04db 90010000 		.4byte	.LASF43
+ 1104 04df 06       		.byte	0x6
+ 1105 04e0 1E       		.byte	0x1e
+ 1106 04e1 81000000 		.4byte	0x81
+ 1107 04e5 FE040000 		.4byte	0x4fe
+ 1108 04e9 19       		.uleb128 0x19
+ 1109 04ea 81000000 		.4byte	0x81
+ 1110 04ee 19       		.uleb128 0x19
+ 1111 04ef 81000000 		.4byte	0x81
+ 1112 04f3 19       		.uleb128 0x19
+ 1113 04f4 8C000000 		.4byte	0x8c
+ 1114 04f8 19       		.uleb128 0x19
+ 1115 04f9 8C000000 		.4byte	0x8c
+ 1116 04fd 00       		.byte	0
+ 1117 04fe 1A       		.uleb128 0x1a
+ 1118 04ff 00000000 		.4byte	.LASF57
+ 1119 0503 07       		.byte	0x7
+ 1120 0504 39       		.byte	0x39
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 24
+
+
+ 1121 0505 81000000 		.4byte	0x81
+ 1122 0509 18       		.uleb128 0x18
+ 1123 050a 45000000 		.4byte	.LASF44
+ 1124 050e 07       		.byte	0x7
+ 1125 050f 3C       		.byte	0x3c
+ 1126 0510 C2000000 		.4byte	0xc2
+ 1127 0514 2D050000 		.4byte	0x52d
+ 1128 0518 19       		.uleb128 0x19
+ 1129 0519 81000000 		.4byte	0x81
+ 1130 051d 19       		.uleb128 0x19
+ 1131 051e 8C000000 		.4byte	0x8c
+ 1132 0522 19       		.uleb128 0x19
+ 1133 0523 81000000 		.4byte	0x81
+ 1134 0527 19       		.uleb128 0x19
+ 1135 0528 81000000 		.4byte	0x81
+ 1136 052c 00       		.byte	0
+ 1137 052d 18       		.uleb128 0x18
+ 1138 052e 16020000 		.4byte	.LASF45
+ 1139 0532 07       		.byte	0x7
+ 1140 0533 40       		.byte	0x40
+ 1141 0534 C2000000 		.4byte	0xc2
+ 1142 0538 4C050000 		.4byte	0x54c
+ 1143 053c 19       		.uleb128 0x19
+ 1144 053d 81000000 		.4byte	0x81
+ 1145 0541 19       		.uleb128 0x19
+ 1146 0542 8C000000 		.4byte	0x8c
+ 1147 0546 19       		.uleb128 0x19
+ 1148 0547 8C000000 		.4byte	0x8c
+ 1149 054b 00       		.byte	0
+ 1150 054c 18       		.uleb128 0x18
+ 1151 054d AB000000 		.4byte	.LASF46
+ 1152 0551 07       		.byte	0x7
+ 1153 0552 30       		.byte	0x30
+ 1154 0553 C2000000 		.4byte	0xc2
+ 1155 0557 66050000 		.4byte	0x566
+ 1156 055b 19       		.uleb128 0x19
+ 1157 055c 81000000 		.4byte	0x81
+ 1158 0560 19       		.uleb128 0x19
+ 1159 0561 81000000 		.4byte	0x81
+ 1160 0565 00       		.byte	0
+ 1161 0566 18       		.uleb128 0x18
+ 1162 0567 5D000000 		.4byte	.LASF47
+ 1163 056b 07       		.byte	0x7
+ 1164 056c 2A       		.byte	0x2a
+ 1165 056d C2000000 		.4byte	0xc2
+ 1166 0571 80050000 		.4byte	0x580
+ 1167 0575 19       		.uleb128 0x19
+ 1168 0576 81000000 		.4byte	0x81
+ 1169 057a 19       		.uleb128 0x19
+ 1170 057b 81000000 		.4byte	0x81
+ 1171 057f 00       		.byte	0
+ 1172 0580 1B       		.uleb128 0x1b
+ 1173 0581 1A010000 		.4byte	.LASF48
+ 1174 0585 08       		.byte	0x8
+ 1175 0586 1E       		.byte	0x1e
+ 1176 0587 1B       		.uleb128 0x1b
+ 1177 0588 93020000 		.4byte	.LASF49
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 25
+
+
+ 1178 058c 09       		.byte	0x9
+ 1179 058d 3E       		.byte	0x3e
+ 1180 058e 1B       		.uleb128 0x1b
+ 1181 058f C6000000 		.4byte	.LASF50
+ 1182 0593 0A       		.byte	0xa
+ 1183 0594 3E       		.byte	0x3e
+ 1184 0595 1B       		.uleb128 0x1b
+ 1185 0596 1C000000 		.4byte	.LASF51
+ 1186 059a 0B       		.byte	0xb
+ 1187 059b 34       		.byte	0x34
+ 1188 059c 1B       		.uleb128 0x1b
+ 1189 059d 72030000 		.4byte	.LASF52
+ 1190 05a1 0C       		.byte	0xc
+ 1191 05a2 17       		.byte	0x17
+ 1192 05a3 1B       		.uleb128 0x1b
+ 1193 05a4 62020000 		.4byte	.LASF53
+ 1194 05a8 0B       		.byte	0xb
+ 1195 05a9 D1       		.byte	0xd1
+ 1196 05aa 1C       		.uleb128 0x1c
+ 1197 05ab B8010000 		.4byte	.LASF58
+ 1198 05af 0D       		.byte	0xd
+ 1199 05b0 1E       		.byte	0x1e
+ 1200 05b1 81000000 		.4byte	0x81
+ 1201 05b5 19       		.uleb128 0x19
+ 1202 05b6 81000000 		.4byte	0x81
+ 1203 05ba 19       		.uleb128 0x19
+ 1204 05bb 81000000 		.4byte	0x81
+ 1205 05bf 19       		.uleb128 0x19
+ 1206 05c0 8C000000 		.4byte	0x8c
+ 1207 05c4 19       		.uleb128 0x19
+ 1208 05c5 8C000000 		.4byte	0x8c
+ 1209 05c9 00       		.byte	0
+ 1210 05ca 00       		.byte	0
+ 1211              		.section	.debug_abbrev,"",%progbits
+ 1212              	.Ldebug_abbrev0:
+ 1213 0000 01       		.uleb128 0x1
+ 1214 0001 11       		.uleb128 0x11
+ 1215 0002 01       		.byte	0x1
+ 1216 0003 25       		.uleb128 0x25
+ 1217 0004 0E       		.uleb128 0xe
+ 1218 0005 13       		.uleb128 0x13
+ 1219 0006 0B       		.uleb128 0xb
+ 1220 0007 03       		.uleb128 0x3
+ 1221 0008 0E       		.uleb128 0xe
+ 1222 0009 1B       		.uleb128 0x1b
+ 1223 000a 0E       		.uleb128 0xe
+ 1224 000b 55       		.uleb128 0x55
+ 1225 000c 17       		.uleb128 0x17
+ 1226 000d 11       		.uleb128 0x11
+ 1227 000e 01       		.uleb128 0x1
+ 1228 000f 10       		.uleb128 0x10
+ 1229 0010 17       		.uleb128 0x17
+ 1230 0011 00       		.byte	0
+ 1231 0012 00       		.byte	0
+ 1232 0013 02       		.uleb128 0x2
+ 1233 0014 24       		.uleb128 0x24
+ 1234 0015 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 26
+
+
+ 1235 0016 0B       		.uleb128 0xb
+ 1236 0017 0B       		.uleb128 0xb
+ 1237 0018 3E       		.uleb128 0x3e
+ 1238 0019 0B       		.uleb128 0xb
+ 1239 001a 03       		.uleb128 0x3
+ 1240 001b 0E       		.uleb128 0xe
+ 1241 001c 00       		.byte	0
+ 1242 001d 00       		.byte	0
+ 1243 001e 03       		.uleb128 0x3
+ 1244 001f 16       		.uleb128 0x16
+ 1245 0020 00       		.byte	0
+ 1246 0021 03       		.uleb128 0x3
+ 1247 0022 0E       		.uleb128 0xe
+ 1248 0023 3A       		.uleb128 0x3a
+ 1249 0024 0B       		.uleb128 0xb
+ 1250 0025 3B       		.uleb128 0x3b
+ 1251 0026 0B       		.uleb128 0xb
+ 1252 0027 49       		.uleb128 0x49
+ 1253 0028 13       		.uleb128 0x13
+ 1254 0029 00       		.byte	0
+ 1255 002a 00       		.byte	0
+ 1256 002b 04       		.uleb128 0x4
+ 1257 002c 24       		.uleb128 0x24
+ 1258 002d 00       		.byte	0
+ 1259 002e 0B       		.uleb128 0xb
+ 1260 002f 0B       		.uleb128 0xb
+ 1261 0030 3E       		.uleb128 0x3e
+ 1262 0031 0B       		.uleb128 0xb
+ 1263 0032 03       		.uleb128 0x3
+ 1264 0033 08       		.uleb128 0x8
+ 1265 0034 00       		.byte	0
+ 1266 0035 00       		.byte	0
+ 1267 0036 05       		.uleb128 0x5
+ 1268 0037 16       		.uleb128 0x16
+ 1269 0038 00       		.byte	0
+ 1270 0039 03       		.uleb128 0x3
+ 1271 003a 0E       		.uleb128 0xe
+ 1272 003b 3A       		.uleb128 0x3a
+ 1273 003c 0B       		.uleb128 0xb
+ 1274 003d 3B       		.uleb128 0x3b
+ 1275 003e 05       		.uleb128 0x5
+ 1276 003f 49       		.uleb128 0x49
+ 1277 0040 13       		.uleb128 0x13
+ 1278 0041 00       		.byte	0
+ 1279 0042 00       		.byte	0
+ 1280 0043 06       		.uleb128 0x6
+ 1281 0044 35       		.uleb128 0x35
+ 1282 0045 00       		.byte	0
+ 1283 0046 49       		.uleb128 0x49
+ 1284 0047 13       		.uleb128 0x13
+ 1285 0048 00       		.byte	0
+ 1286 0049 00       		.byte	0
+ 1287 004a 07       		.uleb128 0x7
+ 1288 004b 2E       		.uleb128 0x2e
+ 1289 004c 01       		.byte	0x1
+ 1290 004d 3F       		.uleb128 0x3f
+ 1291 004e 19       		.uleb128 0x19
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 27
+
+
+ 1292 004f 03       		.uleb128 0x3
+ 1293 0050 0E       		.uleb128 0xe
+ 1294 0051 3A       		.uleb128 0x3a
+ 1295 0052 0B       		.uleb128 0xb
+ 1296 0053 3B       		.uleb128 0x3b
+ 1297 0054 0B       		.uleb128 0xb
+ 1298 0055 27       		.uleb128 0x27
+ 1299 0056 19       		.uleb128 0x19
+ 1300 0057 49       		.uleb128 0x49
+ 1301 0058 13       		.uleb128 0x13
+ 1302 0059 11       		.uleb128 0x11
+ 1303 005a 01       		.uleb128 0x1
+ 1304 005b 12       		.uleb128 0x12
+ 1305 005c 06       		.uleb128 0x6
+ 1306 005d 40       		.uleb128 0x40
+ 1307 005e 18       		.uleb128 0x18
+ 1308 005f 9742     		.uleb128 0x2117
+ 1309 0061 19       		.uleb128 0x19
+ 1310 0062 01       		.uleb128 0x1
+ 1311 0063 13       		.uleb128 0x13
+ 1312 0064 00       		.byte	0
+ 1313 0065 00       		.byte	0
+ 1314 0066 08       		.uleb128 0x8
+ 1315 0067 05       		.uleb128 0x5
+ 1316 0068 00       		.byte	0
+ 1317 0069 03       		.uleb128 0x3
+ 1318 006a 0E       		.uleb128 0xe
+ 1319 006b 3A       		.uleb128 0x3a
+ 1320 006c 0B       		.uleb128 0xb
+ 1321 006d 3B       		.uleb128 0x3b
+ 1322 006e 0B       		.uleb128 0xb
+ 1323 006f 49       		.uleb128 0x49
+ 1324 0070 13       		.uleb128 0x13
+ 1325 0071 02       		.uleb128 0x2
+ 1326 0072 17       		.uleb128 0x17
+ 1327 0073 00       		.byte	0
+ 1328 0074 00       		.byte	0
+ 1329 0075 09       		.uleb128 0x9
+ 1330 0076 34       		.uleb128 0x34
+ 1331 0077 00       		.byte	0
+ 1332 0078 03       		.uleb128 0x3
+ 1333 0079 08       		.uleb128 0x8
+ 1334 007a 3A       		.uleb128 0x3a
+ 1335 007b 0B       		.uleb128 0xb
+ 1336 007c 3B       		.uleb128 0x3b
+ 1337 007d 0B       		.uleb128 0xb
+ 1338 007e 49       		.uleb128 0x49
+ 1339 007f 13       		.uleb128 0x13
+ 1340 0080 02       		.uleb128 0x2
+ 1341 0081 17       		.uleb128 0x17
+ 1342 0082 00       		.byte	0
+ 1343 0083 00       		.byte	0
+ 1344 0084 0A       		.uleb128 0xa
+ 1345 0085 34       		.uleb128 0x34
+ 1346 0086 00       		.byte	0
+ 1347 0087 03       		.uleb128 0x3
+ 1348 0088 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 28
+
+
+ 1349 0089 3A       		.uleb128 0x3a
+ 1350 008a 0B       		.uleb128 0xb
+ 1351 008b 3B       		.uleb128 0x3b
+ 1352 008c 0B       		.uleb128 0xb
+ 1353 008d 49       		.uleb128 0x49
+ 1354 008e 13       		.uleb128 0x13
+ 1355 008f 02       		.uleb128 0x2
+ 1356 0090 18       		.uleb128 0x18
+ 1357 0091 00       		.byte	0
+ 1358 0092 00       		.byte	0
+ 1359 0093 0B       		.uleb128 0xb
+ 1360 0094 34       		.uleb128 0x34
+ 1361 0095 00       		.byte	0
+ 1362 0096 03       		.uleb128 0x3
+ 1363 0097 08       		.uleb128 0x8
+ 1364 0098 3A       		.uleb128 0x3a
+ 1365 0099 0B       		.uleb128 0xb
+ 1366 009a 3B       		.uleb128 0x3b
+ 1367 009b 0B       		.uleb128 0xb
+ 1368 009c 49       		.uleb128 0x49
+ 1369 009d 13       		.uleb128 0x13
+ 1370 009e 02       		.uleb128 0x2
+ 1371 009f 18       		.uleb128 0x18
+ 1372 00a0 00       		.byte	0
+ 1373 00a1 00       		.byte	0
+ 1374 00a2 0C       		.uleb128 0xc
+ 1375 00a3 01       		.uleb128 0x1
+ 1376 00a4 01       		.byte	0x1
+ 1377 00a5 49       		.uleb128 0x49
+ 1378 00a6 13       		.uleb128 0x13
+ 1379 00a7 01       		.uleb128 0x1
+ 1380 00a8 13       		.uleb128 0x13
+ 1381 00a9 00       		.byte	0
+ 1382 00aa 00       		.byte	0
+ 1383 00ab 0D       		.uleb128 0xd
+ 1384 00ac 21       		.uleb128 0x21
+ 1385 00ad 00       		.byte	0
+ 1386 00ae 49       		.uleb128 0x49
+ 1387 00af 13       		.uleb128 0x13
+ 1388 00b0 2F       		.uleb128 0x2f
+ 1389 00b1 0B       		.uleb128 0xb
+ 1390 00b2 00       		.byte	0
+ 1391 00b3 00       		.byte	0
+ 1392 00b4 0E       		.uleb128 0xe
+ 1393 00b5 2E       		.uleb128 0x2e
+ 1394 00b6 01       		.byte	0x1
+ 1395 00b7 3F       		.uleb128 0x3f
+ 1396 00b8 19       		.uleb128 0x19
+ 1397 00b9 03       		.uleb128 0x3
+ 1398 00ba 0E       		.uleb128 0xe
+ 1399 00bb 3A       		.uleb128 0x3a
+ 1400 00bc 0B       		.uleb128 0xb
+ 1401 00bd 3B       		.uleb128 0x3b
+ 1402 00be 0B       		.uleb128 0xb
+ 1403 00bf 27       		.uleb128 0x27
+ 1404 00c0 19       		.uleb128 0x19
+ 1405 00c1 11       		.uleb128 0x11
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 29
+
+
+ 1406 00c2 01       		.uleb128 0x1
+ 1407 00c3 12       		.uleb128 0x12
+ 1408 00c4 06       		.uleb128 0x6
+ 1409 00c5 40       		.uleb128 0x40
+ 1410 00c6 18       		.uleb128 0x18
+ 1411 00c7 9742     		.uleb128 0x2117
+ 1412 00c9 19       		.uleb128 0x19
+ 1413 00ca 01       		.uleb128 0x1
+ 1414 00cb 13       		.uleb128 0x13
+ 1415 00cc 00       		.byte	0
+ 1416 00cd 00       		.byte	0
+ 1417 00ce 0F       		.uleb128 0xf
+ 1418 00cf 34       		.uleb128 0x34
+ 1419 00d0 00       		.byte	0
+ 1420 00d1 03       		.uleb128 0x3
+ 1421 00d2 0E       		.uleb128 0xe
+ 1422 00d3 3A       		.uleb128 0x3a
+ 1423 00d4 0B       		.uleb128 0xb
+ 1424 00d5 3B       		.uleb128 0x3b
+ 1425 00d6 0B       		.uleb128 0xb
+ 1426 00d7 49       		.uleb128 0x49
+ 1427 00d8 13       		.uleb128 0x13
+ 1428 00d9 02       		.uleb128 0x2
+ 1429 00da 17       		.uleb128 0x17
+ 1430 00db 00       		.byte	0
+ 1431 00dc 00       		.byte	0
+ 1432 00dd 10       		.uleb128 0x10
+ 1433 00de 05       		.uleb128 0x5
+ 1434 00df 00       		.byte	0
+ 1435 00e0 03       		.uleb128 0x3
+ 1436 00e1 08       		.uleb128 0x8
+ 1437 00e2 3A       		.uleb128 0x3a
+ 1438 00e3 0B       		.uleb128 0xb
+ 1439 00e4 3B       		.uleb128 0x3b
+ 1440 00e5 0B       		.uleb128 0xb
+ 1441 00e6 49       		.uleb128 0x49
+ 1442 00e7 13       		.uleb128 0x13
+ 1443 00e8 02       		.uleb128 0x2
+ 1444 00e9 17       		.uleb128 0x17
+ 1445 00ea 00       		.byte	0
+ 1446 00eb 00       		.byte	0
+ 1447 00ec 11       		.uleb128 0x11
+ 1448 00ed 34       		.uleb128 0x34
+ 1449 00ee 00       		.byte	0
+ 1450 00ef 03       		.uleb128 0x3
+ 1451 00f0 0E       		.uleb128 0xe
+ 1452 00f1 3A       		.uleb128 0x3a
+ 1453 00f2 0B       		.uleb128 0xb
+ 1454 00f3 3B       		.uleb128 0x3b
+ 1455 00f4 0B       		.uleb128 0xb
+ 1456 00f5 49       		.uleb128 0x49
+ 1457 00f6 13       		.uleb128 0x13
+ 1458 00f7 00       		.byte	0
+ 1459 00f8 00       		.byte	0
+ 1460 00f9 12       		.uleb128 0x12
+ 1461 00fa 898201   		.uleb128 0x4109
+ 1462 00fd 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 30
+
+
+ 1463 00fe 11       		.uleb128 0x11
+ 1464 00ff 01       		.uleb128 0x1
+ 1465 0100 31       		.uleb128 0x31
+ 1466 0101 13       		.uleb128 0x13
+ 1467 0102 01       		.uleb128 0x1
+ 1468 0103 13       		.uleb128 0x13
+ 1469 0104 00       		.byte	0
+ 1470 0105 00       		.byte	0
+ 1471 0106 13       		.uleb128 0x13
+ 1472 0107 8A8201   		.uleb128 0x410a
+ 1473 010a 00       		.byte	0
+ 1474 010b 02       		.uleb128 0x2
+ 1475 010c 18       		.uleb128 0x18
+ 1476 010d 9142     		.uleb128 0x2111
+ 1477 010f 18       		.uleb128 0x18
+ 1478 0110 00       		.byte	0
+ 1479 0111 00       		.byte	0
+ 1480 0112 14       		.uleb128 0x14
+ 1481 0113 898201   		.uleb128 0x4109
+ 1482 0116 00       		.byte	0
+ 1483 0117 11       		.uleb128 0x11
+ 1484 0118 01       		.uleb128 0x1
+ 1485 0119 31       		.uleb128 0x31
+ 1486 011a 13       		.uleb128 0x13
+ 1487 011b 00       		.byte	0
+ 1488 011c 00       		.byte	0
+ 1489 011d 15       		.uleb128 0x15
+ 1490 011e 898201   		.uleb128 0x4109
+ 1491 0121 01       		.byte	0x1
+ 1492 0122 11       		.uleb128 0x11
+ 1493 0123 01       		.uleb128 0x1
+ 1494 0124 31       		.uleb128 0x31
+ 1495 0125 13       		.uleb128 0x13
+ 1496 0126 00       		.byte	0
+ 1497 0127 00       		.byte	0
+ 1498 0128 16       		.uleb128 0x16
+ 1499 0129 34       		.uleb128 0x34
+ 1500 012a 00       		.byte	0
+ 1501 012b 03       		.uleb128 0x3
+ 1502 012c 0E       		.uleb128 0xe
+ 1503 012d 3A       		.uleb128 0x3a
+ 1504 012e 0B       		.uleb128 0xb
+ 1505 012f 3B       		.uleb128 0x3b
+ 1506 0130 05       		.uleb128 0x5
+ 1507 0131 49       		.uleb128 0x49
+ 1508 0132 13       		.uleb128 0x13
+ 1509 0133 3F       		.uleb128 0x3f
+ 1510 0134 19       		.uleb128 0x19
+ 1511 0135 3C       		.uleb128 0x3c
+ 1512 0136 19       		.uleb128 0x19
+ 1513 0137 00       		.byte	0
+ 1514 0138 00       		.byte	0
+ 1515 0139 17       		.uleb128 0x17
+ 1516 013a 34       		.uleb128 0x34
+ 1517 013b 00       		.byte	0
+ 1518 013c 03       		.uleb128 0x3
+ 1519 013d 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 31
+
+
+ 1520 013e 3A       		.uleb128 0x3a
+ 1521 013f 0B       		.uleb128 0xb
+ 1522 0140 3B       		.uleb128 0x3b
+ 1523 0141 0B       		.uleb128 0xb
+ 1524 0142 49       		.uleb128 0x49
+ 1525 0143 13       		.uleb128 0x13
+ 1526 0144 3F       		.uleb128 0x3f
+ 1527 0145 19       		.uleb128 0x19
+ 1528 0146 02       		.uleb128 0x2
+ 1529 0147 18       		.uleb128 0x18
+ 1530 0148 00       		.byte	0
+ 1531 0149 00       		.byte	0
+ 1532 014a 18       		.uleb128 0x18
+ 1533 014b 2E       		.uleb128 0x2e
+ 1534 014c 01       		.byte	0x1
+ 1535 014d 3F       		.uleb128 0x3f
+ 1536 014e 19       		.uleb128 0x19
+ 1537 014f 03       		.uleb128 0x3
+ 1538 0150 0E       		.uleb128 0xe
+ 1539 0151 3A       		.uleb128 0x3a
+ 1540 0152 0B       		.uleb128 0xb
+ 1541 0153 3B       		.uleb128 0x3b
+ 1542 0154 0B       		.uleb128 0xb
+ 1543 0155 27       		.uleb128 0x27
+ 1544 0156 19       		.uleb128 0x19
+ 1545 0157 49       		.uleb128 0x49
+ 1546 0158 13       		.uleb128 0x13
+ 1547 0159 3C       		.uleb128 0x3c
+ 1548 015a 19       		.uleb128 0x19
+ 1549 015b 01       		.uleb128 0x1
+ 1550 015c 13       		.uleb128 0x13
+ 1551 015d 00       		.byte	0
+ 1552 015e 00       		.byte	0
+ 1553 015f 19       		.uleb128 0x19
+ 1554 0160 05       		.uleb128 0x5
+ 1555 0161 00       		.byte	0
+ 1556 0162 49       		.uleb128 0x49
+ 1557 0163 13       		.uleb128 0x13
+ 1558 0164 00       		.byte	0
+ 1559 0165 00       		.byte	0
+ 1560 0166 1A       		.uleb128 0x1a
+ 1561 0167 2E       		.uleb128 0x2e
+ 1562 0168 00       		.byte	0
+ 1563 0169 3F       		.uleb128 0x3f
+ 1564 016a 19       		.uleb128 0x19
+ 1565 016b 03       		.uleb128 0x3
+ 1566 016c 0E       		.uleb128 0xe
+ 1567 016d 3A       		.uleb128 0x3a
+ 1568 016e 0B       		.uleb128 0xb
+ 1569 016f 3B       		.uleb128 0x3b
+ 1570 0170 0B       		.uleb128 0xb
+ 1571 0171 27       		.uleb128 0x27
+ 1572 0172 19       		.uleb128 0x19
+ 1573 0173 49       		.uleb128 0x49
+ 1574 0174 13       		.uleb128 0x13
+ 1575 0175 3C       		.uleb128 0x3c
+ 1576 0176 19       		.uleb128 0x19
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 32
+
+
+ 1577 0177 00       		.byte	0
+ 1578 0178 00       		.byte	0
+ 1579 0179 1B       		.uleb128 0x1b
+ 1580 017a 2E       		.uleb128 0x2e
+ 1581 017b 00       		.byte	0
+ 1582 017c 3F       		.uleb128 0x3f
+ 1583 017d 19       		.uleb128 0x19
+ 1584 017e 03       		.uleb128 0x3
+ 1585 017f 0E       		.uleb128 0xe
+ 1586 0180 3A       		.uleb128 0x3a
+ 1587 0181 0B       		.uleb128 0xb
+ 1588 0182 3B       		.uleb128 0x3b
+ 1589 0183 0B       		.uleb128 0xb
+ 1590 0184 27       		.uleb128 0x27
+ 1591 0185 19       		.uleb128 0x19
+ 1592 0186 3C       		.uleb128 0x3c
+ 1593 0187 19       		.uleb128 0x19
+ 1594 0188 00       		.byte	0
+ 1595 0189 00       		.byte	0
+ 1596 018a 1C       		.uleb128 0x1c
+ 1597 018b 2E       		.uleb128 0x2e
+ 1598 018c 01       		.byte	0x1
+ 1599 018d 3F       		.uleb128 0x3f
+ 1600 018e 19       		.uleb128 0x19
+ 1601 018f 03       		.uleb128 0x3
+ 1602 0190 0E       		.uleb128 0xe
+ 1603 0191 3A       		.uleb128 0x3a
+ 1604 0192 0B       		.uleb128 0xb
+ 1605 0193 3B       		.uleb128 0x3b
+ 1606 0194 0B       		.uleb128 0xb
+ 1607 0195 27       		.uleb128 0x27
+ 1608 0196 19       		.uleb128 0x19
+ 1609 0197 49       		.uleb128 0x49
+ 1610 0198 13       		.uleb128 0x13
+ 1611 0199 3C       		.uleb128 0x3c
+ 1612 019a 19       		.uleb128 0x19
+ 1613 019b 00       		.byte	0
+ 1614 019c 00       		.byte	0
+ 1615 019d 00       		.byte	0
+ 1616              		.section	.debug_loc,"",%progbits
+ 1617              	.Ldebug_loc0:
+ 1618              	.LLST0:
+ 1619 0000 00000000 		.4byte	.LVL0
+ 1620 0004 2E000000 		.4byte	.LVL5
+ 1621 0008 0100     		.2byte	0x1
+ 1622 000a 50       		.byte	0x50
+ 1623 000b 2E000000 		.4byte	.LVL5
+ 1624 000f 3C000000 		.4byte	.LFE64
+ 1625 0013 0500     		.2byte	0x5
+ 1626 0015 03       		.byte	0x3
+ 1627 0016 12000000 		.4byte	adc_avg_buf.10481+14
+ 1628 001a 00000000 		.4byte	0
+ 1629 001e 00000000 		.4byte	0
+ 1630              	.LLST1:
+ 1631 0022 02000000 		.4byte	.LVL1
+ 1632 0026 0C000000 		.4byte	.LVL2
+ 1633 002a 0200     		.2byte	0x2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 33
+
+
+ 1634 002c 30       		.byte	0x30
+ 1635 002d 9F       		.byte	0x9f
+ 1636 002e 0C000000 		.4byte	.LVL2
+ 1637 0032 2E000000 		.4byte	.LVL5
+ 1638 0036 0100     		.2byte	0x1
+ 1639 0038 54       		.byte	0x54
+ 1640 0039 2E000000 		.4byte	.LVL5
+ 1641 003d 32000000 		.4byte	.LVL6
+ 1642 0041 0100     		.2byte	0x1
+ 1643 0043 50       		.byte	0x50
+ 1644 0044 00000000 		.4byte	0
+ 1645 0048 00000000 		.4byte	0
+ 1646              	.LLST2:
+ 1647 004c 02000000 		.4byte	.LVL1
+ 1648 0050 2E000000 		.4byte	.LVL5
+ 1649 0054 0200     		.2byte	0x2
+ 1650 0056 30       		.byte	0x30
+ 1651 0057 9F       		.byte	0x9f
+ 1652 0058 2E000000 		.4byte	.LVL5
+ 1653 005c 32000000 		.4byte	.LVL6
+ 1654 0060 0900     		.2byte	0x9
+ 1655 0062 70       		.byte	0x70
+ 1656 0063 00       		.sleb128 0
+ 1657 0064 09       		.byte	0x9
+ 1658 0065 F1       		.byte	0xf1
+ 1659 0066 24       		.byte	0x24
+ 1660 0067 09       		.byte	0x9
+ 1661 0068 F4       		.byte	0xf4
+ 1662 0069 25       		.byte	0x25
+ 1663 006a 9F       		.byte	0x9f
+ 1664 006b 00000000 		.4byte	0
+ 1665 006f 00000000 		.4byte	0
+ 1666              	.LLST3:
+ 1667 0073 02000000 		.4byte	.LVL7
+ 1668 0077 06000000 		.4byte	.LVL8
+ 1669 007b 0200     		.2byte	0x2
+ 1670 007d 30       		.byte	0x30
+ 1671 007e 9F       		.byte	0x9f
+ 1672 007f 06000000 		.4byte	.LVL8
+ 1673 0083 2E000000 		.4byte	.LVL16
+ 1674 0087 0100     		.2byte	0x1
+ 1675 0089 54       		.byte	0x54
+ 1676 008a 30000000 		.4byte	.LVL17
+ 1677 008e 38000000 		.4byte	.LVL18
+ 1678 0092 0100     		.2byte	0x1
+ 1679 0094 54       		.byte	0x54
+ 1680 0095 00000000 		.4byte	0
+ 1681 0099 00000000 		.4byte	0
+ 1682              	.LLST4:
+ 1683 009d 02000000 		.4byte	.LVL7
+ 1684 00a1 06000000 		.4byte	.LVL8
+ 1685 00a5 0200     		.2byte	0x2
+ 1686 00a7 30       		.byte	0x30
+ 1687 00a8 9F       		.byte	0x9f
+ 1688 00a9 06000000 		.4byte	.LVL8
+ 1689 00ad 16000000 		.4byte	.LVL10
+ 1690 00b1 0100     		.2byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 34
+
+
+ 1691 00b3 53       		.byte	0x53
+ 1692 00b4 18000000 		.4byte	.LVL11
+ 1693 00b8 1A000000 		.4byte	.LVL12
+ 1694 00bc 0100     		.2byte	0x1
+ 1695 00be 53       		.byte	0x53
+ 1696 00bf 1E000000 		.4byte	.LVL13
+ 1697 00c3 28000000 		.4byte	.LVL15
+ 1698 00c7 0100     		.2byte	0x1
+ 1699 00c9 53       		.byte	0x53
+ 1700 00ca 00000000 		.4byte	0
+ 1701 00ce 00000000 		.4byte	0
+ 1702              	.LLST5:
+ 1703 00d2 02000000 		.4byte	.LVL7
+ 1704 00d6 06000000 		.4byte	.LVL8
+ 1705 00da 0200     		.2byte	0x2
+ 1706 00dc 30       		.byte	0x30
+ 1707 00dd 9F       		.byte	0x9f
+ 1708 00de 06000000 		.4byte	.LVL8
+ 1709 00e2 1A000000 		.4byte	.LVL12
+ 1710 00e6 0100     		.2byte	0x1
+ 1711 00e8 51       		.byte	0x51
+ 1712 00e9 1E000000 		.4byte	.LVL13
+ 1713 00ed 26000000 		.4byte	.LVL14
+ 1714 00f1 0100     		.2byte	0x1
+ 1715 00f3 51       		.byte	0x51
+ 1716 00f4 00000000 		.4byte	0
+ 1717 00f8 00000000 		.4byte	0
+ 1718              	.LLST6:
+ 1719 00fc 02000000 		.4byte	.LVL19
+ 1720 0100 06000000 		.4byte	.LVL20
+ 1721 0104 0200     		.2byte	0x2
+ 1722 0106 30       		.byte	0x30
+ 1723 0107 9F       		.byte	0x9f
+ 1724 0108 06000000 		.4byte	.LVL20
+ 1725 010c 26000000 		.4byte	.LVL25
+ 1726 0110 0100     		.2byte	0x1
+ 1727 0112 54       		.byte	0x54
+ 1728 0113 28000000 		.4byte	.LVL26
+ 1729 0117 30000000 		.4byte	.LVL27
+ 1730 011b 0100     		.2byte	0x1
+ 1731 011d 54       		.byte	0x54
+ 1732 011e 00000000 		.4byte	0
+ 1733 0122 00000000 		.4byte	0
+ 1734              	.LLST7:
+ 1735 0126 02000000 		.4byte	.LVL19
+ 1736 012a 06000000 		.4byte	.LVL20
+ 1737 012e 0200     		.2byte	0x2
+ 1738 0130 30       		.byte	0x30
+ 1739 0131 9F       		.byte	0x9f
+ 1740 0132 06000000 		.4byte	.LVL20
+ 1741 0136 1A000000 		.4byte	.LVL21
+ 1742 013a 0100     		.2byte	0x1
+ 1743 013c 53       		.byte	0x53
+ 1744 013d 1C000000 		.4byte	.LVL22
+ 1745 0141 1E000000 		.4byte	.LVL23
+ 1746 0145 0100     		.2byte	0x1
+ 1747 0147 53       		.byte	0x53
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 35
+
+
+ 1748 0148 20000000 		.4byte	.LVL24
+ 1749 014c 28000000 		.4byte	.LVL26
+ 1750 0150 0100     		.2byte	0x1
+ 1751 0152 53       		.byte	0x53
+ 1752 0153 00000000 		.4byte	0
+ 1753 0157 00000000 		.4byte	0
+ 1754              	.LLST8:
+ 1755 015b 00000000 		.4byte	.LVL28
+ 1756 015f 0A000000 		.4byte	.LVL29
+ 1757 0163 0100     		.2byte	0x1
+ 1758 0165 50       		.byte	0x50
+ 1759 0166 0A000000 		.4byte	.LVL29
+ 1760 016a 0E000000 		.4byte	.LVL30
+ 1761 016e 0400     		.2byte	0x4
+ 1762 0170 F3       		.byte	0xf3
+ 1763 0171 01       		.uleb128 0x1
+ 1764 0172 50       		.byte	0x50
+ 1765 0173 9F       		.byte	0x9f
+ 1766 0174 0E000000 		.4byte	.LVL30
+ 1767 0178 10000000 		.4byte	.LVL31
+ 1768 017c 0100     		.2byte	0x1
+ 1769 017e 50       		.byte	0x50
+ 1770 017f 10000000 		.4byte	.LVL31
+ 1771 0183 18000000 		.4byte	.LFE67
+ 1772 0187 0400     		.2byte	0x4
+ 1773 0189 F3       		.byte	0xf3
+ 1774 018a 01       		.uleb128 0x1
+ 1775 018b 50       		.byte	0x50
+ 1776 018c 9F       		.byte	0x9f
+ 1777 018d 00000000 		.4byte	0
+ 1778 0191 00000000 		.4byte	0
+ 1779              	.LLST9:
+ 1780 0195 14000000 		.4byte	.LVL33
+ 1781 0199 44000000 		.4byte	.LVL39
+ 1782 019d 0100     		.2byte	0x1
+ 1783 019f 55       		.byte	0x55
+ 1784 01a0 00000000 		.4byte	0
+ 1785 01a4 00000000 		.4byte	0
+ 1786              	.LLST10:
+ 1787 01a8 14000000 		.4byte	.LVL48
+ 1788 01ac 44000000 		.4byte	.LVL54
+ 1789 01b0 0100     		.2byte	0x1
+ 1790 01b2 55       		.byte	0x55
+ 1791 01b3 00000000 		.4byte	0
+ 1792 01b7 00000000 		.4byte	0
+ 1793              		.section	.debug_aranges,"",%progbits
+ 1794 0000 4C000000 		.4byte	0x4c
+ 1795 0004 0200     		.2byte	0x2
+ 1796 0006 00000000 		.4byte	.Ldebug_info0
+ 1797 000a 04       		.byte	0x4
+ 1798 000b 00       		.byte	0
+ 1799 000c 0000     		.2byte	0
+ 1800 000e 0000     		.2byte	0
+ 1801 0010 00000000 		.4byte	.LFB64
+ 1802 0014 3C000000 		.4byte	.LFE64-.LFB64
+ 1803 0018 00000000 		.4byte	.LFB65
+ 1804 001c 44000000 		.4byte	.LFE65-.LFB65
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 36
+
+
+ 1805 0020 00000000 		.4byte	.LFB66
+ 1806 0024 3C000000 		.4byte	.LFE66-.LFB66
+ 1807 0028 00000000 		.4byte	.LFB67
+ 1808 002c 18000000 		.4byte	.LFE67-.LFB67
+ 1809 0030 00000000 		.4byte	.LFB68
+ 1810 0034 48000000 		.4byte	.LFE68-.LFB68
+ 1811 0038 00000000 		.4byte	.LFB63
+ 1812 003c 20000000 		.4byte	.LFE63-.LFB63
+ 1813 0040 00000000 		.4byte	.LFB69
+ 1814 0044 48000000 		.4byte	.LFE69-.LFB69
+ 1815 0048 00000000 		.4byte	0
+ 1816 004c 00000000 		.4byte	0
+ 1817              		.section	.debug_ranges,"",%progbits
+ 1818              	.Ldebug_ranges0:
+ 1819 0000 00000000 		.4byte	.LFB64
+ 1820 0004 3C000000 		.4byte	.LFE64
+ 1821 0008 00000000 		.4byte	.LFB65
+ 1822 000c 44000000 		.4byte	.LFE65
+ 1823 0010 00000000 		.4byte	.LFB66
+ 1824 0014 3C000000 		.4byte	.LFE66
+ 1825 0018 00000000 		.4byte	.LFB67
+ 1826 001c 18000000 		.4byte	.LFE67
+ 1827 0020 00000000 		.4byte	.LFB68
+ 1828 0024 48000000 		.4byte	.LFE68
+ 1829 0028 00000000 		.4byte	.LFB63
+ 1830 002c 20000000 		.4byte	.LFE63
+ 1831 0030 00000000 		.4byte	.LFB69
+ 1832 0034 48000000 		.4byte	.LFE69
+ 1833 0038 00000000 		.4byte	0
+ 1834 003c 00000000 		.4byte	0
+ 1835              		.section	.debug_line,"",%progbits
+ 1836              	.Ldebug_line0:
+ 1837 0000 B1020000 		.section	.debug_str,"MS",%progbits,1
+ 1837      0200BD01 
+ 1837      00000201 
+ 1837      FB0E0D00 
+ 1837      01010101 
+ 1838              	.LASF57:
+ 1839 0000 4379446D 		.ascii	"CyDmaTdAllocate\000"
+ 1839      61546441 
+ 1839      6C6C6F63 
+ 1839      61746500 
+ 1840              	.LASF22:
+ 1841 0010 6164635F 		.ascii	"adc_avg_buf\000"
+ 1841      6176675F 
+ 1841      62756600 
+ 1842              	.LASF51:
+ 1843 001c 4144435F 		.ascii	"ADC_SAR_1_Start\000"
+ 1843      5341525F 
+ 1843      315F5374 
+ 1843      61727400 
+ 1844              	.LASF16:
+ 1845 002c 646F7562 		.ascii	"double\000"
+ 1845      6C6500
+ 1846              	.LASF28:
+ 1847 0033 6E65775F 		.ascii	"new_data\000"
+ 1847      64617461 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 37
+
+
+ 1847      00
+ 1848              	.LASF35:
+ 1849 003c 444D415F 		.ascii	"DMA_1_TD\000"
+ 1849      315F5444 
+ 1849      00
+ 1850              	.LASF44:
+ 1851 0045 4379446D 		.ascii	"CyDmaTdSetConfiguration\000"
+ 1851      61546453 
+ 1851      6574436F 
+ 1851      6E666967 
+ 1851      75726174 
+ 1852              	.LASF47:
+ 1853 005d 4379446D 		.ascii	"CyDmaChEnable\000"
+ 1853      61436845 
+ 1853      6E61626C 
+ 1853      6500
+ 1854              	.LASF20:
+ 1855 006b 73697A65 		.ascii	"sizetype\000"
+ 1855      74797065 
+ 1855      00
+ 1856              	.LASF37:
+ 1857 0074 61646331 		.ascii	"adc1_res\000"
+ 1857      5F726573 
+ 1857      00
+ 1858              	.LASF34:
+ 1859 007d 444D415F 		.ascii	"DMA_5_TD\000"
+ 1859      355F5444 
+ 1859      00
+ 1860              	.LASF23:
+ 1861 0086 6164635F 		.ascii	"adc_sum\000"
+ 1861      73756D00 
+ 1862              	.LASF2:
+ 1863 008e 73686F72 		.ascii	"short int\000"
+ 1863      7420696E 
+ 1863      7400
+ 1864              	.LASF41:
+ 1865 0098 6164635F 		.ascii	"adc_sar1_dma_array\000"
+ 1865      73617231 
+ 1865      5F646D61 
+ 1865      5F617272 
+ 1865      617900
+ 1866              	.LASF46:
+ 1867 00ab 4379446D 		.ascii	"CyDmaChSetInitialTd\000"
+ 1867      61436853 
+ 1867      6574496E 
+ 1867      69746961 
+ 1867      6C546400 
+ 1868              	.LASF12:
+ 1869 00bf 75696E74 		.ascii	"uint16\000"
+ 1869      313600
+ 1870              	.LASF50:
+ 1871 00c6 5047415F 		.ascii	"PGA_2_Start\000"
+ 1871      325F5374 
+ 1871      61727400 
+ 1872              	.LASF14:
+ 1873 00d2 696E7431 		.ascii	"int16\000"
+ 1873      3600
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 38
+
+
+ 1874              	.LASF56:
+ 1875 00d8 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 1875      6C657853 
+ 1875      45415F61 
+ 1875      6C783837 
+ 1875      6772645C 
+ 1876              	.LASF29:
+ 1877 0106 6164635F 		.ascii	"adc_sar1_dma_config\000"
+ 1877      73617231 
+ 1877      5F646D61 
+ 1877      5F636F6E 
+ 1877      66696700 
+ 1878              	.LASF48:
+ 1879 011a 414D7578 		.ascii	"AMux_1_Start\000"
+ 1879      5F315F53 
+ 1879      74617274 
+ 1879      00
+ 1880              	.LASF15:
+ 1881 0127 666C6F61 		.ascii	"float\000"
+ 1881      7400
+ 1882              	.LASF30:
+ 1883 012d 444D415F 		.ascii	"DMA_5_Chan\000"
+ 1883      355F4368 
+ 1883      616E00
+ 1884              	.LASF6:
+ 1885 0138 6C6F6E67 		.ascii	"long long int\000"
+ 1885      206C6F6E 
+ 1885      6720696E 
+ 1885      7400
+ 1886              	.LASF33:
+ 1887 0146 444D415F 		.ascii	"DMA_1_Chan\000"
+ 1887      315F4368 
+ 1887      616E00
+ 1888              	.LASF42:
+ 1889 0151 616D7578 		.ascii	"amux_ch\000"
+ 1889      5F636800 
+ 1890              	.LASF4:
+ 1891 0159 6C6F6E67 		.ascii	"long int\000"
+ 1891      20696E74 
+ 1891      00
+ 1892              	.LASF39:
+ 1893 0162 61646331 		.ascii	"adc1_dbuf\000"
+ 1893      5F646275 
+ 1893      6600
+ 1894              	.LASF38:
+ 1895 016c 61646331 		.ascii	"adc1_res_filtered\000"
+ 1895      5F726573 
+ 1895      5F66696C 
+ 1895      74657265 
+ 1895      6400
+ 1896              	.LASF25:
+ 1897 017e 646F7562 		.ascii	"double_buffer_adc\000"
+ 1897      6C655F62 
+ 1897      75666665 
+ 1897      725F6164 
+ 1897      6300
+ 1898              	.LASF43:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 39
+
+
+ 1899 0190 444D415F 		.ascii	"DMA_5_DmaInitialize\000"
+ 1899      355F446D 
+ 1899      61496E69 
+ 1899      7469616C 
+ 1899      697A6500 
+ 1900              	.LASF32:
+ 1901 01a4 6164635F 		.ascii	"adc_sar2_dma_config\000"
+ 1901      73617232 
+ 1901      5F646D61 
+ 1901      5F636F6E 
+ 1901      66696700 
+ 1902              	.LASF58:
+ 1903 01b8 444D415F 		.ascii	"DMA_1_DmaInitialize\000"
+ 1903      315F446D 
+ 1903      61496E69 
+ 1903      7469616C 
+ 1903      697A6500 
+ 1904              	.LASF21:
+ 1905 01cc 6C6F6E67 		.ascii	"long double\000"
+ 1905      20646F75 
+ 1905      626C6500 
+ 1906              	.LASF1:
+ 1907 01d8 756E7369 		.ascii	"unsigned char\000"
+ 1907      676E6564 
+ 1907      20636861 
+ 1907      7200
+ 1908              	.LASF0:
+ 1909 01e6 7369676E 		.ascii	"signed char\000"
+ 1909      65642063 
+ 1909      68617200 
+ 1910              	.LASF7:
+ 1911 01f2 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1911      206C6F6E 
+ 1911      6720756E 
+ 1911      7369676E 
+ 1911      65642069 
+ 1912              	.LASF8:
+ 1913 0209 756E7369 		.ascii	"unsigned int\000"
+ 1913      676E6564 
+ 1913      20696E74 
+ 1913      00
+ 1914              	.LASF45:
+ 1915 0216 4379446D 		.ascii	"CyDmaTdSetAddress\000"
+ 1915      61546453 
+ 1915      65744164 
+ 1915      64726573 
+ 1915      7300
+ 1916              	.LASF55:
+ 1917 0228 2E2E5C73 		.ascii	"..\\src\\analog.c\000"
+ 1917      72635C61 
+ 1917      6E616C6F 
+ 1917      672E6300 
+ 1918              	.LASF26:
+ 1919 0238 6164635F 		.ascii	"adc_avg8\000"
+ 1919      61766738 
+ 1919      00
+ 1920              	.LASF3:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 40
+
+
+ 1921 0241 73686F72 		.ascii	"short unsigned int\000"
+ 1921      7420756E 
+ 1921      7369676E 
+ 1921      65642069 
+ 1921      6E7400
+ 1922              	.LASF17:
+ 1923 0254 63686172 		.ascii	"char\000"
+ 1923      00
+ 1924              	.LASF18:
+ 1925 0259 63797374 		.ascii	"cystatus\000"
+ 1925      61747573 
+ 1925      00
+ 1926              	.LASF53:
+ 1927 0262 4144435F 		.ascii	"ADC_SAR_1_StartConvert\000"
+ 1927      5341525F 
+ 1927      315F5374 
+ 1927      61727443 
+ 1927      6F6E7665 
+ 1928              	.LASF10:
+ 1929 0279 696E7433 		.ascii	"int32_t\000"
+ 1929      325F7400 
+ 1930              	.LASF11:
+ 1931 0281 75696E74 		.ascii	"uint8\000"
+ 1931      3800
+ 1932              	.LASF27:
+ 1933 0287 72656164 		.ascii	"read_analog\000"
+ 1933      5F616E61 
+ 1933      6C6F6700 
+ 1934              	.LASF49:
+ 1935 0293 5047415F 		.ascii	"PGA_1_Start\000"
+ 1935      315F5374 
+ 1935      61727400 
+ 1936              	.LASF24:
+ 1937 029f 66696C74 		.ascii	"filter_sar_adc\000"
+ 1937      65725F73 
+ 1937      61725F61 
+ 1937      646300
+ 1938              	.LASF19:
+ 1939 02ae 72656738 		.ascii	"reg8\000"
+ 1939      00
+ 1940              	.LASF5:
+ 1941 02b3 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1941      20756E73 
+ 1941      69676E65 
+ 1941      6420696E 
+ 1941      7400
+ 1942              	.LASF13:
+ 1943 02c5 75696E74 		.ascii	"uint32\000"
+ 1943      333200
+ 1944              	.LASF9:
+ 1945 02cc 5F5F696E 		.ascii	"__int32_t\000"
+ 1945      7433325F 
+ 1945      7400
+ 1946              	.LASF54:
+ 1947 02d6 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 1947      4320342E 
+ 1947      392E3320 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cc1JZcuE.s 			page 41
+
+
+ 1947      32303135 
+ 1947      30333033 
+ 1948 0309 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 1948      20726576 
+ 1948      6973696F 
+ 1948      6E203232 
+ 1948      31323230 
+ 1949 033c 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1949      66756E63 
+ 1949      74696F6E 
+ 1949      2D736563 
+ 1949      74696F6E 
+ 1950              	.LASF40:
+ 1951 0364 6164635F 		.ascii	"adc_dma_array\000"
+ 1951      646D615F 
+ 1951      61727261 
+ 1951      7900
+ 1952              	.LASF52:
+ 1953 0372 6973725F 		.ascii	"isr_sar1_dma_Start\000"
+ 1953      73617231 
+ 1953      5F646D61 
+ 1953      5F537461 
+ 1953      727400
+ 1954              	.LASF36:
+ 1955 0385 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 1955      52784275 
+ 1955      66666572 
+ 1955      00
+ 1956              	.LASF31:
+ 1957 0392 696E6974 		.ascii	"init_analog\000"
+ 1957      5F616E61 
+ 1957      6C6F6700 
+ 1958              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

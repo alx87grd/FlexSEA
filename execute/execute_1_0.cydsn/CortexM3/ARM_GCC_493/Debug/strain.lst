@@ -1,0 +1,2682 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"strain.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.global _printf_float
+  19              		.thumb
+  20              		.section	.text.strain_config,"ax",%progbits
+  21              		.align	2
+  22              		.global	strain_config
+  23              		.thumb
+  24              		.thumb_func
+  25              		.type	strain_config, %function
+  26              	strain_config:
+  27              	.LFB64:
+  28              		.file 1 "..\\src\\strain.c"
+   1:..\src/strain.c **** //****************************************************************************
+   2:..\src/strain.c **** // MIT Media Lab - Biomechatronics
+   3:..\src/strain.c **** // Jean-Francois (Jeff) Duval
+   4:..\src/strain.c **** // jfduval@mit.edu
+   5:..\src/strain.c **** // 02/2015
+   6:..\src/strain.c **** //****************************************************************************
+   7:..\src/strain.c **** // strain: strain gauge amplifier
+   8:..\src/strain.c **** //****************************************************************************
+   9:..\src/strain.c **** 
+  10:..\src/strain.c **** //****************************************************************************
+  11:..\src/strain.c **** // Include(s)
+  12:..\src/strain.c **** //****************************************************************************
+  13:..\src/strain.c **** 
+  14:..\src/strain.c **** #include "main.h"
+  15:..\src/strain.c **** #include "strain.h"
+  16:..\src/strain.c **** 
+  17:..\src/strain.c **** //****************************************************************************
+  18:..\src/strain.c **** // Variable(s)
+  19:..\src/strain.c **** //****************************************************************************
+  20:..\src/strain.c **** 
+  21:..\src/strain.c **** struct strain_s strain;
+  22:..\src/strain.c **** uint16 adc_strain_filtered = 0;
+  23:..\src/strain.c **** volatile uint16 adc_strain = 0;
+  24:..\src/strain.c **** volatile uint16 adc_delsig_dma_array[8];
+  25:..\src/strain.c **** 
+  26:..\src/strain.c **** //****************************************************************************
+  27:..\src/strain.c **** // Function(s)
+  28:..\src/strain.c **** //****************************************************************************
+  29:..\src/strain.c **** 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 2
+
+
+  30:..\src/strain.c **** //Enables the peripherals associated with the strain amplifier and
+  31:..\src/strain.c **** //sets the default values.
+  32:..\src/strain.c **** //Make sure that you initialize I2C1 first!
+  33:..\src/strain.c **** void init_strain(void)
+  34:..\src/strain.c **** {
+  35:..\src/strain.c **** 	//Peripherals:
+  36:..\src/strain.c **** 	//=-=-=-=-=-=
+  37:..\src/strain.c **** 	
+  38:..\src/strain.c **** 	Opamp_2_Start();		//VR1
+  39:..\src/strain.c **** 	
+  40:..\src/strain.c **** 	//16-bits ADC:
+  41:..\src/strain.c **** 	ADC_DelSig_1_Start();
+  42:..\src/strain.c **** 	ADC_DelSig_1_IRQ_Enable();
+  43:..\src/strain.c **** 	dma_2_config();
+  44:..\src/strain.c **** 	isr_delsig_Start();
+  45:..\src/strain.c **** 	
+  46:..\src/strain.c **** 	//Defaults:
+  47:..\src/strain.c **** 	//=-=-=-=-=-=
+  48:..\src/strain.c **** 	
+  49:..\src/strain.c **** 	strain.offset = STRAIN_DEFAULT_OFFSET;
+  50:..\src/strain.c **** 	strain.gain = STRAIN_DEFAULT_GAIN;
+  51:..\src/strain.c **** 	//strain.oref = STRAIN_DEFAULT_OREF;	
+  52:..\src/strain.c **** 	strain.vo1 = 0;
+  53:..\src/strain.c **** 	//strain.vo2 = 0;
+  54:..\src/strain.c **** 	strain.filtered_strain = 0;
+  55:..\src/strain.c **** 	strain_config(strain.offset, strain.gain);
+  56:..\src/strain.c **** }
+  57:..\src/strain.c **** 
+  58:..\src/strain.c **** //Configure the strain gauge amplifier
+  59:..\src/strain.c **** void strain_config(uint8 offs, uint8 gain)
+  60:..\src/strain.c **** {
+  29              		.loc 1 60 0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 8
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              	.LVL0:
+  34 0000 10B5     		push	{r4, lr}
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 4, -8
+  37              		.cfi_offset 14, -4
+  38 0002 82B0     		sub	sp, sp, #8
+  39              		.cfi_def_cfa_offset 16
+  40 0004 0C46     		mov	r4, r1
+  61:..\src/strain.c **** 	uint8 i2c_init_buf[2];
+  62:..\src/strain.c **** 	
+  63:..\src/strain.c **** 	//Offset:
+  64:..\src/strain.c **** 	i2c_init_buf[0] = STRAIN_OFFSET;
+  41              		.loc 1 64 0
+  42 0006 1023     		movs	r3, #16
+  43 0008 8DF80430 		strb	r3, [sp, #4]
+  65:..\src/strain.c **** 	i2c_init_buf[1] = offs;		//Offset
+  44              		.loc 1 65 0
+  45 000c 8DF80500 		strb	r0, [sp, #5]
+  66:..\src/strain.c **** 	I2C_1_MasterWriteBuf(I2C_POT_ADDR, (uint8 *) i2c_init_buf, 2, I2C_1_MODE_COMPLETE_XFER);	
+  46              		.loc 1 66 0
+  47 0010 2820     		movs	r0, #40
+  48              	.LVL1:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 3
+
+
+  49 0012 01A9     		add	r1, sp, #4
+  50              	.LVL2:
+  51 0014 0222     		movs	r2, #2
+  52 0016 0023     		movs	r3, #0
+  53 0018 FFF7FEFF 		bl	I2C_1_MasterWriteBuf
+  54              	.LVL3:
+  67:..\src/strain.c **** 	CyDelayUs(100);
+  55              		.loc 1 67 0
+  56 001c 6420     		movs	r0, #100
+  57 001e FFF7FEFF 		bl	CyDelayUs
+  58              	.LVL4:
+  68:..\src/strain.c **** 	
+  69:..\src/strain.c **** 	//Second stage gain:
+  70:..\src/strain.c **** 	i2c_init_buf[0] = STRAIN_GAIN;
+  59              		.loc 1 70 0
+  60 0022 0023     		movs	r3, #0
+  61 0024 8DF80430 		strb	r3, [sp, #4]
+  71:..\src/strain.c **** 	i2c_init_buf[1] = gain;		//Gain
+  62              		.loc 1 71 0
+  63 0028 8DF80540 		strb	r4, [sp, #5]
+  72:..\src/strain.c **** 	I2C_1_MasterWriteBuf(I2C_POT_ADDR, (uint8 *) i2c_init_buf, 2, I2C_1_MODE_COMPLETE_XFER);
+  64              		.loc 1 72 0
+  65 002c 2820     		movs	r0, #40
+  66 002e 01A9     		add	r1, sp, #4
+  67 0030 0222     		movs	r2, #2
+  68 0032 FFF7FEFF 		bl	I2C_1_MasterWriteBuf
+  69              	.LVL5:
+  73:..\src/strain.c **** 	CyDelayUs(100);
+  70              		.loc 1 73 0
+  71 0036 6420     		movs	r0, #100
+  72 0038 FFF7FEFF 		bl	CyDelayUs
+  73              	.LVL6:
+  74:..\src/strain.c **** }
+  74              		.loc 1 74 0
+  75 003c 02B0     		add	sp, sp, #8
+  76              		.cfi_def_cfa_offset 8
+  77              		@ sp needed
+  78 003e 10BD     		pop	{r4, pc}
+  79              		.cfi_endproc
+  80              	.LFE64:
+  81              		.size	strain_config, .-strain_config
+  82              		.section	.text.strain_read,"ax",%progbits
+  83              		.align	2
+  84              		.global	strain_read
+  85              		.thumb
+  86              		.thumb_func
+  87              		.type	strain_read, %function
+  88              	strain_read:
+  89              	.LFB65:
+  75:..\src/strain.c **** 
+  76:..\src/strain.c **** //Returns the latest filtered strain measurement
+  77:..\src/strain.c **** uint16 strain_read(void)
+  78:..\src/strain.c **** {
+  90              		.loc 1 78 0
+  91              		.cfi_startproc
+  92              		@ args = 0, pretend = 0, frame = 0
+  93              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 4
+
+
+  94              		@ link register save eliminated.
+  79:..\src/strain.c **** 	//ADC is auto-sampling, this function simply returns the last filtered value
+  80:..\src/strain.c **** 	
+  81:..\src/strain.c **** 	//return strain.filtered_strain;	//Buggy
+  82:..\src/strain.c **** 	return adc_strain_filtered;
+  83:..\src/strain.c **** }
+  95              		.loc 1 83 0
+  96 0000 014B     		ldr	r3, .L4
+  97 0002 1888     		ldrh	r0, [r3]
+  98 0004 7047     		bx	lr
+  99              	.L5:
+ 100 0006 00BF     		.align	2
+ 101              	.L4:
+ 102 0008 00000000 		.word	.LANCHOR0
+ 103              		.cfi_endproc
+ 104              	.LFE65:
+ 105              		.size	strain_read, .-strain_read
+ 106              		.section	.text.strain_filter,"ax",%progbits
+ 107              		.align	2
+ 108              		.global	strain_filter
+ 109              		.thumb
+ 110              		.thumb_func
+ 111              		.type	strain_filter, %function
+ 112              	strain_filter:
+ 113              	.LFB66:
+  84:..\src/strain.c **** 
+  85:..\src/strain.c **** //Moving average filter:
+  86:..\src/strain.c **** uint16 strain_filter(void)
+  87:..\src/strain.c **** {
+ 114              		.loc 1 87 0
+ 115              		.cfi_startproc
+ 116              		@ args = 0, pretend = 0, frame = 0
+ 117              		@ frame_needed = 0, uses_anonymous_args = 0
+ 118              		@ link register save eliminated.
+ 119              	.LVL7:
+  88:..\src/strain.c **** 	uint32 sum = 0;
+  89:..\src/strain.c **** 	uint8 cnt = 0;
+  90:..\src/strain.c **** 	uint16 avg = 0;
+  91:..\src/strain.c **** 	static uint16 vo2_buf[STRAIN_BUF_LEN];
+  92:..\src/strain.c **** 	
+  93:..\src/strain.c **** 	//Shift buffer and sum all but last term
+  94:..\src/strain.c **** 	for(cnt = 1; cnt < (STRAIN_BUF_LEN); cnt++)
+ 120              		.loc 1 94 0
+ 121 0000 0123     		movs	r3, #1
+  88:..\src/strain.c **** 	uint32 sum = 0;
+ 122              		.loc 1 88 0
+ 123 0002 0021     		movs	r1, #0
+ 124              		.loc 1 94 0
+ 125 0004 09E0     		b	.L7
+ 126              	.LVL8:
+ 127              	.L8:
+  95:..\src/strain.c **** 	{
+  96:..\src/strain.c **** 		vo2_buf[cnt-1] = vo2_buf[cnt];
+ 128              		.loc 1 96 0 discriminator 3
+ 129 0006 0B4A     		ldr	r2, .L9
+ 130 0008 02EB4300 		add	r0, r2, r3, lsl #1
+ 131 000c 8088     		ldrh	r0, [r0, #4]
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 5
+
+
+ 132 000e 02EB4302 		add	r2, r2, r3, lsl #1
+ 133 0012 5080     		strh	r0, [r2, #2]	@ movhi
+  97:..\src/strain.c **** 		sum += vo2_buf[cnt-1];
+ 134              		.loc 1 97 0 discriminator 3
+ 135 0014 0144     		add	r1, r1, r0
+ 136              	.LVL9:
+  94:..\src/strain.c **** 	{
+ 137              		.loc 1 94 0 discriminator 3
+ 138 0016 0133     		adds	r3, r3, #1
+ 139              	.LVL10:
+ 140 0018 DBB2     		uxtb	r3, r3
+ 141              	.LVL11:
+ 142              	.L7:
+  94:..\src/strain.c **** 	{
+ 143              		.loc 1 94 0 is_stmt 0 discriminator 1
+ 144 001a 052B     		cmp	r3, #5
+ 145 001c F3D9     		bls	.L8
+  98:..\src/strain.c **** 	}
+  99:..\src/strain.c **** 	
+ 100:..\src/strain.c **** 	//vo2_buf[STRAIN_BUF_LEN - 1] = strain.vo2;	//Buggy, see Evernote
+ 101:..\src/strain.c **** 	vo2_buf[STRAIN_BUF_LEN - 1] = adc_strain;
+ 146              		.loc 1 101 0 is_stmt 1
+ 147 001e 054B     		ldr	r3, .L9
+ 148              	.LVL12:
+ 149 0020 188A     		ldrh	r0, [r3, #16]
+ 150 0022 80B2     		uxth	r0, r0
+ 151 0024 D881     		strh	r0, [r3, #14]	@ movhi
+ 102:..\src/strain.c **** 	sum += vo2_buf[STRAIN_BUF_LEN - 1];
+ 152              		.loc 1 102 0
+ 153 0026 0844     		add	r0, r0, r1
+ 154              	.LVL13:
+ 103:..\src/strain.c **** 		
+ 104:..\src/strain.c **** 	//Average
+ 105:..\src/strain.c **** 	avg = (uint16)(sum >> STRAIN_SHIFT);
+ 155              		.loc 1 105 0
+ 156 0028 C0F38F00 		ubfx	r0, r0, #2, #16
+ 157              	.LVL14:
+ 106:..\src/strain.c **** 	
+ 107:..\src/strain.c **** 	//Store in structure:
+ 108:..\src/strain.c **** 	strain.filtered_strain = avg;
+ 158              		.loc 1 108 0
+ 159 002c 024A     		ldr	r2, .L9+4
+ 160 002e 5082     		strh	r0, [r2, #18]	@ movhi
+ 109:..\src/strain.c **** 	adc_strain_filtered = avg;
+ 161              		.loc 1 109 0
+ 162 0030 1880     		strh	r0, [r3]	@ movhi
+ 110:..\src/strain.c **** 	
+ 111:..\src/strain.c **** 	return avg;	
+ 112:..\src/strain.c **** }
+ 163              		.loc 1 112 0
+ 164 0032 7047     		bx	lr
+ 165              	.L10:
+ 166              		.align	2
+ 167              	.L9:
+ 168 0034 00000000 		.word	.LANCHOR0
+ 169 0038 00000000 		.word	strain
+ 170              		.cfi_endproc
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 6
+
+
+ 171              	.LFE66:
+ 172              		.size	strain_filter, .-strain_filter
+ 173              		.section	.text.strain_filter_dma,"ax",%progbits
+ 174              		.align	2
+ 175              		.global	strain_filter_dma
+ 176              		.thumb
+ 177              		.thumb_func
+ 178              		.type	strain_filter_dma, %function
+ 179              	strain_filter_dma:
+ 180              	.LFB67:
+ 113:..\src/strain.c **** 
+ 114:..\src/strain.c **** //With DMA transfers we get a full buffer (6 bytes) per interrupt
+ 115:..\src/strain.c **** //Note: we take 6 samples and ignore the first 2. This is a workaround, as the first 2 values are o
+ 116:..\src/strain.c **** uint16 strain_filter_dma(void)
+ 117:..\src/strain.c **** {
+ 181              		.loc 1 117 0
+ 182              		.cfi_startproc
+ 183              		@ args = 0, pretend = 0, frame = 0
+ 184              		@ frame_needed = 0, uses_anonymous_args = 0
+ 185              		@ link register save eliminated.
+ 186              	.LVL15:
+ 118:..\src/strain.c **** 	uint32 sum = 0;
+ 119:..\src/strain.c **** 	uint8 cnt = 0;
+ 120:..\src/strain.c **** 	uint16 avg = 0;
+ 121:..\src/strain.c **** 	
+ 122:..\src/strain.c **** 	//Sum all the terms
+ 123:..\src/strain.c **** 	for(cnt = 2; cnt < STRAIN_BUF_LEN; cnt++)
+ 187              		.loc 1 123 0
+ 188 0000 0223     		movs	r3, #2
+ 118:..\src/strain.c **** 	uint32 sum = 0;
+ 189              		.loc 1 118 0
+ 190 0002 0020     		movs	r0, #0
+ 191              		.loc 1 123 0
+ 192 0004 06E0     		b	.L12
+ 193              	.LVL16:
+ 194              	.L13:
+ 124:..\src/strain.c **** 	{
+ 125:..\src/strain.c **** 		sum += adc_delsig_dma_array[cnt];
+ 195              		.loc 1 125 0 discriminator 3
+ 196 0006 084A     		ldr	r2, .L14
+ 197 0008 32F81320 		ldrh	r2, [r2, r3, lsl #1]
+ 198 000c 92B2     		uxth	r2, r2
+ 199 000e 1044     		add	r0, r0, r2
+ 200              	.LVL17:
+ 123:..\src/strain.c **** 	{
+ 201              		.loc 1 123 0 discriminator 3
+ 202 0010 0133     		adds	r3, r3, #1
+ 203              	.LVL18:
+ 204 0012 DBB2     		uxtb	r3, r3
+ 205              	.LVL19:
+ 206              	.L12:
+ 123:..\src/strain.c **** 	{
+ 207              		.loc 1 123 0 is_stmt 0 discriminator 1
+ 208 0014 052B     		cmp	r3, #5
+ 209 0016 F6D9     		bls	.L13
+ 126:..\src/strain.c **** 	}
+ 127:..\src/strain.c **** 	
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 7
+
+
+ 128:..\src/strain.c **** 	//Average
+ 129:..\src/strain.c **** 	avg = (uint16)(sum >> STRAIN_SHIFT);
+ 210              		.loc 1 129 0 is_stmt 1
+ 211 0018 C0F38F00 		ubfx	r0, r0, #2, #16
+ 212              	.LVL20:
+ 130:..\src/strain.c **** 	
+ 131:..\src/strain.c **** 	//Store in structure:
+ 132:..\src/strain.c **** 	strain.filtered_strain = avg;
+ 213              		.loc 1 132 0
+ 214 001c 034B     		ldr	r3, .L14+4
+ 215              	.LVL21:
+ 216 001e 5882     		strh	r0, [r3, #18]	@ movhi
+ 133:..\src/strain.c **** 	adc_strain_filtered = avg;
+ 217              		.loc 1 133 0
+ 218 0020 034B     		ldr	r3, .L14+8
+ 219 0022 1880     		strh	r0, [r3]	@ movhi
+ 134:..\src/strain.c **** 	
+ 135:..\src/strain.c **** 	return avg;	
+ 136:..\src/strain.c **** }
+ 220              		.loc 1 136 0
+ 221 0024 7047     		bx	lr
+ 222              	.L15:
+ 223 0026 00BF     		.align	2
+ 224              	.L14:
+ 225 0028 00000000 		.word	adc_delsig_dma_array
+ 226 002c 00000000 		.word	strain
+ 227 0030 00000000 		.word	.LANCHOR0
+ 228              		.cfi_endproc
+ 229              	.LFE67:
+ 230              		.size	strain_filter_dma, .-strain_filter_dma
+ 231              		.section	.text.strain_test_blocking,"ax",%progbits
+ 232              		.align	2
+ 233              		.global	strain_test_blocking
+ 234              		.thumb
+ 235              		.thumb_func
+ 236              		.type	strain_test_blocking, %function
+ 237              	strain_test_blocking:
+ 238              	.LFB68:
+ 137:..\src/strain.c **** 
+ 138:..\src/strain.c **** //Copy of the test code used in main.c to test the hardware:
+ 139:..\src/strain.c **** void strain_test_blocking(void)
+ 140:..\src/strain.c **** {
+ 239              		.loc 1 140 0
+ 240              		.cfi_startproc
+ 241              		@ args = 0, pretend = 0, frame = 16
+ 242              		@ frame_needed = 0, uses_anonymous_args = 0
+ 243 0000 30B5     		push	{r4, r5, lr}
+ 244              		.cfi_def_cfa_offset 12
+ 245              		.cfi_offset 4, -12
+ 246              		.cfi_offset 5, -8
+ 247              		.cfi_offset 14, -4
+ 248 0002 85B0     		sub	sp, sp, #20
+ 249              		.cfi_def_cfa_offset 32
+ 250              	.LVL22:
+ 141:..\src/strain.c **** 	//Strain Amplifier test:
+ 142:..\src/strain.c **** 	
+ 143:..\src/strain.c **** 	uint8 i2c_test_wbuf[9];
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 8
+
+
+ 144:..\src/strain.c **** 	uint8 vr1 = 0;
+ 145:..\src/strain.c **** 	uint8 ledg_state = 0;
+ 146:..\src/strain.c **** 	
+ 147:..\src/strain.c **** 	i2c_test_wbuf[0] = STRAIN_OFFSET;
+ 251              		.loc 1 147 0
+ 252 0004 1025     		movs	r5, #16
+ 253 0006 8DF80450 		strb	r5, [sp, #4]
+ 148:..\src/strain.c **** 	i2c_test_wbuf[1] = 127;	//Offset of ~ V/2
+ 254              		.loc 1 148 0
+ 255 000a 7F23     		movs	r3, #127
+ 256 000c 8DF80530 		strb	r3, [sp, #5]
+ 149:..\src/strain.c **** 	I2C_1_MasterWriteBuf(I2C_POT_ADDR, (uint8 *) i2c_test_wbuf, 2, I2C_1_MODE_COMPLETE_XFER);	
+ 257              		.loc 1 149 0
+ 258 0010 2820     		movs	r0, #40
+ 259 0012 01A9     		add	r1, sp, #4
+ 260 0014 0222     		movs	r2, #2
+ 261 0016 0023     		movs	r3, #0
+ 262 0018 FFF7FEFF 		bl	I2C_1_MasterWriteBuf
+ 263              	.LVL23:
+ 150:..\src/strain.c **** 	CyDelay(10);
+ 264              		.loc 1 150 0
+ 265 001c 0A20     		movs	r0, #10
+ 266 001e FFF7FEFF 		bl	CyDelay
+ 267              	.LVL24:
+ 151:..\src/strain.c **** 	i2c_test_wbuf[0] = STRAIN_GAIN;
+ 268              		.loc 1 151 0
+ 269 0022 0024     		movs	r4, #0
+ 270 0024 8DF80440 		strb	r4, [sp, #4]
+ 152:..\src/strain.c **** 	i2c_test_wbuf[1] = 10;	//Relatively small gain
+ 271              		.loc 1 152 0
+ 272 0028 0A23     		movs	r3, #10
+ 273 002a 8DF80530 		strb	r3, [sp, #5]
+ 153:..\src/strain.c **** 	I2C_1_MasterWriteBuf(I2C_POT_ADDR, (uint8 *) i2c_test_wbuf, 2, I2C_1_MODE_COMPLETE_XFER);	
+ 274              		.loc 1 153 0
+ 275 002e 2820     		movs	r0, #40
+ 276 0030 01A9     		add	r1, sp, #4
+ 277 0032 0222     		movs	r2, #2
+ 278 0034 2346     		mov	r3, r4
+ 279 0036 FFF7FEFF 		bl	I2C_1_MasterWriteBuf
+ 280              	.LVL25:
+ 154:..\src/strain.c **** 	
+ 155:..\src/strain.c **** 	i2c_test_wbuf[0] = STRAIN_OFFSET;
+ 281              		.loc 1 155 0
+ 282 003a 8DF80450 		strb	r5, [sp, #4]
+ 145:..\src/strain.c **** 	
+ 283              		.loc 1 145 0
+ 284 003e 2546     		mov	r5, r4
+ 285              	.LVL26:
+ 286              	.L17:
+ 156:..\src/strain.c **** 	while(1)
+ 157:..\src/strain.c **** 	{
+ 158:..\src/strain.c **** 		vr1++;		
+ 287              		.loc 1 158 0 discriminator 1
+ 288 0040 0134     		adds	r4, r4, #1
+ 289              	.LVL27:
+ 290 0042 E4B2     		uxtb	r4, r4
+ 291              	.LVL28:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 9
+
+
+ 159:..\src/strain.c **** 		i2c_test_wbuf[1] = vr1;	//Enable this line to test the offset
+ 292              		.loc 1 159 0 discriminator 1
+ 293 0044 8DF80540 		strb	r4, [sp, #5]
+ 160:..\src/strain.c **** 		I2C_1_MasterWriteBuf(I2C_POT_ADDR, (uint8 *) i2c_test_wbuf, 2, I2C_1_MODE_COMPLETE_XFER);	
+ 294              		.loc 1 160 0 discriminator 1
+ 295 0048 2820     		movs	r0, #40
+ 296 004a 01A9     		add	r1, sp, #4
+ 297 004c 0222     		movs	r2, #2
+ 298 004e 0023     		movs	r3, #0
+ 299 0050 FFF7FEFF 		bl	I2C_1_MasterWriteBuf
+ 300              	.LVL29:
+ 161:..\src/strain.c **** 		
+ 162:..\src/strain.c **** 		ledg_state ^= 1;
+ 301              		.loc 1 162 0 discriminator 1
+ 302 0054 85F00105 		eor	r5, r5, #1
+ 303              	.LVL30:
+ 163:..\src/strain.c **** 		LED_G_Write(ledg_state);
+ 304              		.loc 1 163 0 discriminator 1
+ 305 0058 2846     		mov	r0, r5
+ 306 005a FFF7FEFF 		bl	LED_G_Write
+ 307              	.LVL31:
+ 164:..\src/strain.c **** 		
+ 165:..\src/strain.c **** 		CyDelayUs(1000);
+ 308              		.loc 1 165 0 discriminator 1
+ 309 005e 4FF47A70 		mov	r0, #1000
+ 310 0062 FFF7FEFF 		bl	CyDelayUs
+ 311              	.LVL32:
+ 166:..\src/strain.c **** 	}
+ 312              		.loc 1 166 0 discriminator 1
+ 313 0066 EBE7     		b	.L17
+ 314              		.cfi_endproc
+ 315              	.LFE68:
+ 316              		.size	strain_test_blocking, .-strain_test_blocking
+ 317              		.section	.text.dma_2_config,"ax",%progbits
+ 318              		.align	2
+ 319              		.global	dma_2_config
+ 320              		.thumb
+ 321              		.thumb_func
+ 322              		.type	dma_2_config, %function
+ 323              	dma_2_config:
+ 324              	.LFB69:
+ 167:..\src/strain.c **** }
+ 168:..\src/strain.c **** 
+ 169:..\src/strain.c **** //DMA for Delta Sigma ADC
+ 170:..\src/strain.c **** void dma_2_config(void)
+ 171:..\src/strain.c **** {
+ 325              		.loc 1 171 0
+ 326              		.cfi_startproc
+ 327              		@ args = 0, pretend = 0, frame = 0
+ 328              		@ frame_needed = 0, uses_anonymous_args = 0
+ 329 0000 38B5     		push	{r3, r4, r5, lr}
+ 330              		.cfi_def_cfa_offset 16
+ 331              		.cfi_offset 3, -16
+ 332              		.cfi_offset 4, -12
+ 333              		.cfi_offset 5, -8
+ 334              		.cfi_offset 14, -4
+ 172:..\src/strain.c **** 	/* Variable declarations for DMA_2 */
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 10
+
+
+ 173:..\src/strain.c **** 	/* Move these variable declarations to the top of the function */
+ 174:..\src/strain.c **** 	uint8 DMA_2_Chan;
+ 175:..\src/strain.c **** 	uint8 DMA_2_TD[1];
+ 176:..\src/strain.c **** 
+ 177:..\src/strain.c **** 	/* DMA Configuration for DMA_2 */
+ 178:..\src/strain.c **** 	#define DMA_2_BYTES_PER_BURST 2
+ 179:..\src/strain.c **** 	#define DMA_2_REQUEST_PER_BURST 1
+ 180:..\src/strain.c **** 	#define DMA_2_SRC_BASE (CYDEV_PERIPH_BASE)
+ 181:..\src/strain.c **** 	#define DMA_2_DST_BASE (CYDEV_SRAM_BASE)
+ 182:..\src/strain.c **** 	DMA_2_Chan = DMA_2_DmaInitialize(DMA_2_BYTES_PER_BURST, DMA_2_REQUEST_PER_BURST, 
+ 335              		.loc 1 182 0
+ 336 0002 0220     		movs	r0, #2
+ 337 0004 0121     		movs	r1, #1
+ 338 0006 4FF48042 		mov	r2, #16384
+ 339 000a 41F6FF73 		movw	r3, #8191
+ 340 000e FFF7FEFF 		bl	DMA_2_DmaInitialize
+ 341              	.LVL33:
+ 342 0012 0546     		mov	r5, r0
+ 343              	.LVL34:
+ 183:..\src/strain.c **** 	    HI16(DMA_2_SRC_BASE), HI16(DMA_2_DST_BASE));
+ 184:..\src/strain.c **** 	DMA_2_TD[0] = CyDmaTdAllocate();
+ 344              		.loc 1 184 0
+ 345 0014 FFF7FEFF 		bl	CyDmaTdAllocate
+ 346              	.LVL35:
+ 347 0018 0446     		mov	r4, r0
+ 185:..\src/strain.c **** 	CyDmaTdSetConfiguration(DMA_2_TD[0], DMA2_BYTES_PER_XFER, DMA_2_TD[0], DMA_2__TD_TERMOUT_EN | TD_I
+ 348              		.loc 1 185 0
+ 349 001a 0C21     		movs	r1, #12
+ 350 001c 0246     		mov	r2, r0
+ 351 001e 0623     		movs	r3, #6
+ 352 0020 FFF7FEFF 		bl	CyDmaTdSetConfiguration
+ 353              	.LVL36:
+ 186:..\src/strain.c **** 	CyDmaTdSetAddress(DMA_2_TD[0], LO16((uint32)ADC_DelSig_1_DEC_SAMP_PTR), LO16((uint32)adc_delsig_dm
+ 354              		.loc 1 186 0
+ 355 0024 2046     		mov	r0, r4
+ 356 0026 44F61061 		movw	r1, #19984
+ 357 002a 064A     		ldr	r2, .L21
+ 358 002c 92B2     		uxth	r2, r2
+ 359 002e FFF7FEFF 		bl	CyDmaTdSetAddress
+ 360              	.LVL37:
+ 187:..\src/strain.c **** 	CyDmaChSetInitialTd(DMA_2_Chan, DMA_2_TD[0]);
+ 361              		.loc 1 187 0
+ 362 0032 2846     		mov	r0, r5
+ 363 0034 2146     		mov	r1, r4
+ 364 0036 FFF7FEFF 		bl	CyDmaChSetInitialTd
+ 365              	.LVL38:
+ 188:..\src/strain.c **** 	CyDmaChEnable(DMA_2_Chan, 1);
+ 366              		.loc 1 188 0
+ 367 003a 2846     		mov	r0, r5
+ 368 003c 0121     		movs	r1, #1
+ 369 003e FFF7FEFF 		bl	CyDmaChEnable
+ 370              	.LVL39:
+ 371 0042 38BD     		pop	{r3, r4, r5, pc}
+ 372              	.LVL40:
+ 373              	.L22:
+ 374              		.align	2
+ 375              	.L21:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 11
+
+
+ 376 0044 00000000 		.word	adc_delsig_dma_array
+ 377              		.cfi_endproc
+ 378              	.LFE69:
+ 379              		.size	dma_2_config, .-dma_2_config
+ 380              		.section	.text.init_strain,"ax",%progbits
+ 381              		.align	2
+ 382              		.global	init_strain
+ 383              		.thumb
+ 384              		.thumb_func
+ 385              		.type	init_strain, %function
+ 386              	init_strain:
+ 387              	.LFB63:
+  34:..\src/strain.c **** 	//Peripherals:
+ 388              		.loc 1 34 0
+ 389              		.cfi_startproc
+ 390              		@ args = 0, pretend = 0, frame = 0
+ 391              		@ frame_needed = 0, uses_anonymous_args = 0
+ 392 0000 08B5     		push	{r3, lr}
+ 393              		.cfi_def_cfa_offset 8
+ 394              		.cfi_offset 3, -8
+ 395              		.cfi_offset 14, -4
+  38:..\src/strain.c **** 	
+ 396              		.loc 1 38 0
+ 397 0002 FFF7FEFF 		bl	Opamp_2_Start
+ 398              	.LVL41:
+  41:..\src/strain.c **** 	ADC_DelSig_1_IRQ_Enable();
+ 399              		.loc 1 41 0
+ 400 0006 FFF7FEFF 		bl	ADC_DelSig_1_Start
+ 401              	.LVL42:
+  42:..\src/strain.c **** 	dma_2_config();
+ 402              		.loc 1 42 0
+ 403 000a FFF7FEFF 		bl	ADC_DelSig_1_IRQ_Enable
+ 404              	.LVL43:
+  43:..\src/strain.c **** 	isr_delsig_Start();
+ 405              		.loc 1 43 0
+ 406 000e FFF7FEFF 		bl	dma_2_config
+ 407              	.LVL44:
+  44:..\src/strain.c **** 	
+ 408              		.loc 1 44 0
+ 409 0012 FFF7FEFF 		bl	isr_delsig_Start
+ 410              	.LVL45:
+  49:..\src/strain.c **** 	strain.gain = STRAIN_DEFAULT_GAIN;
+ 411              		.loc 1 49 0
+ 412 0016 054B     		ldr	r3, .L25
+ 413 0018 7F20     		movs	r0, #127
+ 414 001a 1870     		strb	r0, [r3]
+  50:..\src/strain.c **** 	//strain.oref = STRAIN_DEFAULT_OREF;	
+ 415              		.loc 1 50 0
+ 416 001c 5021     		movs	r1, #80
+ 417 001e 5970     		strb	r1, [r3, #1]
+  52:..\src/strain.c **** 	//strain.vo2 = 0;
+ 418              		.loc 1 52 0
+ 419 0020 0022     		movs	r2, #0
+ 420 0022 9A81     		strh	r2, [r3, #12]	@ movhi
+  54:..\src/strain.c **** 	strain_config(strain.offset, strain.gain);
+ 421              		.loc 1 54 0
+ 422 0024 5A82     		strh	r2, [r3, #18]	@ movhi
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 12
+
+
+  55:..\src/strain.c **** }
+ 423              		.loc 1 55 0
+ 424 0026 FFF7FEFF 		bl	strain_config
+ 425              	.LVL46:
+ 426 002a 08BD     		pop	{r3, pc}
+ 427              	.L26:
+ 428              		.align	2
+ 429              	.L25:
+ 430 002c 00000000 		.word	strain
+ 431              		.cfi_endproc
+ 432              	.LFE63:
+ 433              		.size	init_strain, .-init_strain
+ 434              		.comm	adc_delsig_dma_array,16,4
+ 435              		.global	adc_strain
+ 436              		.global	adc_strain_filtered
+ 437              		.comm	strain,20,4
+ 438              		.bss
+ 439              		.align	2
+ 440              		.set	.LANCHOR0,. + 0
+ 441              		.type	adc_strain_filtered, %object
+ 442              		.size	adc_strain_filtered, 2
+ 443              	adc_strain_filtered:
+ 444 0000 0000     		.space	2
+ 445 0002 0000     		.space	2
+ 446              		.type	vo2_buf.10489, %object
+ 447              		.size	vo2_buf.10489, 12
+ 448              	vo2_buf.10489:
+ 449 0004 00000000 		.space	12
+ 449      00000000 
+ 449      00000000 
+ 450              		.type	adc_strain, %object
+ 451              		.size	adc_strain, 2
+ 452              	adc_strain:
+ 453 0010 0000     		.space	2
+ 454 0012 0000     		.text
+ 455              	.Letext0:
+ 456              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 457              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 458              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 459              		.file 5 "..\\inc/../../flexsea-system/inc/flexsea_system.h"
+ 460              		.file 6 "Generated_Source\\PSoC5/core_cm3.h"
+ 461              		.file 7 "Generated_Source\\PSoC5/CyLib.h"
+ 462              		.file 8 "Generated_Source\\PSoC5/LED_G.h"
+ 463              		.file 9 "Generated_Source\\PSoC5/I2C_1.h"
+ 464              		.file 10 "Generated_Source\\PSoC5/DMA_2_dma.h"
+ 465              		.file 11 "Generated_Source\\PSoC5/CYDMAC.H"
+ 466              		.file 12 "Generated_Source\\PSoC5/Opamp_2.h"
+ 467              		.file 13 "Generated_Source\\PSoC5/ADC_DelSig_1.h"
+ 468              		.file 14 "Generated_Source\\PSoC5/ADC_DelSig_1_IRQ.h"
+ 469              		.file 15 "Generated_Source\\PSoC5/isr_delsig.h"
+ 470              		.section	.debug_info,"",%progbits
+ 471              	.Ldebug_info0:
+ 472 0000 D7060000 		.4byte	0x6d7
+ 473 0004 0400     		.2byte	0x4
+ 474 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 475 000a 04       		.byte	0x4
+ 476 000b 01       		.uleb128 0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 13
+
+
+ 477 000c F2020000 		.4byte	.LASF61
+ 478 0010 01       		.byte	0x1
+ 479 0011 B2000000 		.4byte	.LASF62
+ 480 0015 D6000000 		.4byte	.LASF63
+ 481 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 482 001d 00000000 		.4byte	0
+ 483 0021 00000000 		.4byte	.Ldebug_line0
+ 484 0025 02       		.uleb128 0x2
+ 485 0026 01       		.byte	0x1
+ 486 0027 06       		.byte	0x6
+ 487 0028 F2010000 		.4byte	.LASF0
+ 488 002c 03       		.uleb128 0x3
+ 489 002d AE010000 		.4byte	.LASF3
+ 490 0031 02       		.byte	0x2
+ 491 0032 1D       		.byte	0x1d
+ 492 0033 37000000 		.4byte	0x37
+ 493 0037 02       		.uleb128 0x2
+ 494 0038 01       		.byte	0x1
+ 495 0039 08       		.byte	0x8
+ 496 003a E4010000 		.4byte	.LASF1
+ 497 003e 02       		.uleb128 0x2
+ 498 003f 02       		.byte	0x2
+ 499 0040 05       		.byte	0x5
+ 500 0041 61000000 		.4byte	.LASF2
+ 501 0045 03       		.uleb128 0x3
+ 502 0046 A7000000 		.4byte	.LASF4
+ 503 004a 02       		.byte	0x2
+ 504 004b 2B       		.byte	0x2b
+ 505 004c 50000000 		.4byte	0x50
+ 506 0050 02       		.uleb128 0x2
+ 507 0051 02       		.byte	0x2
+ 508 0052 07       		.byte	0x7
+ 509 0053 94030000 		.4byte	.LASF5
+ 510 0057 03       		.uleb128 0x3
+ 511 0058 DD020000 		.4byte	.LASF6
+ 512 005c 02       		.byte	0x2
+ 513 005d 3F       		.byte	0x3f
+ 514 005e 62000000 		.4byte	0x62
+ 515 0062 02       		.uleb128 0x2
+ 516 0063 04       		.byte	0x4
+ 517 0064 05       		.byte	0x5
+ 518 0065 90010000 		.4byte	.LASF7
+ 519 0069 02       		.uleb128 0x2
+ 520 006a 04       		.byte	0x4
+ 521 006b 07       		.byte	0x7
+ 522 006c 42020000 		.4byte	.LASF8
+ 523 0070 02       		.uleb128 0x2
+ 524 0071 08       		.byte	0x8
+ 525 0072 05       		.byte	0x5
+ 526 0073 6E010000 		.4byte	.LASF9
+ 527 0077 02       		.uleb128 0x2
+ 528 0078 08       		.byte	0x8
+ 529 0079 07       		.byte	0x7
+ 530 007a FE010000 		.4byte	.LASF10
+ 531 007e 04       		.uleb128 0x4
+ 532 007f 04       		.byte	0x4
+ 533 0080 05       		.byte	0x5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 14
+
+
+ 534 0081 696E7400 		.ascii	"int\000"
+ 535 0085 02       		.uleb128 0x2
+ 536 0086 04       		.byte	0x4
+ 537 0087 07       		.byte	0x7
+ 538 0088 1A020000 		.4byte	.LASF11
+ 539 008c 03       		.uleb128 0x3
+ 540 008d C6010000 		.4byte	.LASF12
+ 541 0091 03       		.byte	0x3
+ 542 0092 15       		.byte	0x15
+ 543 0093 2C000000 		.4byte	0x2c
+ 544 0097 03       		.uleb128 0x3
+ 545 0098 39020000 		.4byte	.LASF13
+ 546 009c 03       		.byte	0x3
+ 547 009d 21       		.byte	0x21
+ 548 009e 45000000 		.4byte	0x45
+ 549 00a2 03       		.uleb128 0x3
+ 550 00a3 7F020000 		.4byte	.LASF14
+ 551 00a7 03       		.byte	0x3
+ 552 00a8 2C       		.byte	0x2c
+ 553 00a9 57000000 		.4byte	0x57
+ 554 00ad 03       		.uleb128 0x3
+ 555 00ae 4A010000 		.4byte	.LASF15
+ 556 00b2 04       		.byte	0x4
+ 557 00b3 C2       		.byte	0xc2
+ 558 00b4 37000000 		.4byte	0x37
+ 559 00b8 03       		.uleb128 0x3
+ 560 00b9 2D010000 		.4byte	.LASF16
+ 561 00bd 04       		.byte	0x4
+ 562 00be C3       		.byte	0xc3
+ 563 00bf 50000000 		.4byte	0x50
+ 564 00c3 03       		.uleb128 0x3
+ 565 00c4 AC020000 		.4byte	.LASF17
+ 566 00c8 04       		.byte	0x4
+ 567 00c9 C4       		.byte	0xc4
+ 568 00ca 69000000 		.4byte	0x69
+ 569 00ce 02       		.uleb128 0x2
+ 570 00cf 04       		.byte	0x4
+ 571 00d0 04       		.byte	0x4
+ 572 00d1 50010000 		.4byte	.LASF18
+ 573 00d5 02       		.uleb128 0x2
+ 574 00d6 08       		.byte	0x8
+ 575 00d7 04       		.byte	0x4
+ 576 00d8 C4020000 		.4byte	.LASF19
+ 577 00dc 02       		.uleb128 0x2
+ 578 00dd 01       		.byte	0x1
+ 579 00de 08       		.byte	0x8
+ 580 00df 71020000 		.4byte	.LASF20
+ 581 00e3 05       		.uleb128 0x5
+ 582 00e4 76020000 		.4byte	.LASF21
+ 583 00e8 04       		.byte	0x4
+ 584 00e9 6401     		.2byte	0x164
+ 585 00eb 69000000 		.4byte	0x69
+ 586 00ef 05       		.uleb128 0x5
+ 587 00f0 B3020000 		.4byte	.LASF22
+ 588 00f4 04       		.byte	0x4
+ 589 00f5 6C01     		.2byte	0x16c
+ 590 00f7 FB000000 		.4byte	0xfb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 15
+
+
+ 591 00fb 06       		.uleb128 0x6
+ 592 00fc AD000000 		.4byte	0xad
+ 593 0100 06       		.uleb128 0x6
+ 594 0101 B8000000 		.4byte	0xb8
+ 595 0105 02       		.uleb128 0x2
+ 596 0106 04       		.byte	0x4
+ 597 0107 07       		.byte	0x7
+ 598 0108 91000000 		.4byte	.LASF23
+ 599 010c 02       		.uleb128 0x2
+ 600 010d 08       		.byte	0x8
+ 601 010e 04       		.byte	0x4
+ 602 010f CE010000 		.4byte	.LASF24
+ 603 0113 07       		.uleb128 0x7
+ 604 0114 87020000 		.4byte	.LASF64
+ 605 0118 14       		.byte	0x14
+ 606 0119 05       		.byte	0x5
+ 607 011a E801     		.2byte	0x1e8
+ 608 011c 89010000 		.4byte	0x189
+ 609 0120 08       		.uleb128 0x8
+ 610 0121 99010000 		.4byte	.LASF25
+ 611 0125 05       		.byte	0x5
+ 612 0126 EB01     		.2byte	0x1eb
+ 613 0128 8C000000 		.4byte	0x8c
+ 614 012c 00       		.byte	0
+ 615 012d 08       		.uleb128 0x8
+ 616 012e 54020000 		.4byte	.LASF26
+ 617 0132 05       		.byte	0x5
+ 618 0133 EC01     		.2byte	0x1ec
+ 619 0135 8C000000 		.4byte	0x8c
+ 620 0139 01       		.byte	0x1
+ 621 013a 08       		.uleb128 0x8
+ 622 013b 59020000 		.4byte	.LASF27
+ 623 013f 05       		.byte	0x5
+ 624 0140 ED01     		.2byte	0x1ed
+ 625 0142 8C000000 		.4byte	0x8c
+ 626 0146 02       		.byte	0x2
+ 627 0147 08       		.uleb128 0x8
+ 628 0148 E7020000 		.4byte	.LASF28
+ 629 014c 05       		.byte	0x5
+ 630 014d F001     		.2byte	0x1f0
+ 631 014f 89010000 		.4byte	0x189
+ 632 0153 04       		.byte	0x4
+ 633 0154 09       		.uleb128 0x9
+ 634 0155 766F3100 		.ascii	"vo1\000"
+ 635 0159 05       		.byte	0x5
+ 636 015a F101     		.2byte	0x1f1
+ 637 015c 97000000 		.4byte	0x97
+ 638 0160 0C       		.byte	0xc
+ 639 0161 09       		.uleb128 0x9
+ 640 0162 766F3200 		.ascii	"vo2\000"
+ 641 0166 05       		.byte	0x5
+ 642 0167 F201     		.2byte	0x1f2
+ 643 0169 97000000 		.4byte	0x97
+ 644 016d 0E       		.byte	0xe
+ 645 016e 08       		.uleb128 0x8
+ 646 016f 90020000 		.4byte	.LASF29
+ 647 0173 05       		.byte	0x5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 16
+
+
+ 648 0174 F501     		.2byte	0x1f5
+ 649 0176 97000000 		.4byte	0x97
+ 650 017a 10       		.byte	0x10
+ 651 017b 08       		.uleb128 0x8
+ 652 017c 10000000 		.4byte	.LASF30
+ 653 0180 05       		.byte	0x5
+ 654 0181 F601     		.2byte	0x1f6
+ 655 0183 97000000 		.4byte	0x97
+ 656 0187 12       		.byte	0x12
+ 657 0188 00       		.byte	0
+ 658 0189 0A       		.uleb128 0xa
+ 659 018a 97000000 		.4byte	0x97
+ 660 018e 99010000 		.4byte	0x199
+ 661 0192 0B       		.uleb128 0xb
+ 662 0193 05010000 		.4byte	0x105
+ 663 0197 03       		.byte	0x3
+ 664 0198 00       		.byte	0
+ 665 0199 0C       		.uleb128 0xc
+ 666 019a 3C010000 		.4byte	.LASF36
+ 667 019e 01       		.byte	0x1
+ 668 019f 3B       		.byte	0x3b
+ 669 01a0 00000000 		.4byte	.LFB64
+ 670 01a4 40000000 		.4byte	.LFE64-.LFB64
+ 671 01a8 01       		.uleb128 0x1
+ 672 01a9 9C       		.byte	0x9c
+ 673 01aa 47020000 		.4byte	0x247
+ 674 01ae 0D       		.uleb128 0xd
+ 675 01af 15020000 		.4byte	.LASF31
+ 676 01b3 01       		.byte	0x1
+ 677 01b4 3B       		.byte	0x3b
+ 678 01b5 AD000000 		.4byte	0xad
+ 679 01b9 00000000 		.4byte	.LLST0
+ 680 01bd 0D       		.uleb128 0xd
+ 681 01be 54020000 		.4byte	.LASF26
+ 682 01c2 01       		.byte	0x1
+ 683 01c3 3B       		.byte	0x3b
+ 684 01c4 AD000000 		.4byte	0xad
+ 685 01c8 2D000000 		.4byte	.LLST1
+ 686 01cc 0E       		.uleb128 0xe
+ 687 01cd A7030000 		.4byte	.LASF32
+ 688 01d1 01       		.byte	0x1
+ 689 01d2 3D       		.byte	0x3d
+ 690 01d3 47020000 		.4byte	0x247
+ 691 01d7 02       		.uleb128 0x2
+ 692 01d8 91       		.byte	0x91
+ 693 01d9 74       		.sleb128 -12
+ 694 01da 0F       		.uleb128 0xf
+ 695 01db 1C000000 		.4byte	.LVL3
+ 696 01df BB050000 		.4byte	0x5bb
+ 697 01e3 FE010000 		.4byte	0x1fe
+ 698 01e7 10       		.uleb128 0x10
+ 699 01e8 01       		.uleb128 0x1
+ 700 01e9 53       		.byte	0x53
+ 701 01ea 01       		.uleb128 0x1
+ 702 01eb 30       		.byte	0x30
+ 703 01ec 10       		.uleb128 0x10
+ 704 01ed 01       		.uleb128 0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 17
+
+
+ 705 01ee 52       		.byte	0x52
+ 706 01ef 01       		.uleb128 0x1
+ 707 01f0 32       		.byte	0x32
+ 708 01f1 10       		.uleb128 0x10
+ 709 01f2 01       		.uleb128 0x1
+ 710 01f3 51       		.byte	0x51
+ 711 01f4 02       		.uleb128 0x2
+ 712 01f5 91       		.byte	0x91
+ 713 01f6 74       		.sleb128 -12
+ 714 01f7 10       		.uleb128 0x10
+ 715 01f8 01       		.uleb128 0x1
+ 716 01f9 50       		.byte	0x50
+ 717 01fa 02       		.uleb128 0x2
+ 718 01fb 08       		.byte	0x8
+ 719 01fc 28       		.byte	0x28
+ 720 01fd 00       		.byte	0
+ 721 01fe 0F       		.uleb128 0xf
+ 722 01ff 22000000 		.4byte	.LVL4
+ 723 0203 E5050000 		.4byte	0x5e5
+ 724 0207 12020000 		.4byte	0x212
+ 725 020b 10       		.uleb128 0x10
+ 726 020c 01       		.uleb128 0x1
+ 727 020d 50       		.byte	0x50
+ 728 020e 02       		.uleb128 0x2
+ 729 020f 08       		.byte	0x8
+ 730 0210 64       		.byte	0x64
+ 731 0211 00       		.byte	0
+ 732 0212 0F       		.uleb128 0xf
+ 733 0213 36000000 		.4byte	.LVL5
+ 734 0217 BB050000 		.4byte	0x5bb
+ 735 021b 36020000 		.4byte	0x236
+ 736 021f 10       		.uleb128 0x10
+ 737 0220 01       		.uleb128 0x1
+ 738 0221 53       		.byte	0x53
+ 739 0222 01       		.uleb128 0x1
+ 740 0223 30       		.byte	0x30
+ 741 0224 10       		.uleb128 0x10
+ 742 0225 01       		.uleb128 0x1
+ 743 0226 52       		.byte	0x52
+ 744 0227 01       		.uleb128 0x1
+ 745 0228 32       		.byte	0x32
+ 746 0229 10       		.uleb128 0x10
+ 747 022a 01       		.uleb128 0x1
+ 748 022b 51       		.byte	0x51
+ 749 022c 02       		.uleb128 0x2
+ 750 022d 91       		.byte	0x91
+ 751 022e 74       		.sleb128 -12
+ 752 022f 10       		.uleb128 0x10
+ 753 0230 01       		.uleb128 0x1
+ 754 0231 50       		.byte	0x50
+ 755 0232 02       		.uleb128 0x2
+ 756 0233 08       		.byte	0x8
+ 757 0234 28       		.byte	0x28
+ 758 0235 00       		.byte	0
+ 759 0236 11       		.uleb128 0x11
+ 760 0237 3C000000 		.4byte	.LVL6
+ 761 023b E5050000 		.4byte	0x5e5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 18
+
+
+ 762 023f 10       		.uleb128 0x10
+ 763 0240 01       		.uleb128 0x1
+ 764 0241 50       		.byte	0x50
+ 765 0242 02       		.uleb128 0x2
+ 766 0243 08       		.byte	0x8
+ 767 0244 64       		.byte	0x64
+ 768 0245 00       		.byte	0
+ 769 0246 00       		.byte	0
+ 770 0247 0A       		.uleb128 0xa
+ 771 0248 AD000000 		.4byte	0xad
+ 772 024c 57020000 		.4byte	0x257
+ 773 0250 0B       		.uleb128 0xb
+ 774 0251 05010000 		.4byte	0x105
+ 775 0255 01       		.byte	0x1
+ 776 0256 00       		.byte	0
+ 777 0257 12       		.uleb128 0x12
+ 778 0258 A0020000 		.4byte	.LASF65
+ 779 025c 01       		.byte	0x1
+ 780 025d 4D       		.byte	0x4d
+ 781 025e B8000000 		.4byte	0xb8
+ 782 0262 00000000 		.4byte	.LFB65
+ 783 0266 0C000000 		.4byte	.LFE65-.LFB65
+ 784 026a 01       		.uleb128 0x1
+ 785 026b 9C       		.byte	0x9c
+ 786 026c 13       		.uleb128 0x13
+ 787 026d D4030000 		.4byte	.LASF34
+ 788 0271 01       		.byte	0x1
+ 789 0272 56       		.byte	0x56
+ 790 0273 B8000000 		.4byte	0xb8
+ 791 0277 00000000 		.4byte	.LFB66
+ 792 027b 3C000000 		.4byte	.LFE66-.LFB66
+ 793 027f 01       		.uleb128 0x1
+ 794 0280 9C       		.byte	0x9c
+ 795 0281 C4020000 		.4byte	0x2c4
+ 796 0285 14       		.uleb128 0x14
+ 797 0286 73756D00 		.ascii	"sum\000"
+ 798 028a 01       		.byte	0x1
+ 799 028b 58       		.byte	0x58
+ 800 028c C3000000 		.4byte	0xc3
+ 801 0290 4E000000 		.4byte	.LLST2
+ 802 0294 14       		.uleb128 0x14
+ 803 0295 636E7400 		.ascii	"cnt\000"
+ 804 0299 01       		.byte	0x1
+ 805 029a 59       		.byte	0x59
+ 806 029b AD000000 		.4byte	0xad
+ 807 029f 78000000 		.4byte	.LLST3
+ 808 02a3 14       		.uleb128 0x14
+ 809 02a4 61766700 		.ascii	"avg\000"
+ 810 02a8 01       		.byte	0x1
+ 811 02a9 5A       		.byte	0x5a
+ 812 02aa B8000000 		.4byte	0xb8
+ 813 02ae A2000000 		.4byte	.LLST4
+ 814 02b2 0E       		.uleb128 0xe
+ 815 02b3 34010000 		.4byte	.LASF33
+ 816 02b7 01       		.byte	0x1
+ 817 02b8 5B       		.byte	0x5b
+ 818 02b9 C4020000 		.4byte	0x2c4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 19
+
+
+ 819 02bd 05       		.uleb128 0x5
+ 820 02be 03       		.byte	0x3
+ 821 02bf 04000000 		.4byte	vo2_buf.10489
+ 822 02c3 00       		.byte	0
+ 823 02c4 0A       		.uleb128 0xa
+ 824 02c5 B8000000 		.4byte	0xb8
+ 825 02c9 D4020000 		.4byte	0x2d4
+ 826 02cd 0B       		.uleb128 0xb
+ 827 02ce 05010000 		.4byte	0x105
+ 828 02d2 05       		.byte	0x5
+ 829 02d3 00       		.byte	0
+ 830 02d4 13       		.uleb128 0x13
+ 831 02d5 CB020000 		.4byte	.LASF35
+ 832 02d9 01       		.byte	0x1
+ 833 02da 74       		.byte	0x74
+ 834 02db B8000000 		.4byte	0xb8
+ 835 02df 00000000 		.4byte	.LFB67
+ 836 02e3 34000000 		.4byte	.LFE67-.LFB67
+ 837 02e7 01       		.uleb128 0x1
+ 838 02e8 9C       		.byte	0x9c
+ 839 02e9 1B030000 		.4byte	0x31b
+ 840 02ed 14       		.uleb128 0x14
+ 841 02ee 73756D00 		.ascii	"sum\000"
+ 842 02f2 01       		.byte	0x1
+ 843 02f3 76       		.byte	0x76
+ 844 02f4 C3000000 		.4byte	0xc3
+ 845 02f8 C1000000 		.4byte	.LLST5
+ 846 02fc 14       		.uleb128 0x14
+ 847 02fd 636E7400 		.ascii	"cnt\000"
+ 848 0301 01       		.byte	0x1
+ 849 0302 77       		.byte	0x77
+ 850 0303 AD000000 		.4byte	0xad
+ 851 0307 E0000000 		.4byte	.LLST6
+ 852 030b 14       		.uleb128 0x14
+ 853 030c 61766700 		.ascii	"avg\000"
+ 854 0310 01       		.byte	0x1
+ 855 0311 78       		.byte	0x78
+ 856 0312 B8000000 		.4byte	0xb8
+ 857 0316 0A010000 		.4byte	.LLST7
+ 858 031a 00       		.byte	0
+ 859 031b 0C       		.uleb128 0xc
+ 860 031c 4C000000 		.4byte	.LASF37
+ 861 0320 01       		.byte	0x1
+ 862 0321 8B       		.byte	0x8b
+ 863 0322 00000000 		.4byte	.LFB68
+ 864 0326 68000000 		.4byte	.LFE68-.LFB68
+ 865 032a 01       		.uleb128 0x1
+ 866 032b 9C       		.byte	0x9c
+ 867 032c 02040000 		.4byte	0x402
+ 868 0330 0E       		.uleb128 0xe
+ 869 0331 A0010000 		.4byte	.LASF38
+ 870 0335 01       		.byte	0x1
+ 871 0336 8F       		.byte	0x8f
+ 872 0337 02040000 		.4byte	0x402
+ 873 033b 02       		.uleb128 0x2
+ 874 033c 91       		.byte	0x91
+ 875 033d 64       		.sleb128 -28
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 20
+
+
+ 876 033e 14       		.uleb128 0x14
+ 877 033f 76723100 		.ascii	"vr1\000"
+ 878 0343 01       		.byte	0x1
+ 879 0344 90       		.byte	0x90
+ 880 0345 AD000000 		.4byte	0xad
+ 881 0349 29010000 		.4byte	.LLST8
+ 882 034d 15       		.uleb128 0x15
+ 883 034e B4030000 		.4byte	.LASF39
+ 884 0352 01       		.byte	0x1
+ 885 0353 91       		.byte	0x91
+ 886 0354 AD000000 		.4byte	0xad
+ 887 0358 53010000 		.4byte	.LLST9
+ 888 035c 0F       		.uleb128 0xf
+ 889 035d 1C000000 		.4byte	.LVL23
+ 890 0361 BB050000 		.4byte	0x5bb
+ 891 0365 80030000 		.4byte	0x380
+ 892 0369 10       		.uleb128 0x10
+ 893 036a 01       		.uleb128 0x1
+ 894 036b 53       		.byte	0x53
+ 895 036c 01       		.uleb128 0x1
+ 896 036d 30       		.byte	0x30
+ 897 036e 10       		.uleb128 0x10
+ 898 036f 01       		.uleb128 0x1
+ 899 0370 52       		.byte	0x52
+ 900 0371 01       		.uleb128 0x1
+ 901 0372 32       		.byte	0x32
+ 902 0373 10       		.uleb128 0x10
+ 903 0374 01       		.uleb128 0x1
+ 904 0375 51       		.byte	0x51
+ 905 0376 02       		.uleb128 0x2
+ 906 0377 91       		.byte	0x91
+ 907 0378 64       		.sleb128 -28
+ 908 0379 10       		.uleb128 0x10
+ 909 037a 01       		.uleb128 0x1
+ 910 037b 50       		.byte	0x50
+ 911 037c 02       		.uleb128 0x2
+ 912 037d 08       		.byte	0x8
+ 913 037e 28       		.byte	0x28
+ 914 037f 00       		.byte	0
+ 915 0380 0F       		.uleb128 0xf
+ 916 0381 22000000 		.4byte	.LVL24
+ 917 0385 F6050000 		.4byte	0x5f6
+ 918 0389 93030000 		.4byte	0x393
+ 919 038d 10       		.uleb128 0x10
+ 920 038e 01       		.uleb128 0x1
+ 921 038f 50       		.byte	0x50
+ 922 0390 01       		.uleb128 0x1
+ 923 0391 3A       		.byte	0x3a
+ 924 0392 00       		.byte	0
+ 925 0393 0F       		.uleb128 0xf
+ 926 0394 3A000000 		.4byte	.LVL25
+ 927 0398 BB050000 		.4byte	0x5bb
+ 928 039c B8030000 		.4byte	0x3b8
+ 929 03a0 10       		.uleb128 0x10
+ 930 03a1 01       		.uleb128 0x1
+ 931 03a2 53       		.byte	0x53
+ 932 03a3 02       		.uleb128 0x2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 21
+
+
+ 933 03a4 74       		.byte	0x74
+ 934 03a5 00       		.sleb128 0
+ 935 03a6 10       		.uleb128 0x10
+ 936 03a7 01       		.uleb128 0x1
+ 937 03a8 52       		.byte	0x52
+ 938 03a9 01       		.uleb128 0x1
+ 939 03aa 32       		.byte	0x32
+ 940 03ab 10       		.uleb128 0x10
+ 941 03ac 01       		.uleb128 0x1
+ 942 03ad 51       		.byte	0x51
+ 943 03ae 02       		.uleb128 0x2
+ 944 03af 91       		.byte	0x91
+ 945 03b0 64       		.sleb128 -28
+ 946 03b1 10       		.uleb128 0x10
+ 947 03b2 01       		.uleb128 0x1
+ 948 03b3 50       		.byte	0x50
+ 949 03b4 02       		.uleb128 0x2
+ 950 03b5 08       		.byte	0x8
+ 951 03b6 28       		.byte	0x28
+ 952 03b7 00       		.byte	0
+ 953 03b8 0F       		.uleb128 0xf
+ 954 03b9 54000000 		.4byte	.LVL29
+ 955 03bd BB050000 		.4byte	0x5bb
+ 956 03c1 DC030000 		.4byte	0x3dc
+ 957 03c5 10       		.uleb128 0x10
+ 958 03c6 01       		.uleb128 0x1
+ 959 03c7 53       		.byte	0x53
+ 960 03c8 01       		.uleb128 0x1
+ 961 03c9 30       		.byte	0x30
+ 962 03ca 10       		.uleb128 0x10
+ 963 03cb 01       		.uleb128 0x1
+ 964 03cc 52       		.byte	0x52
+ 965 03cd 01       		.uleb128 0x1
+ 966 03ce 32       		.byte	0x32
+ 967 03cf 10       		.uleb128 0x10
+ 968 03d0 01       		.uleb128 0x1
+ 969 03d1 51       		.byte	0x51
+ 970 03d2 02       		.uleb128 0x2
+ 971 03d3 91       		.byte	0x91
+ 972 03d4 64       		.sleb128 -28
+ 973 03d5 10       		.uleb128 0x10
+ 974 03d6 01       		.uleb128 0x1
+ 975 03d7 50       		.byte	0x50
+ 976 03d8 02       		.uleb128 0x2
+ 977 03d9 08       		.byte	0x8
+ 978 03da 28       		.byte	0x28
+ 979 03db 00       		.byte	0
+ 980 03dc 0F       		.uleb128 0xf
+ 981 03dd 5E000000 		.4byte	.LVL31
+ 982 03e1 07060000 		.4byte	0x607
+ 983 03e5 F0030000 		.4byte	0x3f0
+ 984 03e9 10       		.uleb128 0x10
+ 985 03ea 01       		.uleb128 0x1
+ 986 03eb 50       		.byte	0x50
+ 987 03ec 02       		.uleb128 0x2
+ 988 03ed 75       		.byte	0x75
+ 989 03ee 00       		.sleb128 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 22
+
+
+ 990 03ef 00       		.byte	0
+ 991 03f0 11       		.uleb128 0x11
+ 992 03f1 66000000 		.4byte	.LVL32
+ 993 03f5 E5050000 		.4byte	0x5e5
+ 994 03f9 10       		.uleb128 0x10
+ 995 03fa 01       		.uleb128 0x1
+ 996 03fb 50       		.byte	0x50
+ 997 03fc 03       		.uleb128 0x3
+ 998 03fd 0A       		.byte	0xa
+ 999 03fe E803     		.2byte	0x3e8
+ 1000 0400 00       		.byte	0
+ 1001 0401 00       		.byte	0
+ 1002 0402 0A       		.uleb128 0xa
+ 1003 0403 AD000000 		.4byte	0xad
+ 1004 0407 12040000 		.4byte	0x412
+ 1005 040b 0B       		.uleb128 0xb
+ 1006 040c 05010000 		.4byte	0x105
+ 1007 0410 08       		.byte	0x8
+ 1008 0411 00       		.byte	0
+ 1009 0412 0C       		.uleb128 0xc
+ 1010 0413 9A000000 		.4byte	.LASF40
+ 1011 0417 01       		.byte	0x1
+ 1012 0418 AA       		.byte	0xaa
+ 1013 0419 00000000 		.4byte	.LFB69
+ 1014 041d 48000000 		.4byte	.LFE69-.LFB69
+ 1015 0421 01       		.uleb128 0x1
+ 1016 0422 9C       		.byte	0x9c
+ 1017 0423 E8040000 		.4byte	0x4e8
+ 1018 0427 15       		.uleb128 0x15
+ 1019 0428 7C010000 		.4byte	.LASF41
+ 1020 042c 01       		.byte	0x1
+ 1021 042d AE       		.byte	0xae
+ 1022 042e AD000000 		.4byte	0xad
+ 1023 0432 72010000 		.4byte	.LLST10
+ 1024 0436 16       		.uleb128 0x16
+ 1025 0437 87010000 		.4byte	.LASF66
+ 1026 043b 01       		.byte	0x1
+ 1027 043c AF       		.byte	0xaf
+ 1028 043d E8040000 		.4byte	0x4e8
+ 1029 0441 0F       		.uleb128 0xf
+ 1030 0442 12000000 		.4byte	.LVL33
+ 1031 0446 18060000 		.4byte	0x618
+ 1032 044a 67040000 		.4byte	0x467
+ 1033 044e 10       		.uleb128 0x10
+ 1034 044f 01       		.uleb128 0x1
+ 1035 0450 53       		.byte	0x53
+ 1036 0451 03       		.uleb128 0x3
+ 1037 0452 0A       		.byte	0xa
+ 1038 0453 FF1F     		.2byte	0x1fff
+ 1039 0455 10       		.uleb128 0x10
+ 1040 0456 01       		.uleb128 0x1
+ 1041 0457 52       		.byte	0x52
+ 1042 0458 03       		.uleb128 0x3
+ 1043 0459 0A       		.byte	0xa
+ 1044 045a 0040     		.2byte	0x4000
+ 1045 045c 10       		.uleb128 0x10
+ 1046 045d 01       		.uleb128 0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 23
+
+
+ 1047 045e 51       		.byte	0x51
+ 1048 045f 01       		.uleb128 0x1
+ 1049 0460 31       		.byte	0x31
+ 1050 0461 10       		.uleb128 0x10
+ 1051 0462 01       		.uleb128 0x1
+ 1052 0463 50       		.byte	0x50
+ 1053 0464 01       		.uleb128 0x1
+ 1054 0465 32       		.byte	0x32
+ 1055 0466 00       		.byte	0
+ 1056 0467 17       		.uleb128 0x17
+ 1057 0468 18000000 		.4byte	.LVL35
+ 1058 046c 3C060000 		.4byte	0x63c
+ 1059 0470 0F       		.uleb128 0xf
+ 1060 0471 24000000 		.4byte	.LVL36
+ 1061 0475 47060000 		.4byte	0x647
+ 1062 0479 94040000 		.4byte	0x494
+ 1063 047d 10       		.uleb128 0x10
+ 1064 047e 01       		.uleb128 0x1
+ 1065 047f 53       		.byte	0x53
+ 1066 0480 01       		.uleb128 0x1
+ 1067 0481 36       		.byte	0x36
+ 1068 0482 10       		.uleb128 0x10
+ 1069 0483 01       		.uleb128 0x1
+ 1070 0484 52       		.byte	0x52
+ 1071 0485 02       		.uleb128 0x2
+ 1072 0486 74       		.byte	0x74
+ 1073 0487 00       		.sleb128 0
+ 1074 0488 10       		.uleb128 0x10
+ 1075 0489 01       		.uleb128 0x1
+ 1076 048a 51       		.byte	0x51
+ 1077 048b 01       		.uleb128 0x1
+ 1078 048c 3C       		.byte	0x3c
+ 1079 048d 10       		.uleb128 0x10
+ 1080 048e 01       		.uleb128 0x1
+ 1081 048f 50       		.byte	0x50
+ 1082 0490 02       		.uleb128 0x2
+ 1083 0491 74       		.byte	0x74
+ 1084 0492 00       		.sleb128 0
+ 1085 0493 00       		.byte	0
+ 1086 0494 0F       		.uleb128 0xf
+ 1087 0495 32000000 		.4byte	.LVL37
+ 1088 0499 6B060000 		.4byte	0x66b
+ 1089 049d B8040000 		.4byte	0x4b8
+ 1090 04a1 10       		.uleb128 0x10
+ 1091 04a2 01       		.uleb128 0x1
+ 1092 04a3 52       		.byte	0x52
+ 1093 04a4 05       		.uleb128 0x5
+ 1094 04a5 03       		.byte	0x3
+ 1095 04a6 00000000 		.4byte	adc_delsig_dma_array
+ 1096 04aa 10       		.uleb128 0x10
+ 1097 04ab 01       		.uleb128 0x1
+ 1098 04ac 51       		.byte	0x51
+ 1099 04ad 03       		.uleb128 0x3
+ 1100 04ae 0A       		.byte	0xa
+ 1101 04af 104E     		.2byte	0x4e10
+ 1102 04b1 10       		.uleb128 0x10
+ 1103 04b2 01       		.uleb128 0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 24
+
+
+ 1104 04b3 50       		.byte	0x50
+ 1105 04b4 02       		.uleb128 0x2
+ 1106 04b5 74       		.byte	0x74
+ 1107 04b6 00       		.sleb128 0
+ 1108 04b7 00       		.byte	0
+ 1109 04b8 0F       		.uleb128 0xf
+ 1110 04b9 3A000000 		.4byte	.LVL38
+ 1111 04bd 8A060000 		.4byte	0x68a
+ 1112 04c1 D2040000 		.4byte	0x4d2
+ 1113 04c5 10       		.uleb128 0x10
+ 1114 04c6 01       		.uleb128 0x1
+ 1115 04c7 51       		.byte	0x51
+ 1116 04c8 02       		.uleb128 0x2
+ 1117 04c9 74       		.byte	0x74
+ 1118 04ca 00       		.sleb128 0
+ 1119 04cb 10       		.uleb128 0x10
+ 1120 04cc 01       		.uleb128 0x1
+ 1121 04cd 50       		.byte	0x50
+ 1122 04ce 02       		.uleb128 0x2
+ 1123 04cf 75       		.byte	0x75
+ 1124 04d0 00       		.sleb128 0
+ 1125 04d1 00       		.byte	0
+ 1126 04d2 11       		.uleb128 0x11
+ 1127 04d3 42000000 		.4byte	.LVL39
+ 1128 04d7 A4060000 		.4byte	0x6a4
+ 1129 04db 10       		.uleb128 0x10
+ 1130 04dc 01       		.uleb128 0x1
+ 1131 04dd 51       		.byte	0x51
+ 1132 04de 01       		.uleb128 0x1
+ 1133 04df 31       		.byte	0x31
+ 1134 04e0 10       		.uleb128 0x10
+ 1135 04e1 01       		.uleb128 0x1
+ 1136 04e2 50       		.byte	0x50
+ 1137 04e3 02       		.uleb128 0x2
+ 1138 04e4 75       		.byte	0x75
+ 1139 04e5 00       		.sleb128 0
+ 1140 04e6 00       		.byte	0
+ 1141 04e7 00       		.byte	0
+ 1142 04e8 0A       		.uleb128 0xa
+ 1143 04e9 AD000000 		.4byte	0xad
+ 1144 04ed F8040000 		.4byte	0x4f8
+ 1145 04f1 0B       		.uleb128 0xb
+ 1146 04f2 05010000 		.4byte	0x105
+ 1147 04f6 00       		.byte	0
+ 1148 04f7 00       		.byte	0
+ 1149 04f8 0C       		.uleb128 0xc
+ 1150 04f9 2B000000 		.4byte	.LASF42
+ 1151 04fd 01       		.byte	0x1
+ 1152 04fe 21       		.byte	0x21
+ 1153 04ff 00000000 		.4byte	.LFB63
+ 1154 0503 30000000 		.4byte	.LFE63-.LFB63
+ 1155 0507 01       		.uleb128 0x1
+ 1156 0508 9C       		.byte	0x9c
+ 1157 0509 51050000 		.4byte	0x551
+ 1158 050d 17       		.uleb128 0x17
+ 1159 050e 06000000 		.4byte	.LVL41
+ 1160 0512 BE060000 		.4byte	0x6be
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 25
+
+
+ 1161 0516 17       		.uleb128 0x17
+ 1162 0517 0A000000 		.4byte	.LVL42
+ 1163 051b C5060000 		.4byte	0x6c5
+ 1164 051f 17       		.uleb128 0x17
+ 1165 0520 0E000000 		.4byte	.LVL43
+ 1166 0524 CC060000 		.4byte	0x6cc
+ 1167 0528 17       		.uleb128 0x17
+ 1168 0529 12000000 		.4byte	.LVL44
+ 1169 052d 12040000 		.4byte	0x412
+ 1170 0531 17       		.uleb128 0x17
+ 1171 0532 16000000 		.4byte	.LVL45
+ 1172 0536 D3060000 		.4byte	0x6d3
+ 1173 053a 11       		.uleb128 0x11
+ 1174 053b 2A000000 		.4byte	.LVL46
+ 1175 053f 99010000 		.4byte	0x199
+ 1176 0543 10       		.uleb128 0x10
+ 1177 0544 01       		.uleb128 0x1
+ 1178 0545 51       		.byte	0x51
+ 1179 0546 02       		.uleb128 0x2
+ 1180 0547 08       		.byte	0x8
+ 1181 0548 50       		.byte	0x50
+ 1182 0549 10       		.uleb128 0x10
+ 1183 054a 01       		.uleb128 0x1
+ 1184 054b 50       		.byte	0x50
+ 1185 054c 02       		.uleb128 0x2
+ 1186 054d 08       		.byte	0x8
+ 1187 054e 7F       		.byte	0x7f
+ 1188 054f 00       		.byte	0
+ 1189 0550 00       		.byte	0
+ 1190 0551 18       		.uleb128 0x18
+ 1191 0552 BF030000 		.4byte	.LASF43
+ 1192 0556 06       		.byte	0x6
+ 1193 0557 2A06     		.2byte	0x62a
+ 1194 0559 5D050000 		.4byte	0x55d
+ 1195 055d 06       		.uleb128 0x6
+ 1196 055e A2000000 		.4byte	0xa2
+ 1197 0562 19       		.uleb128 0x19
+ 1198 0563 F3030000 		.4byte	.LASF44
+ 1199 0567 01       		.byte	0x1
+ 1200 0568 15       		.byte	0x15
+ 1201 0569 13010000 		.4byte	0x113
+ 1202 056d 05       		.uleb128 0x5
+ 1203 056e 03       		.byte	0x3
+ 1204 056f 00000000 		.4byte	strain
+ 1205 0573 19       		.uleb128 0x19
+ 1206 0574 80030000 		.4byte	.LASF45
+ 1207 0578 01       		.byte	0x1
+ 1208 0579 16       		.byte	0x16
+ 1209 057a B8000000 		.4byte	0xb8
+ 1210 057e 05       		.uleb128 0x5
+ 1211 057f 03       		.byte	0x3
+ 1212 0580 00000000 		.4byte	adc_strain_filtered
+ 1213 0584 19       		.uleb128 0x19
+ 1214 0585 20000000 		.4byte	.LASF46
+ 1215 0589 01       		.byte	0x1
+ 1216 058a 17       		.byte	0x17
+ 1217 058b 00010000 		.4byte	0x100
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 26
+
+
+ 1218 058f 05       		.uleb128 0x5
+ 1219 0590 03       		.byte	0x3
+ 1220 0591 00000000 		.4byte	adc_strain
+ 1221 0595 0A       		.uleb128 0xa
+ 1222 0596 B8000000 		.4byte	0xb8
+ 1223 059a A5050000 		.4byte	0x5a5
+ 1224 059e 0B       		.uleb128 0xb
+ 1225 059f 05010000 		.4byte	0x105
+ 1226 05a3 07       		.byte	0x7
+ 1227 05a4 00       		.byte	0
+ 1228 05a5 19       		.uleb128 0x19
+ 1229 05a6 37000000 		.4byte	.LASF47
+ 1230 05aa 01       		.byte	0x1
+ 1231 05ab 18       		.byte	0x18
+ 1232 05ac B6050000 		.4byte	0x5b6
+ 1233 05b0 05       		.uleb128 0x5
+ 1234 05b1 03       		.byte	0x3
+ 1235 05b2 00000000 		.4byte	adc_delsig_dma_array
+ 1236 05b6 06       		.uleb128 0x6
+ 1237 05b7 95050000 		.4byte	0x595
+ 1238 05bb 1A       		.uleb128 0x1a
+ 1239 05bc 04010000 		.4byte	.LASF51
+ 1240 05c0 09       		.byte	0x9
+ 1241 05c1 A7       		.byte	0xa7
+ 1242 05c2 AD000000 		.4byte	0xad
+ 1243 05c6 DF050000 		.4byte	0x5df
+ 1244 05ca 1B       		.uleb128 0x1b
+ 1245 05cb AD000000 		.4byte	0xad
+ 1246 05cf 1B       		.uleb128 0x1b
+ 1247 05d0 DF050000 		.4byte	0x5df
+ 1248 05d4 1B       		.uleb128 0x1b
+ 1249 05d5 AD000000 		.4byte	0xad
+ 1250 05d9 1B       		.uleb128 0x1b
+ 1251 05da AD000000 		.4byte	0xad
+ 1252 05de 00       		.byte	0
+ 1253 05df 1C       		.uleb128 0x1c
+ 1254 05e0 04       		.byte	0x4
+ 1255 05e1 AD000000 		.4byte	0xad
+ 1256 05e5 1D       		.uleb128 0x1d
+ 1257 05e6 DA010000 		.4byte	.LASF48
+ 1258 05ea 07       		.byte	0x7
+ 1259 05eb 78       		.byte	0x78
+ 1260 05ec F6050000 		.4byte	0x5f6
+ 1261 05f0 1B       		.uleb128 0x1b
+ 1262 05f1 B8000000 		.4byte	0xb8
+ 1263 05f5 00       		.byte	0
+ 1264 05f6 1D       		.uleb128 0x1d
+ 1265 05f7 CC030000 		.4byte	.LASF49
+ 1266 05fb 07       		.byte	0x7
+ 1267 05fc 77       		.byte	0x77
+ 1268 05fd 07060000 		.4byte	0x607
+ 1269 0601 1B       		.uleb128 0x1b
+ 1270 0602 C3000000 		.4byte	0xc3
+ 1271 0606 00       		.byte	0
+ 1272 0607 1D       		.uleb128 0x1d
+ 1273 0608 B8020000 		.4byte	.LASF50
+ 1274 060c 08       		.byte	0x8
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 27
+
+
+ 1275 060d 28       		.byte	0x28
+ 1276 060e 18060000 		.4byte	0x618
+ 1277 0612 1B       		.uleb128 0x1b
+ 1278 0613 AD000000 		.4byte	0xad
+ 1279 0617 00       		.byte	0
+ 1280 0618 1A       		.uleb128 0x1a
+ 1281 0619 C2000000 		.4byte	.LASF52
+ 1282 061d 0A       		.byte	0xa
+ 1283 061e 1E       		.byte	0x1e
+ 1284 061f AD000000 		.4byte	0xad
+ 1285 0623 3C060000 		.4byte	0x63c
+ 1286 0627 1B       		.uleb128 0x1b
+ 1287 0628 AD000000 		.4byte	0xad
+ 1288 062c 1B       		.uleb128 0x1b
+ 1289 062d AD000000 		.4byte	0xad
+ 1290 0631 1B       		.uleb128 0x1b
+ 1291 0632 B8000000 		.4byte	0xb8
+ 1292 0636 1B       		.uleb128 0x1b
+ 1293 0637 B8000000 		.4byte	0xb8
+ 1294 063b 00       		.byte	0
+ 1295 063c 1E       		.uleb128 0x1e
+ 1296 063d 00000000 		.4byte	.LASF67
+ 1297 0641 0B       		.byte	0xb
+ 1298 0642 39       		.byte	0x39
+ 1299 0643 AD000000 		.4byte	0xad
+ 1300 0647 1A       		.uleb128 0x1a
+ 1301 0648 6B000000 		.4byte	.LASF53
+ 1302 064c 0B       		.byte	0xb
+ 1303 064d 3C       		.byte	0x3c
+ 1304 064e E3000000 		.4byte	0xe3
+ 1305 0652 6B060000 		.4byte	0x66b
+ 1306 0656 1B       		.uleb128 0x1b
+ 1307 0657 AD000000 		.4byte	0xad
+ 1308 065b 1B       		.uleb128 0x1b
+ 1309 065c B8000000 		.4byte	0xb8
+ 1310 0660 1B       		.uleb128 0x1b
+ 1311 0661 AD000000 		.4byte	0xad
+ 1312 0665 1B       		.uleb128 0x1b
+ 1313 0666 AD000000 		.4byte	0xad
+ 1314 066a 00       		.byte	0
+ 1315 066b 1A       		.uleb128 0x1a
+ 1316 066c 27020000 		.4byte	.LASF54
+ 1317 0670 0B       		.byte	0xb
+ 1318 0671 40       		.byte	0x40
+ 1319 0672 E3000000 		.4byte	0xe3
+ 1320 0676 8A060000 		.4byte	0x68a
+ 1321 067a 1B       		.uleb128 0x1b
+ 1322 067b AD000000 		.4byte	0xad
+ 1323 067f 1B       		.uleb128 0x1b
+ 1324 0680 B8000000 		.4byte	0xb8
+ 1325 0684 1B       		.uleb128 0x1b
+ 1326 0685 B8000000 		.4byte	0xb8
+ 1327 0689 00       		.byte	0
+ 1328 068a 1A       		.uleb128 0x1a
+ 1329 068b 19010000 		.4byte	.LASF55
+ 1330 068f 0B       		.byte	0xb
+ 1331 0690 30       		.byte	0x30
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 28
+
+
+ 1332 0691 E3000000 		.4byte	0xe3
+ 1333 0695 A4060000 		.4byte	0x6a4
+ 1334 0699 1B       		.uleb128 0x1b
+ 1335 069a AD000000 		.4byte	0xad
+ 1336 069e 1B       		.uleb128 0x1b
+ 1337 069f AD000000 		.4byte	0xad
+ 1338 06a3 00       		.byte	0
+ 1339 06a4 1A       		.uleb128 0x1a
+ 1340 06a5 83000000 		.4byte	.LASF56
+ 1341 06a9 0B       		.byte	0xb
+ 1342 06aa 2A       		.byte	0x2a
+ 1343 06ab E3000000 		.4byte	0xe3
+ 1344 06af BE060000 		.4byte	0x6be
+ 1345 06b3 1B       		.uleb128 0x1b
+ 1346 06b4 AD000000 		.4byte	0xad
+ 1347 06b8 1B       		.uleb128 0x1b
+ 1348 06b9 AD000000 		.4byte	0xad
+ 1349 06bd 00       		.byte	0
+ 1350 06be 1F       		.uleb128 0x1f
+ 1351 06bf B8010000 		.4byte	.LASF57
+ 1352 06c3 0C       		.byte	0xc
+ 1353 06c4 33       		.byte	0x33
+ 1354 06c5 1F       		.uleb128 0x1f
+ 1355 06c6 5E020000 		.4byte	.LASF58
+ 1356 06ca 0D       		.byte	0xd
+ 1357 06cb 3A       		.byte	0x3a
+ 1358 06cc 1F       		.uleb128 0x1f
+ 1359 06cd 56010000 		.4byte	.LASF59
+ 1360 06d1 0E       		.byte	0xe
+ 1361 06d2 23       		.byte	0x23
+ 1362 06d3 1F       		.uleb128 0x1f
+ 1363 06d4 E2030000 		.4byte	.LASF60
+ 1364 06d8 0F       		.byte	0xf
+ 1365 06d9 17       		.byte	0x17
+ 1366 06da 00       		.byte	0
+ 1367              		.section	.debug_abbrev,"",%progbits
+ 1368              	.Ldebug_abbrev0:
+ 1369 0000 01       		.uleb128 0x1
+ 1370 0001 11       		.uleb128 0x11
+ 1371 0002 01       		.byte	0x1
+ 1372 0003 25       		.uleb128 0x25
+ 1373 0004 0E       		.uleb128 0xe
+ 1374 0005 13       		.uleb128 0x13
+ 1375 0006 0B       		.uleb128 0xb
+ 1376 0007 03       		.uleb128 0x3
+ 1377 0008 0E       		.uleb128 0xe
+ 1378 0009 1B       		.uleb128 0x1b
+ 1379 000a 0E       		.uleb128 0xe
+ 1380 000b 55       		.uleb128 0x55
+ 1381 000c 17       		.uleb128 0x17
+ 1382 000d 11       		.uleb128 0x11
+ 1383 000e 01       		.uleb128 0x1
+ 1384 000f 10       		.uleb128 0x10
+ 1385 0010 17       		.uleb128 0x17
+ 1386 0011 00       		.byte	0
+ 1387 0012 00       		.byte	0
+ 1388 0013 02       		.uleb128 0x2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 29
+
+
+ 1389 0014 24       		.uleb128 0x24
+ 1390 0015 00       		.byte	0
+ 1391 0016 0B       		.uleb128 0xb
+ 1392 0017 0B       		.uleb128 0xb
+ 1393 0018 3E       		.uleb128 0x3e
+ 1394 0019 0B       		.uleb128 0xb
+ 1395 001a 03       		.uleb128 0x3
+ 1396 001b 0E       		.uleb128 0xe
+ 1397 001c 00       		.byte	0
+ 1398 001d 00       		.byte	0
+ 1399 001e 03       		.uleb128 0x3
+ 1400 001f 16       		.uleb128 0x16
+ 1401 0020 00       		.byte	0
+ 1402 0021 03       		.uleb128 0x3
+ 1403 0022 0E       		.uleb128 0xe
+ 1404 0023 3A       		.uleb128 0x3a
+ 1405 0024 0B       		.uleb128 0xb
+ 1406 0025 3B       		.uleb128 0x3b
+ 1407 0026 0B       		.uleb128 0xb
+ 1408 0027 49       		.uleb128 0x49
+ 1409 0028 13       		.uleb128 0x13
+ 1410 0029 00       		.byte	0
+ 1411 002a 00       		.byte	0
+ 1412 002b 04       		.uleb128 0x4
+ 1413 002c 24       		.uleb128 0x24
+ 1414 002d 00       		.byte	0
+ 1415 002e 0B       		.uleb128 0xb
+ 1416 002f 0B       		.uleb128 0xb
+ 1417 0030 3E       		.uleb128 0x3e
+ 1418 0031 0B       		.uleb128 0xb
+ 1419 0032 03       		.uleb128 0x3
+ 1420 0033 08       		.uleb128 0x8
+ 1421 0034 00       		.byte	0
+ 1422 0035 00       		.byte	0
+ 1423 0036 05       		.uleb128 0x5
+ 1424 0037 16       		.uleb128 0x16
+ 1425 0038 00       		.byte	0
+ 1426 0039 03       		.uleb128 0x3
+ 1427 003a 0E       		.uleb128 0xe
+ 1428 003b 3A       		.uleb128 0x3a
+ 1429 003c 0B       		.uleb128 0xb
+ 1430 003d 3B       		.uleb128 0x3b
+ 1431 003e 05       		.uleb128 0x5
+ 1432 003f 49       		.uleb128 0x49
+ 1433 0040 13       		.uleb128 0x13
+ 1434 0041 00       		.byte	0
+ 1435 0042 00       		.byte	0
+ 1436 0043 06       		.uleb128 0x6
+ 1437 0044 35       		.uleb128 0x35
+ 1438 0045 00       		.byte	0
+ 1439 0046 49       		.uleb128 0x49
+ 1440 0047 13       		.uleb128 0x13
+ 1441 0048 00       		.byte	0
+ 1442 0049 00       		.byte	0
+ 1443 004a 07       		.uleb128 0x7
+ 1444 004b 13       		.uleb128 0x13
+ 1445 004c 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 30
+
+
+ 1446 004d 03       		.uleb128 0x3
+ 1447 004e 0E       		.uleb128 0xe
+ 1448 004f 0B       		.uleb128 0xb
+ 1449 0050 0B       		.uleb128 0xb
+ 1450 0051 3A       		.uleb128 0x3a
+ 1451 0052 0B       		.uleb128 0xb
+ 1452 0053 3B       		.uleb128 0x3b
+ 1453 0054 05       		.uleb128 0x5
+ 1454 0055 01       		.uleb128 0x1
+ 1455 0056 13       		.uleb128 0x13
+ 1456 0057 00       		.byte	0
+ 1457 0058 00       		.byte	0
+ 1458 0059 08       		.uleb128 0x8
+ 1459 005a 0D       		.uleb128 0xd
+ 1460 005b 00       		.byte	0
+ 1461 005c 03       		.uleb128 0x3
+ 1462 005d 0E       		.uleb128 0xe
+ 1463 005e 3A       		.uleb128 0x3a
+ 1464 005f 0B       		.uleb128 0xb
+ 1465 0060 3B       		.uleb128 0x3b
+ 1466 0061 05       		.uleb128 0x5
+ 1467 0062 49       		.uleb128 0x49
+ 1468 0063 13       		.uleb128 0x13
+ 1469 0064 38       		.uleb128 0x38
+ 1470 0065 0B       		.uleb128 0xb
+ 1471 0066 00       		.byte	0
+ 1472 0067 00       		.byte	0
+ 1473 0068 09       		.uleb128 0x9
+ 1474 0069 0D       		.uleb128 0xd
+ 1475 006a 00       		.byte	0
+ 1476 006b 03       		.uleb128 0x3
+ 1477 006c 08       		.uleb128 0x8
+ 1478 006d 3A       		.uleb128 0x3a
+ 1479 006e 0B       		.uleb128 0xb
+ 1480 006f 3B       		.uleb128 0x3b
+ 1481 0070 05       		.uleb128 0x5
+ 1482 0071 49       		.uleb128 0x49
+ 1483 0072 13       		.uleb128 0x13
+ 1484 0073 38       		.uleb128 0x38
+ 1485 0074 0B       		.uleb128 0xb
+ 1486 0075 00       		.byte	0
+ 1487 0076 00       		.byte	0
+ 1488 0077 0A       		.uleb128 0xa
+ 1489 0078 01       		.uleb128 0x1
+ 1490 0079 01       		.byte	0x1
+ 1491 007a 49       		.uleb128 0x49
+ 1492 007b 13       		.uleb128 0x13
+ 1493 007c 01       		.uleb128 0x1
+ 1494 007d 13       		.uleb128 0x13
+ 1495 007e 00       		.byte	0
+ 1496 007f 00       		.byte	0
+ 1497 0080 0B       		.uleb128 0xb
+ 1498 0081 21       		.uleb128 0x21
+ 1499 0082 00       		.byte	0
+ 1500 0083 49       		.uleb128 0x49
+ 1501 0084 13       		.uleb128 0x13
+ 1502 0085 2F       		.uleb128 0x2f
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 31
+
+
+ 1503 0086 0B       		.uleb128 0xb
+ 1504 0087 00       		.byte	0
+ 1505 0088 00       		.byte	0
+ 1506 0089 0C       		.uleb128 0xc
+ 1507 008a 2E       		.uleb128 0x2e
+ 1508 008b 01       		.byte	0x1
+ 1509 008c 3F       		.uleb128 0x3f
+ 1510 008d 19       		.uleb128 0x19
+ 1511 008e 03       		.uleb128 0x3
+ 1512 008f 0E       		.uleb128 0xe
+ 1513 0090 3A       		.uleb128 0x3a
+ 1514 0091 0B       		.uleb128 0xb
+ 1515 0092 3B       		.uleb128 0x3b
+ 1516 0093 0B       		.uleb128 0xb
+ 1517 0094 27       		.uleb128 0x27
+ 1518 0095 19       		.uleb128 0x19
+ 1519 0096 11       		.uleb128 0x11
+ 1520 0097 01       		.uleb128 0x1
+ 1521 0098 12       		.uleb128 0x12
+ 1522 0099 06       		.uleb128 0x6
+ 1523 009a 40       		.uleb128 0x40
+ 1524 009b 18       		.uleb128 0x18
+ 1525 009c 9742     		.uleb128 0x2117
+ 1526 009e 19       		.uleb128 0x19
+ 1527 009f 01       		.uleb128 0x1
+ 1528 00a0 13       		.uleb128 0x13
+ 1529 00a1 00       		.byte	0
+ 1530 00a2 00       		.byte	0
+ 1531 00a3 0D       		.uleb128 0xd
+ 1532 00a4 05       		.uleb128 0x5
+ 1533 00a5 00       		.byte	0
+ 1534 00a6 03       		.uleb128 0x3
+ 1535 00a7 0E       		.uleb128 0xe
+ 1536 00a8 3A       		.uleb128 0x3a
+ 1537 00a9 0B       		.uleb128 0xb
+ 1538 00aa 3B       		.uleb128 0x3b
+ 1539 00ab 0B       		.uleb128 0xb
+ 1540 00ac 49       		.uleb128 0x49
+ 1541 00ad 13       		.uleb128 0x13
+ 1542 00ae 02       		.uleb128 0x2
+ 1543 00af 17       		.uleb128 0x17
+ 1544 00b0 00       		.byte	0
+ 1545 00b1 00       		.byte	0
+ 1546 00b2 0E       		.uleb128 0xe
+ 1547 00b3 34       		.uleb128 0x34
+ 1548 00b4 00       		.byte	0
+ 1549 00b5 03       		.uleb128 0x3
+ 1550 00b6 0E       		.uleb128 0xe
+ 1551 00b7 3A       		.uleb128 0x3a
+ 1552 00b8 0B       		.uleb128 0xb
+ 1553 00b9 3B       		.uleb128 0x3b
+ 1554 00ba 0B       		.uleb128 0xb
+ 1555 00bb 49       		.uleb128 0x49
+ 1556 00bc 13       		.uleb128 0x13
+ 1557 00bd 02       		.uleb128 0x2
+ 1558 00be 18       		.uleb128 0x18
+ 1559 00bf 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 32
+
+
+ 1560 00c0 00       		.byte	0
+ 1561 00c1 0F       		.uleb128 0xf
+ 1562 00c2 898201   		.uleb128 0x4109
+ 1563 00c5 01       		.byte	0x1
+ 1564 00c6 11       		.uleb128 0x11
+ 1565 00c7 01       		.uleb128 0x1
+ 1566 00c8 31       		.uleb128 0x31
+ 1567 00c9 13       		.uleb128 0x13
+ 1568 00ca 01       		.uleb128 0x1
+ 1569 00cb 13       		.uleb128 0x13
+ 1570 00cc 00       		.byte	0
+ 1571 00cd 00       		.byte	0
+ 1572 00ce 10       		.uleb128 0x10
+ 1573 00cf 8A8201   		.uleb128 0x410a
+ 1574 00d2 00       		.byte	0
+ 1575 00d3 02       		.uleb128 0x2
+ 1576 00d4 18       		.uleb128 0x18
+ 1577 00d5 9142     		.uleb128 0x2111
+ 1578 00d7 18       		.uleb128 0x18
+ 1579 00d8 00       		.byte	0
+ 1580 00d9 00       		.byte	0
+ 1581 00da 11       		.uleb128 0x11
+ 1582 00db 898201   		.uleb128 0x4109
+ 1583 00de 01       		.byte	0x1
+ 1584 00df 11       		.uleb128 0x11
+ 1585 00e0 01       		.uleb128 0x1
+ 1586 00e1 31       		.uleb128 0x31
+ 1587 00e2 13       		.uleb128 0x13
+ 1588 00e3 00       		.byte	0
+ 1589 00e4 00       		.byte	0
+ 1590 00e5 12       		.uleb128 0x12
+ 1591 00e6 2E       		.uleb128 0x2e
+ 1592 00e7 00       		.byte	0
+ 1593 00e8 3F       		.uleb128 0x3f
+ 1594 00e9 19       		.uleb128 0x19
+ 1595 00ea 03       		.uleb128 0x3
+ 1596 00eb 0E       		.uleb128 0xe
+ 1597 00ec 3A       		.uleb128 0x3a
+ 1598 00ed 0B       		.uleb128 0xb
+ 1599 00ee 3B       		.uleb128 0x3b
+ 1600 00ef 0B       		.uleb128 0xb
+ 1601 00f0 27       		.uleb128 0x27
+ 1602 00f1 19       		.uleb128 0x19
+ 1603 00f2 49       		.uleb128 0x49
+ 1604 00f3 13       		.uleb128 0x13
+ 1605 00f4 11       		.uleb128 0x11
+ 1606 00f5 01       		.uleb128 0x1
+ 1607 00f6 12       		.uleb128 0x12
+ 1608 00f7 06       		.uleb128 0x6
+ 1609 00f8 40       		.uleb128 0x40
+ 1610 00f9 18       		.uleb128 0x18
+ 1611 00fa 9742     		.uleb128 0x2117
+ 1612 00fc 19       		.uleb128 0x19
+ 1613 00fd 00       		.byte	0
+ 1614 00fe 00       		.byte	0
+ 1615 00ff 13       		.uleb128 0x13
+ 1616 0100 2E       		.uleb128 0x2e
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 33
+
+
+ 1617 0101 01       		.byte	0x1
+ 1618 0102 3F       		.uleb128 0x3f
+ 1619 0103 19       		.uleb128 0x19
+ 1620 0104 03       		.uleb128 0x3
+ 1621 0105 0E       		.uleb128 0xe
+ 1622 0106 3A       		.uleb128 0x3a
+ 1623 0107 0B       		.uleb128 0xb
+ 1624 0108 3B       		.uleb128 0x3b
+ 1625 0109 0B       		.uleb128 0xb
+ 1626 010a 27       		.uleb128 0x27
+ 1627 010b 19       		.uleb128 0x19
+ 1628 010c 49       		.uleb128 0x49
+ 1629 010d 13       		.uleb128 0x13
+ 1630 010e 11       		.uleb128 0x11
+ 1631 010f 01       		.uleb128 0x1
+ 1632 0110 12       		.uleb128 0x12
+ 1633 0111 06       		.uleb128 0x6
+ 1634 0112 40       		.uleb128 0x40
+ 1635 0113 18       		.uleb128 0x18
+ 1636 0114 9742     		.uleb128 0x2117
+ 1637 0116 19       		.uleb128 0x19
+ 1638 0117 01       		.uleb128 0x1
+ 1639 0118 13       		.uleb128 0x13
+ 1640 0119 00       		.byte	0
+ 1641 011a 00       		.byte	0
+ 1642 011b 14       		.uleb128 0x14
+ 1643 011c 34       		.uleb128 0x34
+ 1644 011d 00       		.byte	0
+ 1645 011e 03       		.uleb128 0x3
+ 1646 011f 08       		.uleb128 0x8
+ 1647 0120 3A       		.uleb128 0x3a
+ 1648 0121 0B       		.uleb128 0xb
+ 1649 0122 3B       		.uleb128 0x3b
+ 1650 0123 0B       		.uleb128 0xb
+ 1651 0124 49       		.uleb128 0x49
+ 1652 0125 13       		.uleb128 0x13
+ 1653 0126 02       		.uleb128 0x2
+ 1654 0127 17       		.uleb128 0x17
+ 1655 0128 00       		.byte	0
+ 1656 0129 00       		.byte	0
+ 1657 012a 15       		.uleb128 0x15
+ 1658 012b 34       		.uleb128 0x34
+ 1659 012c 00       		.byte	0
+ 1660 012d 03       		.uleb128 0x3
+ 1661 012e 0E       		.uleb128 0xe
+ 1662 012f 3A       		.uleb128 0x3a
+ 1663 0130 0B       		.uleb128 0xb
+ 1664 0131 3B       		.uleb128 0x3b
+ 1665 0132 0B       		.uleb128 0xb
+ 1666 0133 49       		.uleb128 0x49
+ 1667 0134 13       		.uleb128 0x13
+ 1668 0135 02       		.uleb128 0x2
+ 1669 0136 17       		.uleb128 0x17
+ 1670 0137 00       		.byte	0
+ 1671 0138 00       		.byte	0
+ 1672 0139 16       		.uleb128 0x16
+ 1673 013a 34       		.uleb128 0x34
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 34
+
+
+ 1674 013b 00       		.byte	0
+ 1675 013c 03       		.uleb128 0x3
+ 1676 013d 0E       		.uleb128 0xe
+ 1677 013e 3A       		.uleb128 0x3a
+ 1678 013f 0B       		.uleb128 0xb
+ 1679 0140 3B       		.uleb128 0x3b
+ 1680 0141 0B       		.uleb128 0xb
+ 1681 0142 49       		.uleb128 0x49
+ 1682 0143 13       		.uleb128 0x13
+ 1683 0144 00       		.byte	0
+ 1684 0145 00       		.byte	0
+ 1685 0146 17       		.uleb128 0x17
+ 1686 0147 898201   		.uleb128 0x4109
+ 1687 014a 00       		.byte	0
+ 1688 014b 11       		.uleb128 0x11
+ 1689 014c 01       		.uleb128 0x1
+ 1690 014d 31       		.uleb128 0x31
+ 1691 014e 13       		.uleb128 0x13
+ 1692 014f 00       		.byte	0
+ 1693 0150 00       		.byte	0
+ 1694 0151 18       		.uleb128 0x18
+ 1695 0152 34       		.uleb128 0x34
+ 1696 0153 00       		.byte	0
+ 1697 0154 03       		.uleb128 0x3
+ 1698 0155 0E       		.uleb128 0xe
+ 1699 0156 3A       		.uleb128 0x3a
+ 1700 0157 0B       		.uleb128 0xb
+ 1701 0158 3B       		.uleb128 0x3b
+ 1702 0159 05       		.uleb128 0x5
+ 1703 015a 49       		.uleb128 0x49
+ 1704 015b 13       		.uleb128 0x13
+ 1705 015c 3F       		.uleb128 0x3f
+ 1706 015d 19       		.uleb128 0x19
+ 1707 015e 3C       		.uleb128 0x3c
+ 1708 015f 19       		.uleb128 0x19
+ 1709 0160 00       		.byte	0
+ 1710 0161 00       		.byte	0
+ 1711 0162 19       		.uleb128 0x19
+ 1712 0163 34       		.uleb128 0x34
+ 1713 0164 00       		.byte	0
+ 1714 0165 03       		.uleb128 0x3
+ 1715 0166 0E       		.uleb128 0xe
+ 1716 0167 3A       		.uleb128 0x3a
+ 1717 0168 0B       		.uleb128 0xb
+ 1718 0169 3B       		.uleb128 0x3b
+ 1719 016a 0B       		.uleb128 0xb
+ 1720 016b 49       		.uleb128 0x49
+ 1721 016c 13       		.uleb128 0x13
+ 1722 016d 3F       		.uleb128 0x3f
+ 1723 016e 19       		.uleb128 0x19
+ 1724 016f 02       		.uleb128 0x2
+ 1725 0170 18       		.uleb128 0x18
+ 1726 0171 00       		.byte	0
+ 1727 0172 00       		.byte	0
+ 1728 0173 1A       		.uleb128 0x1a
+ 1729 0174 2E       		.uleb128 0x2e
+ 1730 0175 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 35
+
+
+ 1731 0176 3F       		.uleb128 0x3f
+ 1732 0177 19       		.uleb128 0x19
+ 1733 0178 03       		.uleb128 0x3
+ 1734 0179 0E       		.uleb128 0xe
+ 1735 017a 3A       		.uleb128 0x3a
+ 1736 017b 0B       		.uleb128 0xb
+ 1737 017c 3B       		.uleb128 0x3b
+ 1738 017d 0B       		.uleb128 0xb
+ 1739 017e 27       		.uleb128 0x27
+ 1740 017f 19       		.uleb128 0x19
+ 1741 0180 49       		.uleb128 0x49
+ 1742 0181 13       		.uleb128 0x13
+ 1743 0182 3C       		.uleb128 0x3c
+ 1744 0183 19       		.uleb128 0x19
+ 1745 0184 01       		.uleb128 0x1
+ 1746 0185 13       		.uleb128 0x13
+ 1747 0186 00       		.byte	0
+ 1748 0187 00       		.byte	0
+ 1749 0188 1B       		.uleb128 0x1b
+ 1750 0189 05       		.uleb128 0x5
+ 1751 018a 00       		.byte	0
+ 1752 018b 49       		.uleb128 0x49
+ 1753 018c 13       		.uleb128 0x13
+ 1754 018d 00       		.byte	0
+ 1755 018e 00       		.byte	0
+ 1756 018f 1C       		.uleb128 0x1c
+ 1757 0190 0F       		.uleb128 0xf
+ 1758 0191 00       		.byte	0
+ 1759 0192 0B       		.uleb128 0xb
+ 1760 0193 0B       		.uleb128 0xb
+ 1761 0194 49       		.uleb128 0x49
+ 1762 0195 13       		.uleb128 0x13
+ 1763 0196 00       		.byte	0
+ 1764 0197 00       		.byte	0
+ 1765 0198 1D       		.uleb128 0x1d
+ 1766 0199 2E       		.uleb128 0x2e
+ 1767 019a 01       		.byte	0x1
+ 1768 019b 3F       		.uleb128 0x3f
+ 1769 019c 19       		.uleb128 0x19
+ 1770 019d 03       		.uleb128 0x3
+ 1771 019e 0E       		.uleb128 0xe
+ 1772 019f 3A       		.uleb128 0x3a
+ 1773 01a0 0B       		.uleb128 0xb
+ 1774 01a1 3B       		.uleb128 0x3b
+ 1775 01a2 0B       		.uleb128 0xb
+ 1776 01a3 27       		.uleb128 0x27
+ 1777 01a4 19       		.uleb128 0x19
+ 1778 01a5 3C       		.uleb128 0x3c
+ 1779 01a6 19       		.uleb128 0x19
+ 1780 01a7 01       		.uleb128 0x1
+ 1781 01a8 13       		.uleb128 0x13
+ 1782 01a9 00       		.byte	0
+ 1783 01aa 00       		.byte	0
+ 1784 01ab 1E       		.uleb128 0x1e
+ 1785 01ac 2E       		.uleb128 0x2e
+ 1786 01ad 00       		.byte	0
+ 1787 01ae 3F       		.uleb128 0x3f
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 36
+
+
+ 1788 01af 19       		.uleb128 0x19
+ 1789 01b0 03       		.uleb128 0x3
+ 1790 01b1 0E       		.uleb128 0xe
+ 1791 01b2 3A       		.uleb128 0x3a
+ 1792 01b3 0B       		.uleb128 0xb
+ 1793 01b4 3B       		.uleb128 0x3b
+ 1794 01b5 0B       		.uleb128 0xb
+ 1795 01b6 27       		.uleb128 0x27
+ 1796 01b7 19       		.uleb128 0x19
+ 1797 01b8 49       		.uleb128 0x49
+ 1798 01b9 13       		.uleb128 0x13
+ 1799 01ba 3C       		.uleb128 0x3c
+ 1800 01bb 19       		.uleb128 0x19
+ 1801 01bc 00       		.byte	0
+ 1802 01bd 00       		.byte	0
+ 1803 01be 1F       		.uleb128 0x1f
+ 1804 01bf 2E       		.uleb128 0x2e
+ 1805 01c0 00       		.byte	0
+ 1806 01c1 3F       		.uleb128 0x3f
+ 1807 01c2 19       		.uleb128 0x19
+ 1808 01c3 03       		.uleb128 0x3
+ 1809 01c4 0E       		.uleb128 0xe
+ 1810 01c5 3A       		.uleb128 0x3a
+ 1811 01c6 0B       		.uleb128 0xb
+ 1812 01c7 3B       		.uleb128 0x3b
+ 1813 01c8 0B       		.uleb128 0xb
+ 1814 01c9 27       		.uleb128 0x27
+ 1815 01ca 19       		.uleb128 0x19
+ 1816 01cb 3C       		.uleb128 0x3c
+ 1817 01cc 19       		.uleb128 0x19
+ 1818 01cd 00       		.byte	0
+ 1819 01ce 00       		.byte	0
+ 1820 01cf 00       		.byte	0
+ 1821              		.section	.debug_loc,"",%progbits
+ 1822              	.Ldebug_loc0:
+ 1823              	.LLST0:
+ 1824 0000 00000000 		.4byte	.LVL0
+ 1825 0004 12000000 		.4byte	.LVL1
+ 1826 0008 0100     		.2byte	0x1
+ 1827 000a 50       		.byte	0x50
+ 1828 000b 12000000 		.4byte	.LVL1
+ 1829 000f 1B000000 		.4byte	.LVL3-1
+ 1830 0013 0200     		.2byte	0x2
+ 1831 0015 91       		.byte	0x91
+ 1832 0016 75       		.sleb128 -11
+ 1833 0017 1B000000 		.4byte	.LVL3-1
+ 1834 001b 40000000 		.4byte	.LFE64
+ 1835 001f 0400     		.2byte	0x4
+ 1836 0021 F3       		.byte	0xf3
+ 1837 0022 01       		.uleb128 0x1
+ 1838 0023 50       		.byte	0x50
+ 1839 0024 9F       		.byte	0x9f
+ 1840 0025 00000000 		.4byte	0
+ 1841 0029 00000000 		.4byte	0
+ 1842              	.LLST1:
+ 1843 002d 00000000 		.4byte	.LVL0
+ 1844 0031 14000000 		.4byte	.LVL2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 37
+
+
+ 1845 0035 0100     		.2byte	0x1
+ 1846 0037 51       		.byte	0x51
+ 1847 0038 14000000 		.4byte	.LVL2
+ 1848 003c 40000000 		.4byte	.LFE64
+ 1849 0040 0400     		.2byte	0x4
+ 1850 0042 F3       		.byte	0xf3
+ 1851 0043 01       		.uleb128 0x1
+ 1852 0044 51       		.byte	0x51
+ 1853 0045 9F       		.byte	0x9f
+ 1854 0046 00000000 		.4byte	0
+ 1855 004a 00000000 		.4byte	0
+ 1856              	.LLST2:
+ 1857 004e 00000000 		.4byte	.LVL7
+ 1858 0052 06000000 		.4byte	.LVL8
+ 1859 0056 0200     		.2byte	0x2
+ 1860 0058 30       		.byte	0x30
+ 1861 0059 9F       		.byte	0x9f
+ 1862 005a 06000000 		.4byte	.LVL8
+ 1863 005e 28000000 		.4byte	.LVL13
+ 1864 0062 0100     		.2byte	0x1
+ 1865 0064 51       		.byte	0x51
+ 1866 0065 28000000 		.4byte	.LVL13
+ 1867 0069 2C000000 		.4byte	.LVL14
+ 1868 006d 0100     		.2byte	0x1
+ 1869 006f 50       		.byte	0x50
+ 1870 0070 00000000 		.4byte	0
+ 1871 0074 00000000 		.4byte	0
+ 1872              	.LLST3:
+ 1873 0078 00000000 		.4byte	.LVL7
+ 1874 007c 06000000 		.4byte	.LVL8
+ 1875 0080 0200     		.2byte	0x2
+ 1876 0082 31       		.byte	0x31
+ 1877 0083 9F       		.byte	0x9f
+ 1878 0084 06000000 		.4byte	.LVL8
+ 1879 0088 18000000 		.4byte	.LVL10
+ 1880 008c 0100     		.2byte	0x1
+ 1881 008e 53       		.byte	0x53
+ 1882 008f 1A000000 		.4byte	.LVL11
+ 1883 0093 20000000 		.4byte	.LVL12
+ 1884 0097 0100     		.2byte	0x1
+ 1885 0099 53       		.byte	0x53
+ 1886 009a 00000000 		.4byte	0
+ 1887 009e 00000000 		.4byte	0
+ 1888              	.LLST4:
+ 1889 00a2 00000000 		.4byte	.LVL7
+ 1890 00a6 2C000000 		.4byte	.LVL14
+ 1891 00aa 0200     		.2byte	0x2
+ 1892 00ac 30       		.byte	0x30
+ 1893 00ad 9F       		.byte	0x9f
+ 1894 00ae 2C000000 		.4byte	.LVL14
+ 1895 00b2 3C000000 		.4byte	.LFE66
+ 1896 00b6 0100     		.2byte	0x1
+ 1897 00b8 50       		.byte	0x50
+ 1898 00b9 00000000 		.4byte	0
+ 1899 00bd 00000000 		.4byte	0
+ 1900              	.LLST5:
+ 1901 00c1 00000000 		.4byte	.LVL15
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 38
+
+
+ 1902 00c5 06000000 		.4byte	.LVL16
+ 1903 00c9 0200     		.2byte	0x2
+ 1904 00cb 30       		.byte	0x30
+ 1905 00cc 9F       		.byte	0x9f
+ 1906 00cd 06000000 		.4byte	.LVL16
+ 1907 00d1 1C000000 		.4byte	.LVL20
+ 1908 00d5 0100     		.2byte	0x1
+ 1909 00d7 50       		.byte	0x50
+ 1910 00d8 00000000 		.4byte	0
+ 1911 00dc 00000000 		.4byte	0
+ 1912              	.LLST6:
+ 1913 00e0 00000000 		.4byte	.LVL15
+ 1914 00e4 06000000 		.4byte	.LVL16
+ 1915 00e8 0200     		.2byte	0x2
+ 1916 00ea 32       		.byte	0x32
+ 1917 00eb 9F       		.byte	0x9f
+ 1918 00ec 06000000 		.4byte	.LVL16
+ 1919 00f0 12000000 		.4byte	.LVL18
+ 1920 00f4 0100     		.2byte	0x1
+ 1921 00f6 53       		.byte	0x53
+ 1922 00f7 14000000 		.4byte	.LVL19
+ 1923 00fb 1E000000 		.4byte	.LVL21
+ 1924 00ff 0100     		.2byte	0x1
+ 1925 0101 53       		.byte	0x53
+ 1926 0102 00000000 		.4byte	0
+ 1927 0106 00000000 		.4byte	0
+ 1928              	.LLST7:
+ 1929 010a 00000000 		.4byte	.LVL15
+ 1930 010e 1C000000 		.4byte	.LVL20
+ 1931 0112 0200     		.2byte	0x2
+ 1932 0114 30       		.byte	0x30
+ 1933 0115 9F       		.byte	0x9f
+ 1934 0116 1C000000 		.4byte	.LVL20
+ 1935 011a 34000000 		.4byte	.LFE67
+ 1936 011e 0100     		.2byte	0x1
+ 1937 0120 50       		.byte	0x50
+ 1938 0121 00000000 		.4byte	0
+ 1939 0125 00000000 		.4byte	0
+ 1940              	.LLST8:
+ 1941 0129 04000000 		.4byte	.LVL22
+ 1942 012d 40000000 		.4byte	.LVL26
+ 1943 0131 0200     		.2byte	0x2
+ 1944 0133 30       		.byte	0x30
+ 1945 0134 9F       		.byte	0x9f
+ 1946 0135 40000000 		.4byte	.LVL26
+ 1947 0139 42000000 		.4byte	.LVL27
+ 1948 013d 0100     		.2byte	0x1
+ 1949 013f 54       		.byte	0x54
+ 1950 0140 44000000 		.4byte	.LVL28
+ 1951 0144 68000000 		.4byte	.LFE68
+ 1952 0148 0100     		.2byte	0x1
+ 1953 014a 54       		.byte	0x54
+ 1954 014b 00000000 		.4byte	0
+ 1955 014f 00000000 		.4byte	0
+ 1956              	.LLST9:
+ 1957 0153 04000000 		.4byte	.LVL22
+ 1958 0157 40000000 		.4byte	.LVL26
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 39
+
+
+ 1959 015b 0200     		.2byte	0x2
+ 1960 015d 30       		.byte	0x30
+ 1961 015e 9F       		.byte	0x9f
+ 1962 015f 40000000 		.4byte	.LVL26
+ 1963 0163 68000000 		.4byte	.LFE68
+ 1964 0167 0100     		.2byte	0x1
+ 1965 0169 55       		.byte	0x55
+ 1966 016a 00000000 		.4byte	0
+ 1967 016e 00000000 		.4byte	0
+ 1968              	.LLST10:
+ 1969 0172 14000000 		.4byte	.LVL34
+ 1970 0176 44000000 		.4byte	.LVL40
+ 1971 017a 0100     		.2byte	0x1
+ 1972 017c 55       		.byte	0x55
+ 1973 017d 00000000 		.4byte	0
+ 1974 0181 00000000 		.4byte	0
+ 1975              		.section	.debug_aranges,"",%progbits
+ 1976 0000 4C000000 		.4byte	0x4c
+ 1977 0004 0200     		.2byte	0x2
+ 1978 0006 00000000 		.4byte	.Ldebug_info0
+ 1979 000a 04       		.byte	0x4
+ 1980 000b 00       		.byte	0
+ 1981 000c 0000     		.2byte	0
+ 1982 000e 0000     		.2byte	0
+ 1983 0010 00000000 		.4byte	.LFB64
+ 1984 0014 40000000 		.4byte	.LFE64-.LFB64
+ 1985 0018 00000000 		.4byte	.LFB65
+ 1986 001c 0C000000 		.4byte	.LFE65-.LFB65
+ 1987 0020 00000000 		.4byte	.LFB66
+ 1988 0024 3C000000 		.4byte	.LFE66-.LFB66
+ 1989 0028 00000000 		.4byte	.LFB67
+ 1990 002c 34000000 		.4byte	.LFE67-.LFB67
+ 1991 0030 00000000 		.4byte	.LFB68
+ 1992 0034 68000000 		.4byte	.LFE68-.LFB68
+ 1993 0038 00000000 		.4byte	.LFB69
+ 1994 003c 48000000 		.4byte	.LFE69-.LFB69
+ 1995 0040 00000000 		.4byte	.LFB63
+ 1996 0044 30000000 		.4byte	.LFE63-.LFB63
+ 1997 0048 00000000 		.4byte	0
+ 1998 004c 00000000 		.4byte	0
+ 1999              		.section	.debug_ranges,"",%progbits
+ 2000              	.Ldebug_ranges0:
+ 2001 0000 00000000 		.4byte	.LFB64
+ 2002 0004 40000000 		.4byte	.LFE64
+ 2003 0008 00000000 		.4byte	.LFB65
+ 2004 000c 0C000000 		.4byte	.LFE65
+ 2005 0010 00000000 		.4byte	.LFB66
+ 2006 0014 3C000000 		.4byte	.LFE66
+ 2007 0018 00000000 		.4byte	.LFB67
+ 2008 001c 34000000 		.4byte	.LFE67
+ 2009 0020 00000000 		.4byte	.LFB68
+ 2010 0024 68000000 		.4byte	.LFE68
+ 2011 0028 00000000 		.4byte	.LFB69
+ 2012 002c 48000000 		.4byte	.LFE69
+ 2013 0030 00000000 		.4byte	.LFB63
+ 2014 0034 30000000 		.4byte	.LFE63
+ 2015 0038 00000000 		.4byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 40
+
+
+ 2016 003c 00000000 		.4byte	0
+ 2017              		.section	.debug_line,"",%progbits
+ 2018              	.Ldebug_line0:
+ 2019 0000 FE020000 		.section	.debug_str,"MS",%progbits,1
+ 2019      02000502 
+ 2019      00000201 
+ 2019      FB0E0D00 
+ 2019      01010101 
+ 2020              	.LASF67:
+ 2021 0000 4379446D 		.ascii	"CyDmaTdAllocate\000"
+ 2021      61546441 
+ 2021      6C6C6F63 
+ 2021      61746500 
+ 2022              	.LASF30:
+ 2023 0010 66696C74 		.ascii	"filtered_strain\000"
+ 2023      65726564 
+ 2023      5F737472 
+ 2023      61696E00 
+ 2024              	.LASF46:
+ 2025 0020 6164635F 		.ascii	"adc_strain\000"
+ 2025      73747261 
+ 2025      696E00
+ 2026              	.LASF42:
+ 2027 002b 696E6974 		.ascii	"init_strain\000"
+ 2027      5F737472 
+ 2027      61696E00 
+ 2028              	.LASF47:
+ 2029 0037 6164635F 		.ascii	"adc_delsig_dma_array\000"
+ 2029      64656C73 
+ 2029      69675F64 
+ 2029      6D615F61 
+ 2029      72726179 
+ 2030              	.LASF37:
+ 2031 004c 73747261 		.ascii	"strain_test_blocking\000"
+ 2031      696E5F74 
+ 2031      6573745F 
+ 2031      626C6F63 
+ 2031      6B696E67 
+ 2032              	.LASF2:
+ 2033 0061 73686F72 		.ascii	"short int\000"
+ 2033      7420696E 
+ 2033      7400
+ 2034              	.LASF53:
+ 2035 006b 4379446D 		.ascii	"CyDmaTdSetConfiguration\000"
+ 2035      61546453 
+ 2035      6574436F 
+ 2035      6E666967 
+ 2035      75726174 
+ 2036              	.LASF56:
+ 2037 0083 4379446D 		.ascii	"CyDmaChEnable\000"
+ 2037      61436845 
+ 2037      6E61626C 
+ 2037      6500
+ 2038              	.LASF23:
+ 2039 0091 73697A65 		.ascii	"sizetype\000"
+ 2039      74797065 
+ 2039      00
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 41
+
+
+ 2040              	.LASF40:
+ 2041 009a 646D615F 		.ascii	"dma_2_config\000"
+ 2041      325F636F 
+ 2041      6E666967 
+ 2041      00
+ 2042              	.LASF4:
+ 2043 00a7 5F5F7569 		.ascii	"__uint16_t\000"
+ 2043      6E743136 
+ 2043      5F7400
+ 2044              	.LASF62:
+ 2045 00b2 2E2E5C73 		.ascii	"..\\src\\strain.c\000"
+ 2045      72635C73 
+ 2045      74726169 
+ 2045      6E2E6300 
+ 2046              	.LASF52:
+ 2047 00c2 444D415F 		.ascii	"DMA_2_DmaInitialize\000"
+ 2047      325F446D 
+ 2047      61496E69 
+ 2047      7469616C 
+ 2047      697A6500 
+ 2048              	.LASF63:
+ 2049 00d6 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 2049      6C657853 
+ 2049      45415F61 
+ 2049      6C783837 
+ 2049      6772645C 
+ 2050              	.LASF51:
+ 2051 0104 4932435F 		.ascii	"I2C_1_MasterWriteBuf\000"
+ 2051      315F4D61 
+ 2051      73746572 
+ 2051      57726974 
+ 2051      65427566 
+ 2052              	.LASF55:
+ 2053 0119 4379446D 		.ascii	"CyDmaChSetInitialTd\000"
+ 2053      61436853 
+ 2053      6574496E 
+ 2053      69746961 
+ 2053      6C546400 
+ 2054              	.LASF16:
+ 2055 012d 75696E74 		.ascii	"uint16\000"
+ 2055      313600
+ 2056              	.LASF33:
+ 2057 0134 766F325F 		.ascii	"vo2_buf\000"
+ 2057      62756600 
+ 2058              	.LASF36:
+ 2059 013c 73747261 		.ascii	"strain_config\000"
+ 2059      696E5F63 
+ 2059      6F6E6669 
+ 2059      6700
+ 2060              	.LASF15:
+ 2061 014a 75696E74 		.ascii	"uint8\000"
+ 2061      3800
+ 2062              	.LASF18:
+ 2063 0150 666C6F61 		.ascii	"float\000"
+ 2063      7400
+ 2064              	.LASF59:
+ 2065 0156 4144435F 		.ascii	"ADC_DelSig_1_IRQ_Enable\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 42
+
+
+ 2065      44656C53 
+ 2065      69675F31 
+ 2065      5F495251 
+ 2065      5F456E61 
+ 2066              	.LASF9:
+ 2067 016e 6C6F6E67 		.ascii	"long long int\000"
+ 2067      206C6F6E 
+ 2067      6720696E 
+ 2067      7400
+ 2068              	.LASF41:
+ 2069 017c 444D415F 		.ascii	"DMA_2_Chan\000"
+ 2069      325F4368 
+ 2069      616E00
+ 2070              	.LASF66:
+ 2071 0187 444D415F 		.ascii	"DMA_2_TD\000"
+ 2071      325F5444 
+ 2071      00
+ 2072              	.LASF7:
+ 2073 0190 6C6F6E67 		.ascii	"long int\000"
+ 2073      20696E74 
+ 2073      00
+ 2074              	.LASF25:
+ 2075 0199 6F666673 		.ascii	"offset\000"
+ 2075      657400
+ 2076              	.LASF38:
+ 2077 01a0 6932635F 		.ascii	"i2c_test_wbuf\000"
+ 2077      74657374 
+ 2077      5F776275 
+ 2077      6600
+ 2078              	.LASF3:
+ 2079 01ae 5F5F7569 		.ascii	"__uint8_t\000"
+ 2079      6E74385F 
+ 2079      7400
+ 2080              	.LASF57:
+ 2081 01b8 4F70616D 		.ascii	"Opamp_2_Start\000"
+ 2081      705F325F 
+ 2081      53746172 
+ 2081      7400
+ 2082              	.LASF12:
+ 2083 01c6 75696E74 		.ascii	"uint8_t\000"
+ 2083      385F7400 
+ 2084              	.LASF24:
+ 2085 01ce 6C6F6E67 		.ascii	"long double\000"
+ 2085      20646F75 
+ 2085      626C6500 
+ 2086              	.LASF48:
+ 2087 01da 43794465 		.ascii	"CyDelayUs\000"
+ 2087      6C617955 
+ 2087      7300
+ 2088              	.LASF1:
+ 2089 01e4 756E7369 		.ascii	"unsigned char\000"
+ 2089      676E6564 
+ 2089      20636861 
+ 2089      7200
+ 2090              	.LASF0:
+ 2091 01f2 7369676E 		.ascii	"signed char\000"
+ 2091      65642063 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 43
+
+
+ 2091      68617200 
+ 2092              	.LASF10:
+ 2093 01fe 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 2093      206C6F6E 
+ 2093      6720756E 
+ 2093      7369676E 
+ 2093      65642069 
+ 2094              	.LASF31:
+ 2095 0215 6F666673 		.ascii	"offs\000"
+ 2095      00
+ 2096              	.LASF11:
+ 2097 021a 756E7369 		.ascii	"unsigned int\000"
+ 2097      676E6564 
+ 2097      20696E74 
+ 2097      00
+ 2098              	.LASF54:
+ 2099 0227 4379446D 		.ascii	"CyDmaTdSetAddress\000"
+ 2099      61546453 
+ 2099      65744164 
+ 2099      64726573 
+ 2099      7300
+ 2100              	.LASF13:
+ 2101 0239 75696E74 		.ascii	"uint16_t\000"
+ 2101      31365F74 
+ 2101      00
+ 2102              	.LASF8:
+ 2103 0242 6C6F6E67 		.ascii	"long unsigned int\000"
+ 2103      20756E73 
+ 2103      69676E65 
+ 2103      6420696E 
+ 2103      7400
+ 2104              	.LASF26:
+ 2105 0254 6761696E 		.ascii	"gain\000"
+ 2105      00
+ 2106              	.LASF27:
+ 2107 0259 6F726566 		.ascii	"oref\000"
+ 2107      00
+ 2108              	.LASF58:
+ 2109 025e 4144435F 		.ascii	"ADC_DelSig_1_Start\000"
+ 2109      44656C53 
+ 2109      69675F31 
+ 2109      5F537461 
+ 2109      727400
+ 2110              	.LASF20:
+ 2111 0271 63686172 		.ascii	"char\000"
+ 2111      00
+ 2112              	.LASF21:
+ 2113 0276 63797374 		.ascii	"cystatus\000"
+ 2113      61747573 
+ 2113      00
+ 2114              	.LASF14:
+ 2115 027f 696E7433 		.ascii	"int32_t\000"
+ 2115      325F7400 
+ 2116              	.LASF64:
+ 2117 0287 73747261 		.ascii	"strain_s\000"
+ 2117      696E5F73 
+ 2117      00
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 44
+
+
+ 2118              	.LASF29:
+ 2119 0290 73747261 		.ascii	"strain_filtered\000"
+ 2119      696E5F66 
+ 2119      696C7465 
+ 2119      72656400 
+ 2120              	.LASF65:
+ 2121 02a0 73747261 		.ascii	"strain_read\000"
+ 2121      696E5F72 
+ 2121      65616400 
+ 2122              	.LASF17:
+ 2123 02ac 75696E74 		.ascii	"uint32\000"
+ 2123      333200
+ 2124              	.LASF22:
+ 2125 02b3 72656738 		.ascii	"reg8\000"
+ 2125      00
+ 2126              	.LASF50:
+ 2127 02b8 4C45445F 		.ascii	"LED_G_Write\000"
+ 2127      475F5772 
+ 2127      69746500 
+ 2128              	.LASF19:
+ 2129 02c4 646F7562 		.ascii	"double\000"
+ 2129      6C6500
+ 2130              	.LASF35:
+ 2131 02cb 73747261 		.ascii	"strain_filter_dma\000"
+ 2131      696E5F66 
+ 2131      696C7465 
+ 2131      725F646D 
+ 2131      6100
+ 2132              	.LASF6:
+ 2133 02dd 5F5F696E 		.ascii	"__int32_t\000"
+ 2133      7433325F 
+ 2133      7400
+ 2134              	.LASF28:
+ 2135 02e7 73747261 		.ascii	"strain_raw\000"
+ 2135      696E5F72 
+ 2135      617700
+ 2136              	.LASF61:
+ 2137 02f2 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 2137      4320342E 
+ 2137      392E3320 
+ 2137      32303135 
+ 2137      30333033 
+ 2138 0325 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 2138      20726576 
+ 2138      6973696F 
+ 2138      6E203232 
+ 2138      31323230 
+ 2139 0358 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 2139      66756E63 
+ 2139      74696F6E 
+ 2139      2D736563 
+ 2139      74696F6E 
+ 2140              	.LASF45:
+ 2141 0380 6164635F 		.ascii	"adc_strain_filtered\000"
+ 2141      73747261 
+ 2141      696E5F66 
+ 2141      696C7465 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccepxKiO.s 			page 45
+
+
+ 2141      72656400 
+ 2142              	.LASF5:
+ 2143 0394 73686F72 		.ascii	"short unsigned int\000"
+ 2143      7420756E 
+ 2143      7369676E 
+ 2143      65642069 
+ 2143      6E7400
+ 2144              	.LASF32:
+ 2145 03a7 6932635F 		.ascii	"i2c_init_buf\000"
+ 2145      696E6974 
+ 2145      5F627566 
+ 2145      00
+ 2146              	.LASF39:
+ 2147 03b4 6C656467 		.ascii	"ledg_state\000"
+ 2147      5F737461 
+ 2147      746500
+ 2148              	.LASF43:
+ 2149 03bf 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 2149      52784275 
+ 2149      66666572 
+ 2149      00
+ 2150              	.LASF49:
+ 2151 03cc 43794465 		.ascii	"CyDelay\000"
+ 2151      6C617900 
+ 2152              	.LASF34:
+ 2153 03d4 73747261 		.ascii	"strain_filter\000"
+ 2153      696E5F66 
+ 2153      696C7465 
+ 2153      7200
+ 2154              	.LASF60:
+ 2155 03e2 6973725F 		.ascii	"isr_delsig_Start\000"
+ 2155      64656C73 
+ 2155      69675F53 
+ 2155      74617274 
+ 2155      00
+ 2156              	.LASF44:
+ 2157 03f3 73747261 		.ascii	"strain\000"
+ 2157      696E00
+ 2158              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

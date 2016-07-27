@@ -1,0 +1,1323 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"USBUART_1_descr.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.comm	USBUART_1_idSerialNumberStringDescriptor,34,4
+  19              		.global	USBUART_1_MSOS_CONFIGURATION_DESCR
+  20              		.global	USBUART_1_MSOS_DESCRIPTOR
+  21              		.global	USBUART_1_TABLE
+  22              		.global	USBUART_1_DEVICE0_TABLE
+  23              		.global	USBUART_1_DEVICE0_CONFIGURATION0_TABLE
+  24              		.global	USBUART_1_DEVICE0_CONFIGURATION0_INTERFACE_CLASS
+  25              		.global	USBUART_1_DEVICE0_CONFIGURATION0_EP_SETTINGS_TABLE
+  26              		.global	USBUART_1_HIDREPORT_DESCRIPTOR1
+  27              		.global	USBUART_1_SN_STRING_DESCRIPTOR
+  28              		.global	USBUART_1_STRING_DESCRIPTORS
+  29              		.global	USBUART_1_DEVICE0_CONFIGURATION0_DESCR
+  30              		.global	USBUART_1_DEVICE0_DESCR
+  31              		.section	.rodata
+  32              		.align	2
+  33              		.type	USBUART_1_MSOS_CONFIGURATION_DESCR, %object
+  34              		.size	USBUART_1_MSOS_CONFIGURATION_DESCR, 40
+  35              	USBUART_1_MSOS_CONFIGURATION_DESCR:
+  36 0000 28       		.byte	40
+  37 0001 00       		.byte	0
+  38 0002 00       		.byte	0
+  39 0003 00       		.byte	0
+  40 0004 00       		.byte	0
+  41 0005 01       		.byte	1
+  42 0006 04       		.byte	4
+  43 0007 00       		.byte	0
+  44 0008 01       		.byte	1
+  45 0009 00       		.byte	0
+  46 000a 00       		.byte	0
+  47 000b 00       		.byte	0
+  48 000c 00       		.byte	0
+  49 000d 00       		.byte	0
+  50 000e 00       		.byte	0
+  51 000f 00       		.byte	0
+  52 0010 00       		.byte	0
+  53 0011 01       		.byte	1
+  54 0012 43       		.byte	67
+  55 0013 59       		.byte	89
+  56 0014 55       		.byte	85
+  57 0015 53       		.byte	83
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 2
+
+
+  58 0016 42       		.byte	66
+  59 0017 00       		.byte	0
+  60 0018 00       		.byte	0
+  61 0019 00       		.byte	0
+  62 001a 30       		.byte	48
+  63 001b 30       		.byte	48
+  64 001c 30       		.byte	48
+  65 001d 30       		.byte	48
+  66 001e 31       		.byte	49
+  67 001f 00       		.byte	0
+  68 0020 00       		.byte	0
+  69 0021 00       		.byte	0
+  70 0022 00       		.byte	0
+  71 0023 00       		.byte	0
+  72 0024 00       		.byte	0
+  73 0025 00       		.byte	0
+  74 0026 00       		.byte	0
+  75 0027 00       		.byte	0
+  76              		.type	USBUART_1_MSOS_DESCRIPTOR, %object
+  77              		.size	USBUART_1_MSOS_DESCRIPTOR, 18
+  78              	USBUART_1_MSOS_DESCRIPTOR:
+  79 0028 12       		.byte	18
+  80 0029 03       		.byte	3
+  81 002a 4D       		.byte	77
+  82 002b 00       		.byte	0
+  83 002c 53       		.byte	83
+  84 002d 00       		.byte	0
+  85 002e 46       		.byte	70
+  86 002f 00       		.byte	0
+  87 0030 54       		.byte	84
+  88 0031 00       		.byte	0
+  89 0032 31       		.byte	49
+  90 0033 00       		.byte	0
+  91 0034 30       		.byte	48
+  92 0035 00       		.byte	0
+  93 0036 30       		.byte	48
+  94 0037 00       		.byte	0
+  95 0038 01       		.byte	1
+  96 0039 00       		.byte	0
+  97 003a 0000     		.space	2
+  98              		.type	USBUART_1_TABLE, %object
+  99              		.size	USBUART_1_TABLE, 8
+ 100              	USBUART_1_TABLE:
+ 101 003c 01       		.byte	1
+ 102 003d 000000   		.space	3
+ 103 0040 00000000 		.word	USBUART_1_DEVICE0_TABLE
+ 104              		.type	USBUART_1_DEVICE0_TABLE, %object
+ 105              		.size	USBUART_1_DEVICE0_TABLE, 16
+ 106              	USBUART_1_DEVICE0_TABLE:
+ 107 0044 01       		.byte	1
+ 108 0045 000000   		.space	3
+ 109 0048 00000000 		.word	USBUART_1_DEVICE0_DESCR
+ 110 004c 01       		.byte	1
+ 111 004d 000000   		.space	3
+ 112 0050 00000000 		.word	USBUART_1_DEVICE0_CONFIGURATION0_TABLE
+ 113              		.type	USBUART_1_DEVICE0_CONFIGURATION0_TABLE, %object
+ 114              		.size	USBUART_1_DEVICE0_CONFIGURATION0_TABLE, 40
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 3
+
+
+ 115              	USBUART_1_DEVICE0_CONFIGURATION0_TABLE:
+ 116 0054 01       		.byte	1
+ 117 0055 000000   		.space	3
+ 118 0058 00000000 		.word	USBUART_1_DEVICE0_CONFIGURATION0_DESCR
+ 119 005c 03       		.byte	3
+ 120 005d 000000   		.space	3
+ 121 0060 00000000 		.word	USBUART_1_DEVICE0_CONFIGURATION0_EP_SETTINGS_TABLE
+ 122 0064 00       		.byte	0
+ 123 0065 000000   		.space	3
+ 124 0068 00000000 		.word	0
+ 125 006c 00       		.byte	0
+ 126 006d 000000   		.space	3
+ 127 0070 00000000 		.word	0
+ 128 0074 00       		.byte	0
+ 129 0075 000000   		.space	3
+ 130 0078 00000000 		.word	USBUART_1_DEVICE0_CONFIGURATION0_INTERFACE_CLASS
+ 131              		.type	USBUART_1_DEVICE0_CONFIGURATION0_INTERFACE_CLASS, %object
+ 132              		.size	USBUART_1_DEVICE0_CONFIGURATION0_INTERFACE_CLASS, 2
+ 133              	USBUART_1_DEVICE0_CONFIGURATION0_INTERFACE_CLASS:
+ 134 007c 02       		.byte	2
+ 135 007d 0A       		.byte	10
+ 136 007e 0000     		.space	2
+ 137              		.type	USBUART_1_DEVICE0_CONFIGURATION0_EP_SETTINGS_TABLE, %object
+ 138              		.size	USBUART_1_DEVICE0_CONFIGURATION0_EP_SETTINGS_TABLE, 24
+ 139              	USBUART_1_DEVICE0_CONFIGURATION0_EP_SETTINGS_TABLE:
+ 140 0080 00       		.byte	0
+ 141 0081 00       		.byte	0
+ 142 0082 81       		.byte	-127
+ 143 0083 03       		.byte	3
+ 144 0084 0800     		.short	8
+ 145 0086 02       		.byte	2
+ 146 0087 00       		.space	1
+ 147 0088 01       		.byte	1
+ 148 0089 00       		.byte	0
+ 149 008a 82       		.byte	-126
+ 150 008b 02       		.byte	2
+ 151 008c 4000     		.short	64
+ 152 008e 0A       		.byte	10
+ 153 008f 00       		.space	1
+ 154 0090 01       		.byte	1
+ 155 0091 00       		.byte	0
+ 156 0092 03       		.byte	3
+ 157 0093 02       		.byte	2
+ 158 0094 4000     		.short	64
+ 159 0096 0A       		.byte	10
+ 160 0097 00       		.space	1
+ 161              		.type	USBUART_1_HIDREPORT_DESCRIPTOR1, %object
+ 162              		.size	USBUART_1_HIDREPORT_DESCRIPTOR1, 54
+ 163              	USBUART_1_HIDREPORT_DESCRIPTOR1:
+ 164 0098 32       		.byte	50
+ 165 0099 00       		.byte	0
+ 166 009a 05       		.byte	5
+ 167 009b 01       		.byte	1
+ 168 009c 09       		.byte	9
+ 169 009d 02       		.byte	2
+ 170 009e A1       		.byte	-95
+ 171 009f 01       		.byte	1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 4
+
+
+ 172 00a0 09       		.byte	9
+ 173 00a1 01       		.byte	1
+ 174 00a2 A1       		.byte	-95
+ 175 00a3 00       		.byte	0
+ 176 00a4 05       		.byte	5
+ 177 00a5 09       		.byte	9
+ 178 00a6 19       		.byte	25
+ 179 00a7 01       		.byte	1
+ 180 00a8 29       		.byte	41
+ 181 00a9 03       		.byte	3
+ 182 00aa 15       		.byte	21
+ 183 00ab 00       		.byte	0
+ 184 00ac 25       		.byte	37
+ 185 00ad 01       		.byte	1
+ 186 00ae 95       		.byte	-107
+ 187 00af 03       		.byte	3
+ 188 00b0 75       		.byte	117
+ 189 00b1 01       		.byte	1
+ 190 00b2 81       		.byte	-127
+ 191 00b3 02       		.byte	2
+ 192 00b4 95       		.byte	-107
+ 193 00b5 01       		.byte	1
+ 194 00b6 75       		.byte	117
+ 195 00b7 05       		.byte	5
+ 196 00b8 81       		.byte	-127
+ 197 00b9 01       		.byte	1
+ 198 00ba 05       		.byte	5
+ 199 00bb 01       		.byte	1
+ 200 00bc 09       		.byte	9
+ 201 00bd 30       		.byte	48
+ 202 00be 09       		.byte	9
+ 203 00bf 31       		.byte	49
+ 204 00c0 15       		.byte	21
+ 205 00c1 81       		.byte	-127
+ 206 00c2 25       		.byte	37
+ 207 00c3 7F       		.byte	127
+ 208 00c4 75       		.byte	117
+ 209 00c5 08       		.byte	8
+ 210 00c6 95       		.byte	-107
+ 211 00c7 02       		.byte	2
+ 212 00c8 81       		.byte	-127
+ 213 00c9 06       		.byte	6
+ 214 00ca C0       		.byte	-64
+ 215 00cb C0       		.byte	-64
+ 216 00cc 00       		.byte	0
+ 217 00cd 00       		.byte	0
+ 218 00ce 0000     		.space	2
+ 219              		.type	USBUART_1_SN_STRING_DESCRIPTOR, %object
+ 220              		.size	USBUART_1_SN_STRING_DESCRIPTOR, 2
+ 221              	USBUART_1_SN_STRING_DESCRIPTOR:
+ 222 00d0 02       		.byte	2
+ 223 00d1 03       		.byte	3
+ 224 00d2 0000     		.space	2
+ 225              		.type	USBUART_1_STRING_DESCRIPTORS, %object
+ 226              		.size	USBUART_1_STRING_DESCRIPTORS, 179
+ 227              	USBUART_1_STRING_DESCRIPTORS:
+ 228 00d4 04       		.byte	4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 5
+
+
+ 229 00d5 03       		.byte	3
+ 230 00d6 09       		.byte	9
+ 231 00d7 04       		.byte	4
+ 232 00d8 28       		.byte	40
+ 233 00d9 03       		.byte	3
+ 234 00da 4D       		.byte	77
+ 235 00db 00       		.byte	0
+ 236 00dc 49       		.byte	73
+ 237 00dd 00       		.byte	0
+ 238 00de 54       		.byte	84
+ 239 00df 00       		.byte	0
+ 240 00e0 20       		.byte	32
+ 241 00e1 00       		.byte	0
+ 242 00e2 42       		.byte	66
+ 243 00e3 00       		.byte	0
+ 244 00e4 69       		.byte	105
+ 245 00e5 00       		.byte	0
+ 246 00e6 6F       		.byte	111
+ 247 00e7 00       		.byte	0
+ 248 00e8 6D       		.byte	109
+ 249 00e9 00       		.byte	0
+ 250 00ea 65       		.byte	101
+ 251 00eb 00       		.byte	0
+ 252 00ec 63       		.byte	99
+ 253 00ed 00       		.byte	0
+ 254 00ee 68       		.byte	104
+ 255 00ef 00       		.byte	0
+ 256 00f0 61       		.byte	97
+ 257 00f1 00       		.byte	0
+ 258 00f2 74       		.byte	116
+ 259 00f3 00       		.byte	0
+ 260 00f4 72       		.byte	114
+ 261 00f5 00       		.byte	0
+ 262 00f6 6F       		.byte	111
+ 263 00f7 00       		.byte	0
+ 264 00f8 6E       		.byte	110
+ 265 00f9 00       		.byte	0
+ 266 00fa 69       		.byte	105
+ 267 00fb 00       		.byte	0
+ 268 00fc 63       		.byte	99
+ 269 00fd 00       		.byte	0
+ 270 00fe 73       		.byte	115
+ 271 00ff 00       		.byte	0
+ 272 0100 38       		.byte	56
+ 273 0101 03       		.byte	3
+ 274 0102 43       		.byte	67
+ 275 0103 00       		.byte	0
+ 276 0104 44       		.byte	68
+ 277 0105 00       		.byte	0
+ 278 0106 43       		.byte	67
+ 279 0107 00       		.byte	0
+ 280 0108 20       		.byte	32
+ 281 0109 00       		.byte	0
+ 282 010a 43       		.byte	67
+ 283 010b 00       		.byte	0
+ 284 010c 6F       		.byte	111
+ 285 010d 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 6
+
+
+ 286 010e 6D       		.byte	109
+ 287 010f 00       		.byte	0
+ 288 0110 6D       		.byte	109
+ 289 0111 00       		.byte	0
+ 290 0112 75       		.byte	117
+ 291 0113 00       		.byte	0
+ 292 0114 6E       		.byte	110
+ 293 0115 00       		.byte	0
+ 294 0116 69       		.byte	105
+ 295 0117 00       		.byte	0
+ 296 0118 63       		.byte	99
+ 297 0119 00       		.byte	0
+ 298 011a 61       		.byte	97
+ 299 011b 00       		.byte	0
+ 300 011c 74       		.byte	116
+ 301 011d 00       		.byte	0
+ 302 011e 69       		.byte	105
+ 303 011f 00       		.byte	0
+ 304 0120 6F       		.byte	111
+ 305 0121 00       		.byte	0
+ 306 0122 6E       		.byte	110
+ 307 0123 00       		.byte	0
+ 308 0124 20       		.byte	32
+ 309 0125 00       		.byte	0
+ 310 0126 49       		.byte	73
+ 311 0127 00       		.byte	0
+ 312 0128 6E       		.byte	110
+ 313 0129 00       		.byte	0
+ 314 012a 74       		.byte	116
+ 315 012b 00       		.byte	0
+ 316 012c 65       		.byte	101
+ 317 012d 00       		.byte	0
+ 318 012e 72       		.byte	114
+ 319 012f 00       		.byte	0
+ 320 0130 66       		.byte	102
+ 321 0131 00       		.byte	0
+ 322 0132 61       		.byte	97
+ 323 0133 00       		.byte	0
+ 324 0134 63       		.byte	99
+ 325 0135 00       		.byte	0
+ 326 0136 65       		.byte	101
+ 327 0137 00       		.byte	0
+ 328 0138 26       		.byte	38
+ 329 0139 03       		.byte	3
+ 330 013a 43       		.byte	67
+ 331 013b 00       		.byte	0
+ 332 013c 44       		.byte	68
+ 333 013d 00       		.byte	0
+ 334 013e 43       		.byte	67
+ 335 013f 00       		.byte	0
+ 336 0140 20       		.byte	32
+ 337 0141 00       		.byte	0
+ 338 0142 44       		.byte	68
+ 339 0143 00       		.byte	0
+ 340 0144 61       		.byte	97
+ 341 0145 00       		.byte	0
+ 342 0146 74       		.byte	116
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 7
+
+
+ 343 0147 00       		.byte	0
+ 344 0148 61       		.byte	97
+ 345 0149 00       		.byte	0
+ 346 014a 20       		.byte	32
+ 347 014b 00       		.byte	0
+ 348 014c 49       		.byte	73
+ 349 014d 00       		.byte	0
+ 350 014e 6E       		.byte	110
+ 351 014f 00       		.byte	0
+ 352 0150 74       		.byte	116
+ 353 0151 00       		.byte	0
+ 354 0152 65       		.byte	101
+ 355 0153 00       		.byte	0
+ 356 0154 72       		.byte	114
+ 357 0155 00       		.byte	0
+ 358 0156 66       		.byte	102
+ 359 0157 00       		.byte	0
+ 360 0158 61       		.byte	97
+ 361 0159 00       		.byte	0
+ 362 015a 63       		.byte	99
+ 363 015b 00       		.byte	0
+ 364 015c 65       		.byte	101
+ 365 015d 00       		.byte	0
+ 366 015e 28       		.byte	40
+ 367 015f 03       		.byte	3
+ 368 0160 46       		.byte	70
+ 369 0161 00       		.byte	0
+ 370 0162 6C       		.byte	108
+ 371 0163 00       		.byte	0
+ 372 0164 65       		.byte	101
+ 373 0165 00       		.byte	0
+ 374 0166 78       		.byte	120
+ 375 0167 00       		.byte	0
+ 376 0168 53       		.byte	83
+ 377 0169 00       		.byte	0
+ 378 016a 45       		.byte	69
+ 379 016b 00       		.byte	0
+ 380 016c 41       		.byte	65
+ 381 016d 00       		.byte	0
+ 382 016e 2D       		.byte	45
+ 383 016f 00       		.byte	0
+ 384 0170 45       		.byte	69
+ 385 0171 00       		.byte	0
+ 386 0172 78       		.byte	120
+ 387 0173 00       		.byte	0
+ 388 0174 65       		.byte	101
+ 389 0175 00       		.byte	0
+ 390 0176 63       		.byte	99
+ 391 0177 00       		.byte	0
+ 392 0178 75       		.byte	117
+ 393 0179 00       		.byte	0
+ 394 017a 74       		.byte	116
+ 395 017b 00       		.byte	0
+ 396 017c 65       		.byte	101
+ 397 017d 00       		.byte	0
+ 398 017e 20       		.byte	32
+ 399 017f 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 8
+
+
+ 400 0180 30       		.byte	48
+ 401 0181 00       		.byte	0
+ 402 0182 2E       		.byte	46
+ 403 0183 00       		.byte	0
+ 404 0184 31       		.byte	49
+ 405 0185 00       		.byte	0
+ 406 0186 00       		.byte	0
+ 407 0187 00       		.space	1
+ 408              		.type	USBUART_1_DEVICE0_CONFIGURATION0_DESCR, %object
+ 409              		.size	USBUART_1_DEVICE0_CONFIGURATION0_DESCR, 67
+ 410              	USBUART_1_DEVICE0_CONFIGURATION0_DESCR:
+ 411 0188 09       		.byte	9
+ 412 0189 02       		.byte	2
+ 413 018a 43       		.byte	67
+ 414 018b 00       		.byte	0
+ 415 018c 02       		.byte	2
+ 416 018d 01       		.byte	1
+ 417 018e 01       		.byte	1
+ 418 018f C0       		.byte	-64
+ 419 0190 7D       		.byte	125
+ 420 0191 09       		.byte	9
+ 421 0192 04       		.byte	4
+ 422 0193 00       		.byte	0
+ 423 0194 00       		.byte	0
+ 424 0195 01       		.byte	1
+ 425 0196 02       		.byte	2
+ 426 0197 02       		.byte	2
+ 427 0198 00       		.byte	0
+ 428 0199 02       		.byte	2
+ 429 019a 05       		.byte	5
+ 430 019b 24       		.byte	36
+ 431 019c 00       		.byte	0
+ 432 019d 10       		.byte	16
+ 433 019e 01       		.byte	1
+ 434 019f 04       		.byte	4
+ 435 01a0 24       		.byte	36
+ 436 01a1 02       		.byte	2
+ 437 01a2 02       		.byte	2
+ 438 01a3 05       		.byte	5
+ 439 01a4 24       		.byte	36
+ 440 01a5 06       		.byte	6
+ 441 01a6 00       		.byte	0
+ 442 01a7 01       		.byte	1
+ 443 01a8 05       		.byte	5
+ 444 01a9 24       		.byte	36
+ 445 01aa 01       		.byte	1
+ 446 01ab 00       		.byte	0
+ 447 01ac 01       		.byte	1
+ 448 01ad 07       		.byte	7
+ 449 01ae 05       		.byte	5
+ 450 01af 81       		.byte	-127
+ 451 01b0 03       		.byte	3
+ 452 01b1 08       		.byte	8
+ 453 01b2 00       		.byte	0
+ 454 01b3 0A       		.byte	10
+ 455 01b4 09       		.byte	9
+ 456 01b5 04       		.byte	4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 9
+
+
+ 457 01b6 01       		.byte	1
+ 458 01b7 00       		.byte	0
+ 459 01b8 02       		.byte	2
+ 460 01b9 0A       		.byte	10
+ 461 01ba 00       		.byte	0
+ 462 01bb 00       		.byte	0
+ 463 01bc 03       		.byte	3
+ 464 01bd 07       		.byte	7
+ 465 01be 05       		.byte	5
+ 466 01bf 82       		.byte	-126
+ 467 01c0 02       		.byte	2
+ 468 01c1 40       		.byte	64
+ 469 01c2 00       		.byte	0
+ 470 01c3 0A       		.byte	10
+ 471 01c4 07       		.byte	7
+ 472 01c5 05       		.byte	5
+ 473 01c6 03       		.byte	3
+ 474 01c7 02       		.byte	2
+ 475 01c8 40       		.byte	64
+ 476 01c9 00       		.byte	0
+ 477 01ca 0A       		.byte	10
+ 478 01cb 00       		.space	1
+ 479              		.type	USBUART_1_DEVICE0_DESCR, %object
+ 480              		.size	USBUART_1_DEVICE0_DESCR, 18
+ 481              	USBUART_1_DEVICE0_DESCR:
+ 482 01cc 12       		.byte	18
+ 483 01cd 01       		.byte	1
+ 484 01ce 00       		.byte	0
+ 485 01cf 02       		.byte	2
+ 486 01d0 02       		.byte	2
+ 487 01d1 00       		.byte	0
+ 488 01d2 00       		.byte	0
+ 489 01d3 08       		.byte	8
+ 490 01d4 B4       		.byte	-76
+ 491 01d5 04       		.byte	4
+ 492 01d6 32       		.byte	50
+ 493 01d7 F2       		.byte	-14
+ 494 01d8 01       		.byte	1
+ 495 01d9 00       		.byte	0
+ 496 01da 01       		.byte	1
+ 497 01db 04       		.byte	4
+ 498 01dc 80       		.byte	-128
+ 499 01dd 01       		.byte	1
+ 500 01de 0000     		.text
+ 501              	.Letext0:
+ 502              		.file 1 ".\\Generated_Source\\PSoC5\\cytypes.h"
+ 503              		.file 2 ".\\Generated_Source\\PSoC5\\USBUART_1.h"
+ 504              		.file 3 ".\\Generated_Source\\PSoC5\\USBUART_1_descr.c"
+ 505              		.section	.debug_info,"",%progbits
+ 506              	.Ldebug_info0:
+ 507 0000 EF020000 		.4byte	0x2ef
+ 508 0004 0400     		.2byte	0x4
+ 509 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 510 000a 04       		.byte	0x4
+ 511 000b 01       		.uleb128 0x1
+ 512 000c E7010000 		.4byte	.LASF37
+ 513 0010 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 10
+
+
+ 514 0011 4D000000 		.4byte	.LASF38
+ 515 0015 1F000000 		.4byte	.LASF39
+ 516 0019 00000000 		.4byte	.Ldebug_line0
+ 517 001d 02       		.uleb128 0x2
+ 518 001e 01       		.byte	0x1
+ 519 001f 06       		.byte	0x6
+ 520 0020 7D030000 		.4byte	.LASF0
+ 521 0024 02       		.uleb128 0x2
+ 522 0025 01       		.byte	0x1
+ 523 0026 08       		.byte	0x8
+ 524 0027 51010000 		.4byte	.LASF1
+ 525 002b 02       		.uleb128 0x2
+ 526 002c 02       		.byte	0x2
+ 527 002d 05       		.byte	0x5
+ 528 002e B9010000 		.4byte	.LASF2
+ 529 0032 02       		.uleb128 0x2
+ 530 0033 02       		.byte	0x2
+ 531 0034 07       		.byte	0x7
+ 532 0035 D8000000 		.4byte	.LASF3
+ 533 0039 02       		.uleb128 0x2
+ 534 003a 04       		.byte	0x4
+ 535 003b 05       		.byte	0x5
+ 536 003c CF000000 		.4byte	.LASF4
+ 537 0040 02       		.uleb128 0x2
+ 538 0041 04       		.byte	0x4
+ 539 0042 07       		.byte	0x7
+ 540 0043 6A010000 		.4byte	.LASF5
+ 541 0047 02       		.uleb128 0x2
+ 542 0048 08       		.byte	0x8
+ 543 0049 05       		.byte	0x5
+ 544 004a C1020000 		.4byte	.LASF6
+ 545 004e 02       		.uleb128 0x2
+ 546 004f 08       		.byte	0x8
+ 547 0050 07       		.byte	0x7
+ 548 0051 82020000 		.4byte	.LASF7
+ 549 0055 03       		.uleb128 0x3
+ 550 0056 04       		.byte	0x4
+ 551 0057 05       		.byte	0x5
+ 552 0058 696E7400 		.ascii	"int\000"
+ 553 005c 02       		.uleb128 0x2
+ 554 005d 04       		.byte	0x4
+ 555 005e 07       		.byte	0x7
+ 556 005f 75020000 		.4byte	.LASF8
+ 557 0063 04       		.uleb128 0x4
+ 558 0064 20030000 		.4byte	.LASF9
+ 559 0068 01       		.byte	0x1
+ 560 0069 C2       		.byte	0xc2
+ 561 006a 24000000 		.4byte	0x24
+ 562 006e 04       		.uleb128 0x4
+ 563 006f C3010000 		.4byte	.LASF10
+ 564 0073 01       		.byte	0x1
+ 565 0074 C3       		.byte	0xc3
+ 566 0075 32000000 		.4byte	0x32
+ 567 0079 02       		.uleb128 0x2
+ 568 007a 04       		.byte	0x4
+ 569 007b 04       		.byte	0x4
+ 570 007c 19010000 		.4byte	.LASF11
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 11
+
+
+ 571 0080 02       		.uleb128 0x2
+ 572 0081 08       		.byte	0x8
+ 573 0082 04       		.byte	0x4
+ 574 0083 B2010000 		.4byte	.LASF12
+ 575 0087 02       		.uleb128 0x2
+ 576 0088 01       		.byte	0x1
+ 577 0089 08       		.byte	0x8
+ 578 008a CF020000 		.4byte	.LASF13
+ 579 008e 02       		.uleb128 0x2
+ 580 008f 04       		.byte	0x4
+ 581 0090 07       		.byte	0x7
+ 582 0091 B8020000 		.4byte	.LASF14
+ 583 0095 05       		.uleb128 0x5
+ 584 0096 08       		.byte	0x8
+ 585 0097 02       		.byte	0x2
+ 586 0098 8A       		.byte	0x8a
+ 587 0099 E6000000 		.4byte	0xe6
+ 588 009d 06       		.uleb128 0x6
+ 589 009e 26030000 		.4byte	.LASF15
+ 590 00a2 02       		.byte	0x2
+ 591 00a3 8C       		.byte	0x8c
+ 592 00a4 63000000 		.4byte	0x63
+ 593 00a8 00       		.byte	0
+ 594 00a9 06       		.uleb128 0x6
+ 595 00aa 46010000 		.4byte	.LASF16
+ 596 00ae 02       		.byte	0x2
+ 597 00af 8D       		.byte	0x8d
+ 598 00b0 63000000 		.4byte	0x63
+ 599 00b4 01       		.byte	0x1
+ 600 00b5 06       		.uleb128 0x6
+ 601 00b6 7C010000 		.4byte	.LASF17
+ 602 00ba 02       		.byte	0x2
+ 603 00bb 8E       		.byte	0x8e
+ 604 00bc 63000000 		.4byte	0x63
+ 605 00c0 02       		.byte	0x2
+ 606 00c1 06       		.uleb128 0x6
+ 607 00c2 5F010000 		.4byte	.LASF18
+ 608 00c6 02       		.byte	0x2
+ 609 00c7 8F       		.byte	0x8f
+ 610 00c8 63000000 		.4byte	0x63
+ 611 00cc 03       		.byte	0x3
+ 612 00cd 06       		.uleb128 0x6
+ 613 00ce D4020000 		.4byte	.LASF19
+ 614 00d2 02       		.byte	0x2
+ 615 00d3 90       		.byte	0x90
+ 616 00d4 6E000000 		.4byte	0x6e
+ 617 00d8 04       		.byte	0x4
+ 618 00d9 06       		.uleb128 0x6
+ 619 00da AC030000 		.4byte	.LASF20
+ 620 00de 02       		.byte	0x2
+ 621 00df 91       		.byte	0x91
+ 622 00e0 63000000 		.4byte	0x63
+ 623 00e4 06       		.byte	0x6
+ 624 00e5 00       		.byte	0
+ 625 00e6 04       		.uleb128 0x4
+ 626 00e7 FB000000 		.4byte	.LASF21
+ 627 00eb 02       		.byte	0x2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 12
+
+
+ 628 00ec 92       		.byte	0x92
+ 629 00ed 95000000 		.4byte	0x95
+ 630 00f1 05       		.uleb128 0x5
+ 631 00f2 08       		.byte	0x8
+ 632 00f3 02       		.byte	0x2
+ 633 00f4 A2       		.byte	0xa2
+ 634 00f5 10010000 		.4byte	0x110
+ 635 00f9 07       		.uleb128 0x7
+ 636 00fa 6300     		.ascii	"c\000"
+ 637 00fc 02       		.byte	0x2
+ 638 00fd A4       		.byte	0xa4
+ 639 00fe 63000000 		.4byte	0x63
+ 640 0102 00       		.byte	0
+ 641 0103 06       		.uleb128 0x6
+ 642 0104 B1020000 		.4byte	.LASF22
+ 643 0108 02       		.byte	0x2
+ 644 0109 A5       		.byte	0xa5
+ 645 010a 10010000 		.4byte	0x110
+ 646 010e 04       		.byte	0x4
+ 647 010f 00       		.byte	0
+ 648 0110 08       		.uleb128 0x8
+ 649 0111 04       		.byte	0x4
+ 650 0112 16010000 		.4byte	0x116
+ 651 0116 09       		.uleb128 0x9
+ 652 0117 04       		.uleb128 0x4
+ 653 0118 EB000000 		.4byte	.LASF23
+ 654 011c 02       		.byte	0x2
+ 655 011d A6       		.byte	0xa6
+ 656 011e F1000000 		.4byte	0xf1
+ 657 0122 0A       		.uleb128 0xa
+ 658 0123 63000000 		.4byte	0x63
+ 659 0127 32010000 		.4byte	0x132
+ 660 012b 0B       		.uleb128 0xb
+ 661 012c 8E000000 		.4byte	0x8e
+ 662 0130 11       		.byte	0x11
+ 663 0131 00       		.byte	0
+ 664 0132 0C       		.uleb128 0xc
+ 665 0133 08030000 		.4byte	.LASF24
+ 666 0137 03       		.byte	0x3
+ 667 0138 26       		.byte	0x26
+ 668 0139 43010000 		.4byte	0x143
+ 669 013d 05       		.uleb128 0x5
+ 670 013e 03       		.byte	0x3
+ 671 013f 00000000 		.4byte	USBUART_1_DEVICE0_DESCR
+ 672 0143 0D       		.uleb128 0xd
+ 673 0144 22010000 		.4byte	0x122
+ 674 0148 0A       		.uleb128 0xa
+ 675 0149 63000000 		.4byte	0x63
+ 676 014d 58010000 		.4byte	0x158
+ 677 0151 0B       		.uleb128 0xb
+ 678 0152 8E000000 		.4byte	0x8e
+ 679 0156 42       		.byte	0x42
+ 680 0157 00       		.byte	0
+ 681 0158 0C       		.uleb128 0xc
+ 682 0159 1F010000 		.4byte	.LASF25
+ 683 015d 03       		.byte	0x3
+ 684 015e 39       		.byte	0x39
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 13
+
+
+ 685 015f 69010000 		.4byte	0x169
+ 686 0163 05       		.uleb128 0x5
+ 687 0164 03       		.byte	0x3
+ 688 0165 00000000 		.4byte	USBUART_1_DEVICE0_CONFIGURATION0_DESCR
+ 689 0169 0D       		.uleb128 0xd
+ 690 016a 48010000 		.4byte	0x148
+ 691 016e 0A       		.uleb128 0xa
+ 692 016f E6000000 		.4byte	0xe6
+ 693 0173 7E010000 		.4byte	0x17e
+ 694 0177 0B       		.uleb128 0xb
+ 695 0178 8E000000 		.4byte	0x8e
+ 696 017c 02       		.byte	0x2
+ 697 017d 00       		.byte	0
+ 698 017e 0C       		.uleb128 0xc
+ 699 017f 30030000 		.4byte	.LASF26
+ 700 0183 03       		.byte	0x3
+ 701 0184 FE       		.byte	0xfe
+ 702 0185 8F010000 		.4byte	0x18f
+ 703 0189 05       		.uleb128 0x5
+ 704 018a 03       		.byte	0x3
+ 705 018b 00000000 		.4byte	USBUART_1_DEVICE0_CONFIGURATION0_EP_SETTINGS_TABLE
+ 706 018f 0D       		.uleb128 0xd
+ 707 0190 6E010000 		.4byte	0x16e
+ 708 0194 0A       		.uleb128 0xa
+ 709 0195 63000000 		.4byte	0x63
+ 710 0199 A4010000 		.4byte	0x1a4
+ 711 019d 0B       		.uleb128 0xb
+ 712 019e 8E000000 		.4byte	0x8e
+ 713 01a2 01       		.byte	0x1
+ 714 01a3 00       		.byte	0
+ 715 01a4 0E       		.uleb128 0xe
+ 716 01a5 81010000 		.4byte	.LASF27
+ 717 01a9 03       		.byte	0x3
+ 718 01aa 0401     		.2byte	0x104
+ 719 01ac B6010000 		.4byte	0x1b6
+ 720 01b0 05       		.uleb128 0x5
+ 721 01b1 03       		.byte	0x3
+ 722 01b2 00000000 		.4byte	USBUART_1_DEVICE0_CONFIGURATION0_INTERFACE_CLASS
+ 723 01b6 0D       		.uleb128 0xd
+ 724 01b7 94010000 		.4byte	0x194
+ 725 01bb 0A       		.uleb128 0xa
+ 726 01bc 17010000 		.4byte	0x117
+ 727 01c0 CB010000 		.4byte	0x1cb
+ 728 01c4 0B       		.uleb128 0xb
+ 729 01c5 8E000000 		.4byte	0x8e
+ 730 01c9 04       		.byte	0x4
+ 731 01ca 00       		.byte	0
+ 732 01cb 0E       		.uleb128 0xe
+ 733 01cc A8000000 		.4byte	.LASF28
+ 734 01d0 03       		.byte	0x3
+ 735 01d1 0C01     		.2byte	0x10c
+ 736 01d3 DD010000 		.4byte	0x1dd
+ 737 01d7 05       		.uleb128 0x5
+ 738 01d8 03       		.byte	0x3
+ 739 01d9 00000000 		.4byte	USBUART_1_DEVICE0_CONFIGURATION0_TABLE
+ 740 01dd 0D       		.uleb128 0xd
+ 741 01de BB010000 		.4byte	0x1bb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 14
+
+
+ 742 01e2 0A       		.uleb128 0xa
+ 743 01e3 17010000 		.4byte	0x117
+ 744 01e7 F2010000 		.4byte	0x1f2
+ 745 01eb 0B       		.uleb128 0xb
+ 746 01ec 8E000000 		.4byte	0x8e
+ 747 01f0 01       		.byte	0x1
+ 748 01f1 00       		.byte	0
+ 749 01f2 0E       		.uleb128 0xe
+ 750 01f3 99020000 		.4byte	.LASF29
+ 751 01f7 03       		.byte	0x3
+ 752 01f8 1701     		.2byte	0x117
+ 753 01fa 04020000 		.4byte	0x204
+ 754 01fe 05       		.uleb128 0x5
+ 755 01ff 03       		.byte	0x3
+ 756 0200 00000000 		.4byte	USBUART_1_DEVICE0_TABLE
+ 757 0204 0D       		.uleb128 0xd
+ 758 0205 E2010000 		.4byte	0x1e2
+ 759 0209 0A       		.uleb128 0xa
+ 760 020a 17010000 		.4byte	0x117
+ 761 020e 19020000 		.4byte	0x219
+ 762 0212 0B       		.uleb128 0xb
+ 763 0213 8E000000 		.4byte	0x8e
+ 764 0217 00       		.byte	0
+ 765 0218 00       		.byte	0
+ 766 0219 0E       		.uleb128 0xe
+ 767 021a 98000000 		.4byte	.LASF30
+ 768 021e 03       		.byte	0x3
+ 769 021f 1E01     		.2byte	0x11e
+ 770 0221 2B020000 		.4byte	0x22b
+ 771 0225 05       		.uleb128 0x5
+ 772 0226 03       		.byte	0x3
+ 773 0227 00000000 		.4byte	USBUART_1_TABLE
+ 774 022b 0D       		.uleb128 0xd
+ 775 022c 09020000 		.4byte	0x209
+ 776 0230 0C       		.uleb128 0xc
+ 777 0231 00000000 		.4byte	.LASF31
+ 778 0235 03       		.byte	0x3
+ 779 0236 CC       		.byte	0xcc
+ 780 0237 41020000 		.4byte	0x241
+ 781 023b 05       		.uleb128 0x5
+ 782 023c 03       		.byte	0x3
+ 783 023d 00000000 		.4byte	USBUART_1_SN_STRING_DESCRIPTOR
+ 784 0241 0D       		.uleb128 0xd
+ 785 0242 94010000 		.4byte	0x194
+ 786 0246 0A       		.uleb128 0xa
+ 787 0247 63000000 		.4byte	0x63
+ 788 024b 56020000 		.4byte	0x256
+ 789 024f 0B       		.uleb128 0xb
+ 790 0250 8E000000 		.4byte	0x8e
+ 791 0254 B2       		.byte	0xb2
+ 792 0255 00       		.byte	0
+ 793 0256 0C       		.uleb128 0xc
+ 794 0257 CA010000 		.4byte	.LASF32
+ 795 025b 03       		.byte	0x3
+ 796 025c 98       		.byte	0x98
+ 797 025d 67020000 		.4byte	0x267
+ 798 0261 05       		.uleb128 0x5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 15
+
+
+ 799 0262 03       		.byte	0x3
+ 800 0263 00000000 		.4byte	USBUART_1_STRING_DESCRIPTORS
+ 801 0267 0D       		.uleb128 0xd
+ 802 0268 46020000 		.4byte	0x246
+ 803 026c 0A       		.uleb128 0xa
+ 804 026d 63000000 		.4byte	0x63
+ 805 0271 7C020000 		.4byte	0x27c
+ 806 0275 0B       		.uleb128 0xb
+ 807 0276 8E000000 		.4byte	0x8e
+ 808 027a 35       		.byte	0x35
+ 809 027b 00       		.byte	0
+ 810 027c 0C       		.uleb128 0xc
+ 811 027d 78000000 		.4byte	.LASF33
+ 812 0281 03       		.byte	0x3
+ 813 0282 D5       		.byte	0xd5
+ 814 0283 8D020000 		.4byte	0x28d
+ 815 0287 05       		.uleb128 0x5
+ 816 0288 03       		.byte	0x3
+ 817 0289 00000000 		.4byte	USBUART_1_HIDREPORT_DESCRIPTOR1
+ 818 028d 0D       		.uleb128 0xd
+ 819 028e 6C020000 		.4byte	0x26c
+ 820 0292 0E       		.uleb128 0xe
+ 821 0293 63030000 		.4byte	.LASF34
+ 822 0297 03       		.byte	0x3
+ 823 0298 2E01     		.2byte	0x12e
+ 824 029a A4020000 		.4byte	0x2a4
+ 825 029e 05       		.uleb128 0x5
+ 826 029f 03       		.byte	0x3
+ 827 02a0 00000000 		.4byte	USBUART_1_MSOS_DESCRIPTOR
+ 828 02a4 0D       		.uleb128 0xd
+ 829 02a5 22010000 		.4byte	0x122
+ 830 02a9 0A       		.uleb128 0xa
+ 831 02aa 63000000 		.4byte	0x63
+ 832 02ae B9020000 		.4byte	0x2b9
+ 833 02b2 0B       		.uleb128 0xb
+ 834 02b3 8E000000 		.4byte	0x8e
+ 835 02b7 27       		.byte	0x27
+ 836 02b8 00       		.byte	0
+ 837 02b9 0E       		.uleb128 0xe
+ 838 02ba 89030000 		.4byte	.LASF35
+ 839 02be 03       		.byte	0x3
+ 840 02bf 3901     		.2byte	0x139
+ 841 02c1 CB020000 		.4byte	0x2cb
+ 842 02c5 05       		.uleb128 0x5
+ 843 02c6 03       		.byte	0x3
+ 844 02c7 00000000 		.4byte	USBUART_1_MSOS_CONFIGURATION_DESCR
+ 845 02cb 0D       		.uleb128 0xd
+ 846 02cc A9020000 		.4byte	0x2a9
+ 847 02d0 0A       		.uleb128 0xa
+ 848 02d1 63000000 		.4byte	0x63
+ 849 02d5 E0020000 		.4byte	0x2e0
+ 850 02d9 0B       		.uleb128 0xb
+ 851 02da 8E000000 		.4byte	0x8e
+ 852 02de 21       		.byte	0x21
+ 853 02df 00       		.byte	0
+ 854 02e0 0E       		.uleb128 0xe
+ 855 02e1 DF020000 		.4byte	.LASF36
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 16
+
+
+ 856 02e5 03       		.byte	0x3
+ 857 02e6 4C01     		.2byte	0x14c
+ 858 02e8 D0020000 		.4byte	0x2d0
+ 859 02ec 05       		.uleb128 0x5
+ 860 02ed 03       		.byte	0x3
+ 861 02ee 00000000 		.4byte	USBUART_1_idSerialNumberStringDescriptor
+ 862 02f2 00       		.byte	0
+ 863              		.section	.debug_abbrev,"",%progbits
+ 864              	.Ldebug_abbrev0:
+ 865 0000 01       		.uleb128 0x1
+ 866 0001 11       		.uleb128 0x11
+ 867 0002 01       		.byte	0x1
+ 868 0003 25       		.uleb128 0x25
+ 869 0004 0E       		.uleb128 0xe
+ 870 0005 13       		.uleb128 0x13
+ 871 0006 0B       		.uleb128 0xb
+ 872 0007 03       		.uleb128 0x3
+ 873 0008 0E       		.uleb128 0xe
+ 874 0009 1B       		.uleb128 0x1b
+ 875 000a 0E       		.uleb128 0xe
+ 876 000b 10       		.uleb128 0x10
+ 877 000c 17       		.uleb128 0x17
+ 878 000d 00       		.byte	0
+ 879 000e 00       		.byte	0
+ 880 000f 02       		.uleb128 0x2
+ 881 0010 24       		.uleb128 0x24
+ 882 0011 00       		.byte	0
+ 883 0012 0B       		.uleb128 0xb
+ 884 0013 0B       		.uleb128 0xb
+ 885 0014 3E       		.uleb128 0x3e
+ 886 0015 0B       		.uleb128 0xb
+ 887 0016 03       		.uleb128 0x3
+ 888 0017 0E       		.uleb128 0xe
+ 889 0018 00       		.byte	0
+ 890 0019 00       		.byte	0
+ 891 001a 03       		.uleb128 0x3
+ 892 001b 24       		.uleb128 0x24
+ 893 001c 00       		.byte	0
+ 894 001d 0B       		.uleb128 0xb
+ 895 001e 0B       		.uleb128 0xb
+ 896 001f 3E       		.uleb128 0x3e
+ 897 0020 0B       		.uleb128 0xb
+ 898 0021 03       		.uleb128 0x3
+ 899 0022 08       		.uleb128 0x8
+ 900 0023 00       		.byte	0
+ 901 0024 00       		.byte	0
+ 902 0025 04       		.uleb128 0x4
+ 903 0026 16       		.uleb128 0x16
+ 904 0027 00       		.byte	0
+ 905 0028 03       		.uleb128 0x3
+ 906 0029 0E       		.uleb128 0xe
+ 907 002a 3A       		.uleb128 0x3a
+ 908 002b 0B       		.uleb128 0xb
+ 909 002c 3B       		.uleb128 0x3b
+ 910 002d 0B       		.uleb128 0xb
+ 911 002e 49       		.uleb128 0x49
+ 912 002f 13       		.uleb128 0x13
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 17
+
+
+ 913 0030 00       		.byte	0
+ 914 0031 00       		.byte	0
+ 915 0032 05       		.uleb128 0x5
+ 916 0033 13       		.uleb128 0x13
+ 917 0034 01       		.byte	0x1
+ 918 0035 0B       		.uleb128 0xb
+ 919 0036 0B       		.uleb128 0xb
+ 920 0037 3A       		.uleb128 0x3a
+ 921 0038 0B       		.uleb128 0xb
+ 922 0039 3B       		.uleb128 0x3b
+ 923 003a 0B       		.uleb128 0xb
+ 924 003b 01       		.uleb128 0x1
+ 925 003c 13       		.uleb128 0x13
+ 926 003d 00       		.byte	0
+ 927 003e 00       		.byte	0
+ 928 003f 06       		.uleb128 0x6
+ 929 0040 0D       		.uleb128 0xd
+ 930 0041 00       		.byte	0
+ 931 0042 03       		.uleb128 0x3
+ 932 0043 0E       		.uleb128 0xe
+ 933 0044 3A       		.uleb128 0x3a
+ 934 0045 0B       		.uleb128 0xb
+ 935 0046 3B       		.uleb128 0x3b
+ 936 0047 0B       		.uleb128 0xb
+ 937 0048 49       		.uleb128 0x49
+ 938 0049 13       		.uleb128 0x13
+ 939 004a 38       		.uleb128 0x38
+ 940 004b 0B       		.uleb128 0xb
+ 941 004c 00       		.byte	0
+ 942 004d 00       		.byte	0
+ 943 004e 07       		.uleb128 0x7
+ 944 004f 0D       		.uleb128 0xd
+ 945 0050 00       		.byte	0
+ 946 0051 03       		.uleb128 0x3
+ 947 0052 08       		.uleb128 0x8
+ 948 0053 3A       		.uleb128 0x3a
+ 949 0054 0B       		.uleb128 0xb
+ 950 0055 3B       		.uleb128 0x3b
+ 951 0056 0B       		.uleb128 0xb
+ 952 0057 49       		.uleb128 0x49
+ 953 0058 13       		.uleb128 0x13
+ 954 0059 38       		.uleb128 0x38
+ 955 005a 0B       		.uleb128 0xb
+ 956 005b 00       		.byte	0
+ 957 005c 00       		.byte	0
+ 958 005d 08       		.uleb128 0x8
+ 959 005e 0F       		.uleb128 0xf
+ 960 005f 00       		.byte	0
+ 961 0060 0B       		.uleb128 0xb
+ 962 0061 0B       		.uleb128 0xb
+ 963 0062 49       		.uleb128 0x49
+ 964 0063 13       		.uleb128 0x13
+ 965 0064 00       		.byte	0
+ 966 0065 00       		.byte	0
+ 967 0066 09       		.uleb128 0x9
+ 968 0067 26       		.uleb128 0x26
+ 969 0068 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 18
+
+
+ 970 0069 00       		.byte	0
+ 971 006a 00       		.byte	0
+ 972 006b 0A       		.uleb128 0xa
+ 973 006c 01       		.uleb128 0x1
+ 974 006d 01       		.byte	0x1
+ 975 006e 49       		.uleb128 0x49
+ 976 006f 13       		.uleb128 0x13
+ 977 0070 01       		.uleb128 0x1
+ 978 0071 13       		.uleb128 0x13
+ 979 0072 00       		.byte	0
+ 980 0073 00       		.byte	0
+ 981 0074 0B       		.uleb128 0xb
+ 982 0075 21       		.uleb128 0x21
+ 983 0076 00       		.byte	0
+ 984 0077 49       		.uleb128 0x49
+ 985 0078 13       		.uleb128 0x13
+ 986 0079 2F       		.uleb128 0x2f
+ 987 007a 0B       		.uleb128 0xb
+ 988 007b 00       		.byte	0
+ 989 007c 00       		.byte	0
+ 990 007d 0C       		.uleb128 0xc
+ 991 007e 34       		.uleb128 0x34
+ 992 007f 00       		.byte	0
+ 993 0080 03       		.uleb128 0x3
+ 994 0081 0E       		.uleb128 0xe
+ 995 0082 3A       		.uleb128 0x3a
+ 996 0083 0B       		.uleb128 0xb
+ 997 0084 3B       		.uleb128 0x3b
+ 998 0085 0B       		.uleb128 0xb
+ 999 0086 49       		.uleb128 0x49
+ 1000 0087 13       		.uleb128 0x13
+ 1001 0088 3F       		.uleb128 0x3f
+ 1002 0089 19       		.uleb128 0x19
+ 1003 008a 02       		.uleb128 0x2
+ 1004 008b 18       		.uleb128 0x18
+ 1005 008c 00       		.byte	0
+ 1006 008d 00       		.byte	0
+ 1007 008e 0D       		.uleb128 0xd
+ 1008 008f 26       		.uleb128 0x26
+ 1009 0090 00       		.byte	0
+ 1010 0091 49       		.uleb128 0x49
+ 1011 0092 13       		.uleb128 0x13
+ 1012 0093 00       		.byte	0
+ 1013 0094 00       		.byte	0
+ 1014 0095 0E       		.uleb128 0xe
+ 1015 0096 34       		.uleb128 0x34
+ 1016 0097 00       		.byte	0
+ 1017 0098 03       		.uleb128 0x3
+ 1018 0099 0E       		.uleb128 0xe
+ 1019 009a 3A       		.uleb128 0x3a
+ 1020 009b 0B       		.uleb128 0xb
+ 1021 009c 3B       		.uleb128 0x3b
+ 1022 009d 05       		.uleb128 0x5
+ 1023 009e 49       		.uleb128 0x49
+ 1024 009f 13       		.uleb128 0x13
+ 1025 00a0 3F       		.uleb128 0x3f
+ 1026 00a1 19       		.uleb128 0x19
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 19
+
+
+ 1027 00a2 02       		.uleb128 0x2
+ 1028 00a3 18       		.uleb128 0x18
+ 1029 00a4 00       		.byte	0
+ 1030 00a5 00       		.byte	0
+ 1031 00a6 00       		.byte	0
+ 1032              		.section	.debug_aranges,"",%progbits
+ 1033 0000 14000000 		.4byte	0x14
+ 1034 0004 0200     		.2byte	0x2
+ 1035 0006 00000000 		.4byte	.Ldebug_info0
+ 1036 000a 04       		.byte	0x4
+ 1037 000b 00       		.byte	0
+ 1038 000c 0000     		.2byte	0
+ 1039 000e 0000     		.2byte	0
+ 1040 0010 00000000 		.4byte	0
+ 1041 0014 00000000 		.4byte	0
+ 1042              		.section	.debug_line,"",%progbits
+ 1043              	.Ldebug_line0:
+ 1044 0000 63000000 		.section	.debug_str,"MS",%progbits,1
+ 1044      02005D00 
+ 1044      00000201 
+ 1044      FB0E0D00 
+ 1044      01010101 
+ 1045              	.LASF31:
+ 1046 0000 55534255 		.ascii	"USBUART_1_SN_STRING_DESCRIPTOR\000"
+ 1046      4152545F 
+ 1046      315F534E 
+ 1046      5F535452 
+ 1046      494E475F 
+ 1047              	.LASF39:
+ 1048 001f 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 1048      6C657853 
+ 1048      45415F61 
+ 1048      6C783837 
+ 1048      6772645C 
+ 1049              	.LASF38:
+ 1050 004d 2E5C4765 		.ascii	".\\Generated_Source\\PSoC5\\USBUART_1_descr.c\000"
+ 1050      6E657261 
+ 1050      7465645F 
+ 1050      536F7572 
+ 1050      63655C50 
+ 1051              	.LASF33:
+ 1052 0078 55534255 		.ascii	"USBUART_1_HIDREPORT_DESCRIPTOR1\000"
+ 1052      4152545F 
+ 1052      315F4849 
+ 1052      44524550 
+ 1052      4F52545F 
+ 1053              	.LASF30:
+ 1054 0098 55534255 		.ascii	"USBUART_1_TABLE\000"
+ 1054      4152545F 
+ 1054      315F5441 
+ 1054      424C4500 
+ 1055              	.LASF28:
+ 1056 00a8 55534255 		.ascii	"USBUART_1_DEVICE0_CONFIGURATION0_TABLE\000"
+ 1056      4152545F 
+ 1056      315F4445 
+ 1056      56494345 
+ 1056      305F434F 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 20
+
+
+ 1057              	.LASF4:
+ 1058 00cf 6C6F6E67 		.ascii	"long int\000"
+ 1058      20696E74 
+ 1058      00
+ 1059              	.LASF3:
+ 1060 00d8 73686F72 		.ascii	"short unsigned int\000"
+ 1060      7420756E 
+ 1060      7369676E 
+ 1060      65642069 
+ 1060      6E7400
+ 1061              	.LASF23:
+ 1062 00eb 545F5553 		.ascii	"T_USBUART_1_LUT\000"
+ 1062      42554152 
+ 1062      545F315F 
+ 1062      4C555400 
+ 1063              	.LASF21:
+ 1064 00fb 545F5553 		.ascii	"T_USBUART_1_EP_SETTINGS_BLOCK\000"
+ 1064      42554152 
+ 1064      545F315F 
+ 1064      45505F53 
+ 1064      45545449 
+ 1065              	.LASF11:
+ 1066 0119 666C6F61 		.ascii	"float\000"
+ 1066      7400
+ 1067              	.LASF25:
+ 1068 011f 55534255 		.ascii	"USBUART_1_DEVICE0_CONFIGURATION0_DESCR\000"
+ 1068      4152545F 
+ 1068      315F4445 
+ 1068      56494345 
+ 1068      305F434F 
+ 1069              	.LASF16:
+ 1070 0146 616C7453 		.ascii	"altSetting\000"
+ 1070      65747469 
+ 1070      6E6700
+ 1071              	.LASF1:
+ 1072 0151 756E7369 		.ascii	"unsigned char\000"
+ 1072      676E6564 
+ 1072      20636861 
+ 1072      7200
+ 1073              	.LASF18:
+ 1074 015f 61747472 		.ascii	"attributes\000"
+ 1074      69627574 
+ 1074      657300
+ 1075              	.LASF5:
+ 1076 016a 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1076      20756E73 
+ 1076      69676E65 
+ 1076      6420696E 
+ 1076      7400
+ 1077              	.LASF17:
+ 1078 017c 61646472 		.ascii	"addr\000"
+ 1078      00
+ 1079              	.LASF27:
+ 1080 0181 55534255 		.ascii	"USBUART_1_DEVICE0_CONFIGURATION0_INTERFACE_CLASS\000"
+ 1080      4152545F 
+ 1080      315F4445 
+ 1080      56494345 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 21
+
+
+ 1080      305F434F 
+ 1081              	.LASF12:
+ 1082 01b2 646F7562 		.ascii	"double\000"
+ 1082      6C6500
+ 1083              	.LASF2:
+ 1084 01b9 73686F72 		.ascii	"short int\000"
+ 1084      7420696E 
+ 1084      7400
+ 1085              	.LASF10:
+ 1086 01c3 75696E74 		.ascii	"uint16\000"
+ 1086      313600
+ 1087              	.LASF32:
+ 1088 01ca 55534255 		.ascii	"USBUART_1_STRING_DESCRIPTORS\000"
+ 1088      4152545F 
+ 1088      315F5354 
+ 1088      52494E47 
+ 1088      5F444553 
+ 1089              	.LASF37:
+ 1090 01e7 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 1090      4320342E 
+ 1090      392E3320 
+ 1090      32303135 
+ 1090      30333033 
+ 1091 021a 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 1091      20726576 
+ 1091      6973696F 
+ 1091      6E203232 
+ 1091      31323230 
+ 1092 024d 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1092      66756E63 
+ 1092      74696F6E 
+ 1092      2D736563 
+ 1092      74696F6E 
+ 1093              	.LASF8:
+ 1094 0275 756E7369 		.ascii	"unsigned int\000"
+ 1094      676E6564 
+ 1094      20696E74 
+ 1094      00
+ 1095              	.LASF7:
+ 1096 0282 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1096      206C6F6E 
+ 1096      6720756E 
+ 1096      7369676E 
+ 1096      65642069 
+ 1097              	.LASF29:
+ 1098 0299 55534255 		.ascii	"USBUART_1_DEVICE0_TABLE\000"
+ 1098      4152545F 
+ 1098      315F4445 
+ 1098      56494345 
+ 1098      305F5441 
+ 1099              	.LASF22:
+ 1100 02b1 705F6C69 		.ascii	"p_list\000"
+ 1100      737400
+ 1101              	.LASF14:
+ 1102 02b8 73697A65 		.ascii	"sizetype\000"
+ 1102      74797065 
+ 1102      00
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 22
+
+
+ 1103              	.LASF6:
+ 1104 02c1 6C6F6E67 		.ascii	"long long int\000"
+ 1104      206C6F6E 
+ 1104      6720696E 
+ 1104      7400
+ 1105              	.LASF13:
+ 1106 02cf 63686172 		.ascii	"char\000"
+ 1106      00
+ 1107              	.LASF19:
+ 1108 02d4 62756666 		.ascii	"bufferSize\000"
+ 1108      65725369 
+ 1108      7A6500
+ 1109              	.LASF36:
+ 1110 02df 55534255 		.ascii	"USBUART_1_idSerialNumberStringDescriptor\000"
+ 1110      4152545F 
+ 1110      315F6964 
+ 1110      53657269 
+ 1110      616C4E75 
+ 1111              	.LASF24:
+ 1112 0308 55534255 		.ascii	"USBUART_1_DEVICE0_DESCR\000"
+ 1112      4152545F 
+ 1112      315F4445 
+ 1112      56494345 
+ 1112      305F4445 
+ 1113              	.LASF9:
+ 1114 0320 75696E74 		.ascii	"uint8\000"
+ 1114      3800
+ 1115              	.LASF15:
+ 1116 0326 696E7465 		.ascii	"interface\000"
+ 1116      72666163 
+ 1116      6500
+ 1117              	.LASF26:
+ 1118 0330 55534255 		.ascii	"USBUART_1_DEVICE0_CONFIGURATION0_EP_SETTINGS_TABLE\000"
+ 1118      4152545F 
+ 1118      315F4445 
+ 1118      56494345 
+ 1118      305F434F 
+ 1119              	.LASF34:
+ 1120 0363 55534255 		.ascii	"USBUART_1_MSOS_DESCRIPTOR\000"
+ 1120      4152545F 
+ 1120      315F4D53 
+ 1120      4F535F44 
+ 1120      45534352 
+ 1121              	.LASF0:
+ 1122 037d 7369676E 		.ascii	"signed char\000"
+ 1122      65642063 
+ 1122      68617200 
+ 1123              	.LASF35:
+ 1124 0389 55534255 		.ascii	"USBUART_1_MSOS_CONFIGURATION_DESCR\000"
+ 1124      4152545F 
+ 1124      315F4D53 
+ 1124      4F535F43 
+ 1124      4F4E4649 
+ 1125              	.LASF20:
+ 1126 03ac 624D6973 		.ascii	"bMisc\000"
+ 1126      6300
+ 1127              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccfvquG5.s 			page 23
+
+

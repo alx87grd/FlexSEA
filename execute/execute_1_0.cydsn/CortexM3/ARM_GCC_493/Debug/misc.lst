@@ -1,0 +1,1699 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"misc.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.global _printf_float
+  19              		.thumb
+  20              		.section	.text.timebase_1s,"ax",%progbits
+  21              		.align	2
+  22              		.global	timebase_1s
+  23              		.thumb
+  24              		.thumb_func
+  25              		.type	timebase_1s, %function
+  26              	timebase_1s:
+  27              	.LFB63:
+  28              		.file 1 "..\\src\\misc.c"
+   1:..\src/misc.c **** //****************************************************************************
+   2:..\src/misc.c **** // MIT Media Lab - Biomechatronics
+   3:..\src/misc.c **** // Jean-Francois (Jeff) Duval
+   4:..\src/misc.c **** // jfduval@mit.edu
+   5:..\src/misc.c **** // 09/2015
+   6:..\src/misc.c **** //****************************************************************************
+   7:..\src/misc.c **** // misc: when it doesn't belong in any another file, it ends up here...
+   8:..\src/misc.c **** //****************************************************************************
+   9:..\src/misc.c **** 
+  10:..\src/misc.c **** //Note: It's a sign that code is misplaced when this file gets long.
+  11:..\src/misc.c **** 
+  12:..\src/misc.c **** //****************************************************************************
+  13:..\src/misc.c **** // Include(s)
+  14:..\src/misc.c **** //****************************************************************************
+  15:..\src/misc.c **** 
+  16:..\src/misc.c **** #include "main.h"
+  17:..\src/misc.c **** #include "misc.h"
+  18:..\src/misc.c **** 
+  19:..\src/misc.c **** //****************************************************************************
+  20:..\src/misc.c **** // Variable(s)
+  21:..\src/misc.c **** //****************************************************************************
+  22:..\src/misc.c **** 
+  23:..\src/misc.c **** //Timers:
+  24:..\src/misc.c **** volatile uint8 t1_100us_flag = 0;
+  25:..\src/misc.c **** volatile uint8 t1_time_share = 0, t1_new_value = 0;
+  26:..\src/misc.c **** 
+  27:..\src/misc.c **** //ADC:
+  28:..\src/misc.c **** uint8 adc_sar1_flag = 0;
+  29:..\src/misc.c **** volatile uint8 adc_delsig_flag = 0;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 2
+
+
+  30:..\src/misc.c **** 
+  31:..\src/misc.c **** //UART:
+  32:..\src/misc.c **** volatile uint8 data_ready_485 = 0;
+  33:..\src/misc.c **** 
+  34:..\src/misc.c **** //USB:
+  35:..\src/misc.c **** volatile uint8 data_ready_usb = 0;
+  36:..\src/misc.c **** 
+  37:..\src/misc.c **** //AS5047 Magnetic Encoder:
+  38:..\src/misc.c **** uint16 last_as5047_word = 0;
+  39:..\src/misc.c **** 
+  40:..\src/misc.c **** //****************************************************************************
+  41:..\src/misc.c **** // Private Function Prototype(s):
+  42:..\src/misc.c **** //****************************************************************************
+  43:..\src/misc.c **** 
+  44:..\src/misc.c **** 
+  45:..\src/misc.c **** //****************************************************************************
+  46:..\src/misc.c **** // Public Function(s)
+  47:..\src/misc.c **** //****************************************************************************
+  48:..\src/misc.c **** 
+  49:..\src/misc.c **** //Call this function in the 1kHz FSM. It will return 1 every second.
+  50:..\src/misc.c **** uint8 timebase_1s(void)
+  51:..\src/misc.c **** {
+  29              		.loc 1 51 0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  52:..\src/misc.c **** 	static uint16 time = 0;
+  53:..\src/misc.c **** 	
+  54:..\src/misc.c **** 	time++;
+  34              		.loc 1 54 0
+  35 0000 074A     		ldr	r2, .L4
+  36 0002 1388     		ldrh	r3, [r2]
+  37 0004 0133     		adds	r3, r3, #1
+  38 0006 9BB2     		uxth	r3, r3
+  39 0008 1380     		strh	r3, [r2]	@ movhi
+  55:..\src/misc.c **** 	if(time >= 999)
+  40              		.loc 1 55 0
+  41 000a 40F2E632 		movw	r2, #998
+  42 000e 9342     		cmp	r3, r2
+  43 0010 04D9     		bls	.L3
+  56:..\src/misc.c **** 	{
+  57:..\src/misc.c **** 		time = 0;
+  44              		.loc 1 57 0
+  45 0012 0022     		movs	r2, #0
+  46 0014 024B     		ldr	r3, .L4
+  47 0016 1A80     		strh	r2, [r3]	@ movhi
+  58:..\src/misc.c **** 		return 1;
+  48              		.loc 1 58 0
+  49 0018 0120     		movs	r0, #1
+  50 001a 7047     		bx	lr
+  51              	.L3:
+  59:..\src/misc.c **** 	}
+  60:..\src/misc.c **** 	
+  61:..\src/misc.c **** 	return 0;
+  52              		.loc 1 61 0
+  53 001c 0020     		movs	r0, #0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 3
+
+
+  62:..\src/misc.c **** }
+  54              		.loc 1 62 0
+  55 001e 7047     		bx	lr
+  56              	.L5:
+  57              		.align	2
+  58              	.L4:
+  59 0020 00000000 		.word	.LANCHOR0
+  60              		.cfi_endproc
+  61              	.LFE63:
+  62              		.size	timebase_1s, .-timebase_1s
+  63              		.section	.text.test_code_blocking,"ax",%progbits
+  64              		.align	2
+  65              		.global	test_code_blocking
+  66              		.thumb
+  67              		.thumb_func
+  68              		.type	test_code_blocking, %function
+  69              	test_code_blocking:
+  70              	.LFB64:
+  63:..\src/misc.c **** 
+  64:..\src/misc.c **** void test_code_blocking(void)
+  65:..\src/misc.c **** {
+  71              		.loc 1 65 0
+  72              		.cfi_startproc
+  73              		@ args = 0, pretend = 0, frame = 0
+  74              		@ frame_needed = 0, uses_anonymous_args = 0
+  75              		@ link register save eliminated.
+  76 0000 7047     		bx	lr
+  77              		.cfi_endproc
+  78              	.LFE64:
+  79              		.size	test_code_blocking, .-test_code_blocking
+  80 0002 00BF     		.section	.text.test_code_non_blocking,"ax",%progbits
+  81              		.align	2
+  82              		.global	test_code_non_blocking
+  83              		.thumb
+  84              		.thumb_func
+  85              		.type	test_code_non_blocking, %function
+  86              	test_code_non_blocking:
+  87              	.LFB65:
+  66:..\src/misc.c **** 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  67:..\src/misc.c **** 	//Blocking Test code - enable one and only one for special 
+  68:..\src/misc.c **** 	//debugging. Normal code WILL NOT EXECUTE when this is enabled!
+  69:..\src/misc.c **** 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+  70:..\src/misc.c **** 	//strain_test_blocking();
+  71:..\src/misc.c **** 	//safety_cop_comm_test_blocking();
+  72:..\src/misc.c **** 	//imu_test_code_blocking();
+  73:..\src/misc.c **** 	//motor_fixed_pwm_test_code_blocking(200);
+  74:..\src/misc.c **** 	//wdclk_test_blocking();
+  75:..\src/misc.c **** 	//timing_test_blocking();
+  76:..\src/misc.c **** 	//test_current_tracking_blocking();
+  77:..\src/misc.c **** 	//test_pwm_pulse_blocking();
+  78:..\src/misc.c **** 	//test_uart_dma_xmit();
+  79:..\src/misc.c **** 	//motor_cancel_damping_test_code_blocking();
+  80:..\src/misc.c **** 	//csea_knee_up_down_test_demo();
+  81:..\src/misc.c **** 	//motor_stepper_test_blocking_1(80);
+  82:..\src/misc.c **** 	//test_pwro_output_blocking();
+  83:..\src/misc.c **** 	//strain_amp_6ch_test_code_blocking();
+  84:..\src/misc.c **** 	//as5047_test_code_blocking();
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 4
+
+
+  85:..\src/misc.c **** 	//as5048b_test_code_blocking();
+  86:..\src/misc.c **** 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=	
+  87:..\src/misc.c **** }
+  88:..\src/misc.c **** 
+  89:..\src/misc.c **** void test_code_non_blocking(void)
+  90:..\src/misc.c **** {
+  88              		.loc 1 90 0
+  89              		.cfi_startproc
+  90              		@ args = 0, pretend = 0, frame = 0
+  91              		@ frame_needed = 0, uses_anonymous_args = 0
+  92              		@ link register save eliminated.
+  93 0000 7047     		bx	lr
+  94              		.cfi_endproc
+  95              	.LFE65:
+  96              		.size	test_code_non_blocking, .-test_code_non_blocking
+  97 0002 00BF     		.section	.text.timing_test_blocking,"ax",%progbits
+  98              		.align	2
+  99              		.global	timing_test_blocking
+ 100              		.thumb
+ 101              		.thumb_func
+ 102              		.type	timing_test_blocking, %function
+ 103              	timing_test_blocking:
+ 104              	.LFB66:
+  91:..\src/misc.c **** 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+  92:..\src/misc.c **** 	//Non-Blocking Test code
+  93:..\src/misc.c **** 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+  94:..\src/misc.c **** 	#ifdef USE_SPI_COMMUT		
+  95:..\src/misc.c **** 	motor_stepper_test_init(0);
+  96:..\src/misc.c **** 	//Note: deadtime is 55, small PWM values won't make it move.
+  97:..\src/misc.c **** 	//Starting at 0, GUI will change that when it wants.	
+  98:..\src/misc.c **** 	#endif	//USE_SPI_COMMUT	
+  99:..\src/misc.c **** 	//motor_fixed_pwm_test_code_non_blocking(125);
+ 100:..\src/misc.c **** 	//pwro_output(245);	
+ 101:..\src/misc.c **** 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=		
+ 102:..\src/misc.c **** }
+ 103:..\src/misc.c **** 
+ 104:..\src/misc.c **** //****************************************************************************
+ 105:..\src/misc.c **** // Private Function(s)
+ 106:..\src/misc.c **** //****************************************************************************
+ 107:..\src/misc.c **** 
+ 108:..\src/misc.c **** //****************************************************************************
+ 109:..\src/misc.c **** // Test Function(s) - Use with care!
+ 110:..\src/misc.c **** //****************************************************************************
+ 111:..\src/misc.c **** 
+ 112:..\src/misc.c **** //****************************************************************************
+ 113:..\src/misc.c **** // Deprecated Function(s)
+ 114:..\src/misc.c **** //****************************************************************************
+ 115:..\src/misc.c **** 
+ 116:..\src/misc.c **** //Important: this code relies on external pins that are mapped to other functions!
+ 117:..\src/misc.c **** //rewrite or delete
+ 118:..\src/misc.c **** 
+ 119:..\src/misc.c **** //How long does it take to run X function? Use this code and a scope to find out.
+ 120:..\src/misc.c **** void timing_test_blocking(void)
+ 121:..\src/misc.c **** {
+ 105              		.loc 1 121 0
+ 106              		.cfi_startproc
+ 107              		@ Volatile: function does not return.
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 5
+
+
+ 108              		@ args = 0, pretend = 0, frame = 0
+ 109              		@ frame_needed = 0, uses_anonymous_args = 0
+ 110              		.loc 1 121 0
+ 111 0000 08B5     		push	{r3, lr}
+ 112              		.cfi_def_cfa_offset 8
+ 113              		.cfi_offset 3, -8
+ 114              		.cfi_offset 14, -4
+ 122:..\src/misc.c **** 	//Disable Global Interrupts
+ 123:..\src/misc.c ****     CyGlobalIntDisable; 
+ 115              		.loc 1 123 0
+ 116              	@ 123 "..\src\misc.c" 1
+ 117 0002 72B6     		CPSID   i
+ 118              	@ 0 "" 2
+ 119              		.thumb
+ 120              	.L9:
+ 124:..\src/misc.c **** 	
+ 125:..\src/misc.c **** 	while(1)
+ 126:..\src/misc.c **** 	{
+ 127:..\src/misc.c **** 		//Synch sequence
+ 128:..\src/misc.c **** 		/*
+ 129:..\src/misc.c **** 		EXP9_Write(1);
+ 130:..\src/misc.c **** 		EXP8_Write(0);
+ 131:..\src/misc.c **** 		EXP8_Write(1);
+ 132:..\src/misc.c **** 		EXP8_Write(0);
+ 133:..\src/misc.c **** 		EXP8_Write(1);
+ 134:..\src/misc.c **** 		EXP8_Write(0);
+ 135:..\src/misc.c **** 		*/
+ 136:..\src/misc.c **** 		
+ 137:..\src/misc.c **** 		CyDelayUs(SDELAY);
+ 121              		.loc 1 137 0 discriminator 1
+ 122 0004 0520     		movs	r0, #5
+ 123 0006 FFF7FEFF 		bl	CyDelayUs
+ 124              	.LVL0:
+ 138:..\src/misc.c **** 		
+ 139:..\src/misc.c **** 		//Motor current PID
+ 140:..\src/misc.c **** 		//EXP8_Write(1);
+ 141:..\src/misc.c **** 		motor_current_pid(ctrl.current.setpoint_val, ctrl.current.actual_val);
+ 125              		.loc 1 141 0 discriminator 1
+ 126 000a 064C     		ldr	r4, .L11
+ 127 000c A06B     		ldr	r0, [r4, #56]
+ 128 000e 616B     		ldr	r1, [r4, #52]
+ 129 0010 FFF7FEFF 		bl	motor_current_pid
+ 130              	.LVL1:
+ 142:..\src/misc.c **** 		//EXP8_Write(0);
+ 143:..\src/misc.c **** 		
+ 144:..\src/misc.c **** 		//Motor current PID #2
+ 145:..\src/misc.c **** 		//EXP8_Write(1);
+ 146:..\src/misc.c **** 		motor_current_pid_2(ctrl.current.setpoint_val, ctrl.current.actual_val);
+ 131              		.loc 1 146 0 discriminator 1
+ 132 0014 A06B     		ldr	r0, [r4, #56]
+ 133 0016 616B     		ldr	r1, [r4, #52]
+ 134 0018 FFF7FEFF 		bl	motor_current_pid_2
+ 135              	.LVL2:
+ 147:..\src/misc.c **** 		//EXP8_Write(0);
+ 148:..\src/misc.c **** 		
+ 149:..\src/misc.c **** 		//Exit sequence:
+ 150:..\src/misc.c **** 		//EXP9_Write(0);
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 6
+
+
+ 151:..\src/misc.c **** 		CyDelayUs(10*SDELAY);
+ 136              		.loc 1 151 0 discriminator 1
+ 137 001c 3220     		movs	r0, #50
+ 138 001e FFF7FEFF 		bl	CyDelayUs
+ 139              	.LVL3:
+ 152:..\src/misc.c **** 		
+ 153:..\src/misc.c **** 		/*
+ 154:..\src/misc.c **** 		
+ 155:..\src/misc.c **** 		//SAR ADC filter
+ 156:..\src/misc.c **** 		EXP8_Write(1);
+ 157:..\src/misc.c **** 		filter_adc();
+ 158:..\src/misc.c **** 		EXP8_Write(0);
+ 159:..\src/misc.c **** 		
+ 160:..\src/misc.c **** 		//DelSig ADC filter
+ 161:..\src/misc.c **** 		EXP8_Write(1);
+ 162:..\src/misc.c **** 		strain_filter_dma();
+ 163:..\src/misc.c **** 		EXP8_Write(0);
+ 164:..\src/misc.c **** 		
+ 165:..\src/misc.c **** 		//Unpack payload (no data in the buffer)
+ 166:..\src/misc.c **** 		EXP8_Write(1);
+ 167:..\src/misc.c **** 		unpack_payload_485_1();
+ 168:..\src/misc.c **** 		EXP8_Write(0);
+ 169:..\src/misc.c **** 		
+ 170:..\src/misc.c **** 		//Exit sequence:
+ 171:..\src/misc.c **** 		EXP9_Write(0);
+ 172:..\src/misc.c **** 		CyDelayUs(10*SDELAY);
+ 173:..\src/misc.c **** 		*/
+ 174:..\src/misc.c **** 		
+ 175:..\src/misc.c **** 		/*
+ 176:..\src/misc.c **** 		//Position controller
+ 177:..\src/misc.c **** 		EXP8_Write(1);
+ 178:..\src/misc.c **** 		motor_position_pid(ctrl.position.setpoint_val, ctrl.position.actual_val);
+ 179:..\src/misc.c **** 		EXP8_Write(0);
+ 180:..\src/misc.c **** 		
+ 181:..\src/misc.c **** 		CyDelayUs(SDELAY);
+ 182:..\src/misc.c **** 		
+ 183:..\src/misc.c **** 		//Impedance controller:
+ 184:..\src/misc.c **** 		EXP8_Write(1);
+ 185:..\src/misc.c **** 		motor_impedance_encoder(ctrl.impedance.setpoint_val, ctrl.impedance.actual_val);
+ 186:..\src/misc.c **** 		EXP8_Write(0);
+ 187:..\src/misc.c **** 		
+ 188:..\src/misc.c **** 		CyDelayUs(SDELAY);
+ 189:..\src/misc.c **** 		
+ 190:..\src/misc.c **** 		//RGB LED UI:
+ 191:..\src/misc.c **** 		EXP8_Write(1);
+ 192:..\src/misc.c **** 		rgb_led_ui(1, 1, 1, 1);
+ 193:..\src/misc.c **** 		EXP8_Write(0);
+ 194:..\src/misc.c **** 
+ 195:..\src/misc.c **** 		//Exit sequence:
+ 196:..\src/misc.c **** 		EXP9_Write(0);
+ 197:..\src/misc.c **** 		CyDelayUs(10*SDELAY);
+ 198:..\src/misc.c **** 		*/
+ 199:..\src/misc.c **** 		
+ 200:..\src/misc.c **** 		/*
+ 201:..\src/misc.c **** 		filter_adc();
+ 202:..\src/misc.c **** 		
+ 203:..\src/misc.c **** 		strain_filter_dma();
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 7
+
+
+ 204:..\src/misc.c **** 		*/
+ 205:..\src/misc.c **** 		
+ 206:..\src/misc.c **** 		/*
+ 207:..\src/misc.c **** 		unpack_payload_485_1();
+ 208:..\src/misc.c **** 	
+ 209:..\src/misc.c **** 		//Valid communication from RS-485 #1?
+ 210:..\src/misc.c **** 		if(cmd_ready_485_1 != 0)
+ 211:..\src/misc.c **** 		{
+ 212:..\src/misc.c **** 			cmd_ready_485_1 = 0;
+ 213:..\src/misc.c **** 			
+ 214:..\src/misc.c **** 			//Cheap trick to get first line	//ToDo: support more than 1
+ 215:..\src/misc.c **** 			for(i = 0; i < PAYLOAD_BUF_LEN; i++)
+ 216:..\src/misc.c **** 			{
+ 217:..\src/misc.c **** 				tmp_rx_command_485_1[i] = rx_command_485_1[0][i];
+ 218:..\src/misc.c **** 			}
+ 219:..\src/misc.c **** 			
+ 220:..\src/misc.c **** 			//payload_parse_str() calls the functions (if valid)
+ 221:..\src/misc.c **** 			result = payload_parse_str(tmp_rx_command_485_1);
+ 222:..\src/misc.c **** 			
+ 223:..\src/misc.c **** 			//LED:
+ 224:..\src/misc.c **** 			new_cmd_led = 1;
+ 225:..\src/misc.c **** 		}
+ 226:..\src/misc.c **** 		*/
+ 227:..\src/misc.c **** 	}
+ 140              		.loc 1 227 0 discriminator 1
+ 141 0022 EFE7     		b	.L9
+ 142              	.L12:
+ 143              		.align	2
+ 144              	.L11:
+ 145 0024 00000000 		.word	ctrl
+ 146              		.cfi_endproc
+ 147              	.LFE66:
+ 148              		.size	timing_test_blocking, .-timing_test_blocking
+ 149              		.global	last_as5047_word
+ 150              		.global	data_ready_usb
+ 151              		.global	data_ready_485
+ 152              		.global	adc_delsig_flag
+ 153              		.global	adc_sar1_flag
+ 154              		.global	t1_new_value
+ 155              		.global	t1_time_share
+ 156              		.global	t1_100us_flag
+ 157              		.bss
+ 158              		.align	1
+ 159              		.set	.LANCHOR0,. + 0
+ 160              		.type	time.10479, %object
+ 161              		.size	time.10479, 2
+ 162              	time.10479:
+ 163 0000 0000     		.space	2
+ 164              		.type	last_as5047_word, %object
+ 165              		.size	last_as5047_word, 2
+ 166              	last_as5047_word:
+ 167 0002 0000     		.space	2
+ 168              		.type	data_ready_usb, %object
+ 169              		.size	data_ready_usb, 1
+ 170              	data_ready_usb:
+ 171 0004 00       		.space	1
+ 172              		.type	data_ready_485, %object
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 8
+
+
+ 173              		.size	data_ready_485, 1
+ 174              	data_ready_485:
+ 175 0005 00       		.space	1
+ 176              		.type	adc_delsig_flag, %object
+ 177              		.size	adc_delsig_flag, 1
+ 178              	adc_delsig_flag:
+ 179 0006 00       		.space	1
+ 180              		.type	adc_sar1_flag, %object
+ 181              		.size	adc_sar1_flag, 1
+ 182              	adc_sar1_flag:
+ 183 0007 00       		.space	1
+ 184              		.type	t1_new_value, %object
+ 185              		.size	t1_new_value, 1
+ 186              	t1_new_value:
+ 187 0008 00       		.space	1
+ 188              		.type	t1_time_share, %object
+ 189              		.size	t1_time_share, 1
+ 190              	t1_time_share:
+ 191 0009 00       		.space	1
+ 192              		.type	t1_100us_flag, %object
+ 193              		.size	t1_100us_flag, 1
+ 194              	t1_100us_flag:
+ 195 000a 00       		.space	1
+ 196 000b 00       		.text
+ 197              	.Letext0:
+ 198              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 199              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 200              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 201              		.file 5 "..\\inc/../../flexsea-system/inc/flexsea_cmd_control.h"
+ 202              		.file 6 "Generated_Source\\PSoC5/core_cm3.h"
+ 203              		.file 7 "..\\inc/control.h"
+ 204              		.file 8 "Generated_Source\\PSoC5/CyLib.h"
+ 205              		.section	.debug_info,"",%progbits
+ 206              	.Ldebug_info0:
+ 207 0000 0B040000 		.4byte	0x40b
+ 208 0004 0400     		.2byte	0x4
+ 209 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 210 000a 04       		.byte	0x4
+ 211 000b 01       		.uleb128 0x1
+ 212 000c E7010000 		.4byte	.LASF57
+ 213 0010 01       		.byte	0x1
+ 214 0011 3C030000 		.4byte	.LASF58
+ 215 0015 96000000 		.4byte	.LASF59
+ 216 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 217 001d 00000000 		.4byte	0
+ 218 0021 00000000 		.4byte	.Ldebug_line0
+ 219 0025 02       		.uleb128 0x2
+ 220 0026 01       		.byte	0x1
+ 221 0027 06       		.byte	0x6
+ 222 0028 76010000 		.4byte	.LASF0
+ 223 002c 03       		.uleb128 0x3
+ 224 002d 25010000 		.4byte	.LASF3
+ 225 0031 02       		.byte	0x2
+ 226 0032 1D       		.byte	0x1d
+ 227 0033 37000000 		.4byte	0x37
+ 228 0037 02       		.uleb128 0x2
+ 229 0038 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 9
+
+
+ 230 0039 08       		.byte	0x8
+ 231 003a 68010000 		.4byte	.LASF1
+ 232 003e 02       		.uleb128 0x2
+ 233 003f 02       		.byte	0x2
+ 234 0040 05       		.byte	0x5
+ 235 0041 57000000 		.4byte	.LASF2
+ 236 0045 03       		.uleb128 0x3
+ 237 0046 82000000 		.4byte	.LASF4
+ 238 004a 02       		.byte	0x2
+ 239 004b 2B       		.byte	0x2b
+ 240 004c 50000000 		.4byte	0x50
+ 241 0050 02       		.uleb128 0x2
+ 242 0051 02       		.byte	0x2
+ 243 0052 07       		.byte	0x7
+ 244 0053 C4010000 		.4byte	.LASF5
+ 245 0057 03       		.uleb128 0x3
+ 246 0058 0B030000 		.4byte	.LASF6
+ 247 005c 02       		.byte	0x2
+ 248 005d 3F       		.byte	0x3f
+ 249 005e 62000000 		.4byte	0x62
+ 250 0062 02       		.uleb128 0x2
+ 251 0063 04       		.byte	0x4
+ 252 0064 05       		.byte	0x5
+ 253 0065 0F010000 		.4byte	.LASF7
+ 254 0069 02       		.uleb128 0x2
+ 255 006a 04       		.byte	0x4
+ 256 006b 07       		.byte	0x7
+ 257 006c BD020000 		.4byte	.LASF8
+ 258 0070 02       		.uleb128 0x2
+ 259 0071 08       		.byte	0x8
+ 260 0072 05       		.byte	0x5
+ 261 0073 01010000 		.4byte	.LASF9
+ 262 0077 02       		.uleb128 0x2
+ 263 0078 08       		.byte	0x8
+ 264 0079 07       		.byte	0x7
+ 265 007a 82010000 		.4byte	.LASF10
+ 266 007e 04       		.uleb128 0x4
+ 267 007f 04       		.byte	0x4
+ 268 0080 05       		.byte	0x5
+ 269 0081 696E7400 		.ascii	"int\000"
+ 270 0085 02       		.uleb128 0x2
+ 271 0086 04       		.byte	0x4
+ 272 0087 07       		.byte	0x7
+ 273 0088 99010000 		.4byte	.LASF11
+ 274 008c 03       		.uleb128 0x3
+ 275 008d DD000000 		.4byte	.LASF12
+ 276 0091 03       		.byte	0x3
+ 277 0092 15       		.byte	0x15
+ 278 0093 2C000000 		.4byte	0x2c
+ 279 0097 03       		.uleb128 0x3
+ 280 0098 A6010000 		.4byte	.LASF13
+ 281 009c 03       		.byte	0x3
+ 282 009d 21       		.byte	0x21
+ 283 009e 45000000 		.4byte	0x45
+ 284 00a2 03       		.uleb128 0x3
+ 285 00a3 84020000 		.4byte	.LASF14
+ 286 00a7 03       		.byte	0x3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 10
+
+
+ 287 00a8 2C       		.byte	0x2c
+ 288 00a9 57000000 		.4byte	0x57
+ 289 00ad 03       		.uleb128 0x3
+ 290 00ae F5000000 		.4byte	.LASF15
+ 291 00b2 04       		.byte	0x4
+ 292 00b3 C2       		.byte	0xc2
+ 293 00b4 37000000 		.4byte	0x37
+ 294 00b8 03       		.uleb128 0x3
+ 295 00b9 CC000000 		.4byte	.LASF16
+ 296 00bd 04       		.byte	0x4
+ 297 00be C3       		.byte	0xc3
+ 298 00bf 50000000 		.4byte	0x50
+ 299 00c3 03       		.uleb128 0x3
+ 300 00c4 DD020000 		.4byte	.LASF17
+ 301 00c8 04       		.byte	0x4
+ 302 00c9 C7       		.byte	0xc7
+ 303 00ca 62000000 		.4byte	0x62
+ 304 00ce 02       		.uleb128 0x2
+ 305 00cf 04       		.byte	0x4
+ 306 00d0 04       		.byte	0x4
+ 307 00d1 FB000000 		.4byte	.LASF18
+ 308 00d5 02       		.uleb128 0x2
+ 309 00d6 08       		.byte	0x8
+ 310 00d7 04       		.byte	0x4
+ 311 00d8 28030000 		.4byte	.LASF19
+ 312 00dc 02       		.uleb128 0x2
+ 313 00dd 01       		.byte	0x1
+ 314 00de 08       		.byte	0x8
+ 315 00df E2010000 		.4byte	.LASF20
+ 316 00e3 05       		.uleb128 0x5
+ 317 00e4 AD000000 		.4byte	0xad
+ 318 00e8 02       		.uleb128 0x2
+ 319 00e9 04       		.byte	0x4
+ 320 00ea 07       		.byte	0x7
+ 321 00eb 61000000 		.4byte	.LASF21
+ 322 00ef 02       		.uleb128 0x2
+ 323 00f0 08       		.byte	0x8
+ 324 00f1 04       		.byte	0x4
+ 325 00f2 48010000 		.4byte	.LASF22
+ 326 00f6 06       		.uleb128 0x6
+ 327 00f7 21000000 		.4byte	.LASF23
+ 328 00fb 0C       		.byte	0xc
+ 329 00fc 05       		.byte	0x5
+ 330 00fd 43       		.byte	0x43
+ 331 00fe 45010000 		.4byte	0x145
+ 332 0102 07       		.uleb128 0x7
+ 333 0103 673000   		.ascii	"g0\000"
+ 334 0106 05       		.byte	0x5
+ 335 0107 45       		.byte	0x45
+ 336 0108 97000000 		.4byte	0x97
+ 337 010c 00       		.byte	0
+ 338 010d 07       		.uleb128 0x7
+ 339 010e 673100   		.ascii	"g1\000"
+ 340 0111 05       		.byte	0x5
+ 341 0112 45       		.byte	0x45
+ 342 0113 97000000 		.4byte	0x97
+ 343 0117 02       		.byte	0x2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 11
+
+
+ 344 0118 07       		.uleb128 0x7
+ 345 0119 673200   		.ascii	"g2\000"
+ 346 011c 05       		.byte	0x5
+ 347 011d 45       		.byte	0x45
+ 348 011e 97000000 		.4byte	0x97
+ 349 0122 04       		.byte	0x4
+ 350 0123 07       		.uleb128 0x7
+ 351 0124 673300   		.ascii	"g3\000"
+ 352 0127 05       		.byte	0x5
+ 353 0128 45       		.byte	0x45
+ 354 0129 97000000 		.4byte	0x97
+ 355 012d 06       		.byte	0x6
+ 356 012e 07       		.uleb128 0x7
+ 357 012f 673400   		.ascii	"g4\000"
+ 358 0132 05       		.byte	0x5
+ 359 0133 45       		.byte	0x45
+ 360 0134 97000000 		.4byte	0x97
+ 361 0138 08       		.byte	0x8
+ 362 0139 07       		.uleb128 0x7
+ 363 013a 673500   		.ascii	"g5\000"
+ 364 013d 05       		.byte	0x5
+ 365 013e 45       		.byte	0x45
+ 366 013f 97000000 		.4byte	0x97
+ 367 0143 0A       		.byte	0xa
+ 368 0144 00       		.byte	0
+ 369 0145 06       		.uleb128 0x6
+ 370 0146 2F010000 		.4byte	.LASF24
+ 371 014a 24       		.byte	0x24
+ 372 014b 05       		.byte	0x5
+ 373 014c 49       		.byte	0x49
+ 374 014d A6010000 		.4byte	0x1a6
+ 375 0151 08       		.uleb128 0x8
+ 376 0152 BF010000 		.4byte	.LASF25
+ 377 0156 05       		.byte	0x5
+ 378 0157 4C       		.byte	0x4c
+ 379 0158 F6000000 		.4byte	0xf6
+ 380 015c 00       		.byte	0
+ 381 015d 08       		.uleb128 0x8
+ 382 015e 4C000000 		.4byte	.LASF26
+ 383 0162 05       		.byte	0x5
+ 384 0163 4F       		.byte	0x4f
+ 385 0164 A2000000 		.4byte	0xa2
+ 386 0168 0C       		.byte	0xc
+ 387 0169 08       		.uleb128 0x8
+ 388 016a 1B030000 		.4byte	.LASF27
+ 389 016e 05       		.byte	0x5
+ 390 016f 50       		.byte	0x50
+ 391 0170 A2000000 		.4byte	0xa2
+ 392 0174 10       		.byte	0x10
+ 393 0175 08       		.uleb128 0x8
+ 394 0176 15030000 		.4byte	.LASF28
+ 395 017a 05       		.byte	0x5
+ 396 017b 53       		.byte	0x53
+ 397 017c A2000000 		.4byte	0xa2
+ 398 0180 14       		.byte	0x14
+ 399 0181 08       		.uleb128 0x8
+ 400 0182 B4010000 		.4byte	.LASF29
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 12
+
+
+ 401 0186 05       		.byte	0x5
+ 402 0187 54       		.byte	0x54
+ 403 0188 A2000000 		.4byte	0xa2
+ 404 018c 18       		.byte	0x18
+ 405 018d 08       		.uleb128 0x8
+ 406 018e 54010000 		.4byte	.LASF30
+ 407 0192 05       		.byte	0x5
+ 408 0193 55       		.byte	0x55
+ 409 0194 A2000000 		.4byte	0xa2
+ 410 0198 1C       		.byte	0x1c
+ 411 0199 08       		.uleb128 0x8
+ 412 019a 54030000 		.4byte	.LASF31
+ 413 019e 05       		.byte	0x5
+ 414 019f 56       		.byte	0x56
+ 415 01a0 A2000000 		.4byte	0xa2
+ 416 01a4 20       		.byte	0x20
+ 417 01a5 00       		.byte	0
+ 418 01a6 06       		.uleb128 0x6
+ 419 01a7 D7010000 		.4byte	.LASF32
+ 420 01ab 34       		.byte	0x34
+ 421 01ac 05       		.byte	0x5
+ 422 01ad 5A       		.byte	0x5a
+ 423 01ae 37020000 		.4byte	0x237
+ 424 01b2 08       		.uleb128 0x8
+ 425 01b3 BF010000 		.4byte	.LASF25
+ 426 01b7 05       		.byte	0x5
+ 427 01b8 5D       		.byte	0x5d
+ 428 01b9 F6000000 		.4byte	0xf6
+ 429 01bd 00       		.byte	0
+ 430 01be 07       		.uleb128 0x7
+ 431 01bf 706F7300 		.ascii	"pos\000"
+ 432 01c3 05       		.byte	0x5
+ 433 01c4 60       		.byte	0x60
+ 434 01c5 A2000000 		.4byte	0xa2
+ 435 01c9 0C       		.byte	0xc
+ 436 01ca 08       		.uleb128 0x8
+ 437 01cb 9B020000 		.4byte	.LASF33
+ 438 01cf 05       		.byte	0x5
+ 439 01d0 61       		.byte	0x61
+ 440 01d1 A2000000 		.4byte	0xa2
+ 441 01d5 10       		.byte	0x10
+ 442 01d6 08       		.uleb128 0x8
+ 443 01d7 4F030000 		.4byte	.LASF34
+ 444 01db 05       		.byte	0x5
+ 445 01dc 62       		.byte	0x62
+ 446 01dd A2000000 		.4byte	0xa2
+ 447 01e1 14       		.byte	0x14
+ 448 01e2 08       		.uleb128 0x8
+ 449 01e3 4A030000 		.4byte	.LASF35
+ 450 01e7 05       		.byte	0x5
+ 451 01e8 63       		.byte	0x63
+ 452 01e9 A2000000 		.4byte	0xa2
+ 453 01ed 18       		.byte	0x18
+ 454 01ee 08       		.uleb128 0x8
+ 455 01ef 7D000000 		.4byte	.LASF36
+ 456 01f3 05       		.byte	0x5
+ 457 01f4 64       		.byte	0x64
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 13
+
+
+ 458 01f5 A2000000 		.4byte	0xa2
+ 459 01f9 1C       		.byte	0x1c
+ 460 01fa 07       		.uleb128 0x7
+ 461 01fb 61636300 		.ascii	"acc\000"
+ 462 01ff 05       		.byte	0x5
+ 463 0200 65       		.byte	0x65
+ 464 0201 A2000000 		.4byte	0xa2
+ 465 0205 20       		.byte	0x20
+ 466 0206 08       		.uleb128 0x8
+ 467 0207 15030000 		.4byte	.LASF28
+ 468 020b 05       		.byte	0x5
+ 469 020c 68       		.byte	0x68
+ 470 020d A2000000 		.4byte	0xa2
+ 471 0211 24       		.byte	0x24
+ 472 0212 08       		.uleb128 0x8
+ 473 0213 B4010000 		.4byte	.LASF29
+ 474 0217 05       		.byte	0x5
+ 475 0218 69       		.byte	0x69
+ 476 0219 A2000000 		.4byte	0xa2
+ 477 021d 28       		.byte	0x28
+ 478 021e 08       		.uleb128 0x8
+ 479 021f 54010000 		.4byte	.LASF30
+ 480 0223 05       		.byte	0x5
+ 481 0224 6A       		.byte	0x6a
+ 482 0225 A2000000 		.4byte	0xa2
+ 483 0229 2C       		.byte	0x2c
+ 484 022a 08       		.uleb128 0x8
+ 485 022b 54030000 		.4byte	.LASF31
+ 486 022f 05       		.byte	0x5
+ 487 0230 6B       		.byte	0x6b
+ 488 0231 A2000000 		.4byte	0xa2
+ 489 0235 30       		.byte	0x30
+ 490 0236 00       		.byte	0
+ 491 0237 06       		.uleb128 0x6
+ 492 0238 8C020000 		.4byte	.LASF37
+ 493 023c A4       		.byte	0xa4
+ 494 023d 05       		.byte	0x5
+ 495 023e 6F       		.byte	0x6f
+ 496 023f 8C020000 		.4byte	0x28c
+ 497 0243 08       		.uleb128 0x8
+ 498 0244 B1020000 		.4byte	.LASF38
+ 499 0248 05       		.byte	0x5
+ 500 0249 71       		.byte	0x71
+ 501 024a 8C000000 		.4byte	0x8c
+ 502 024e 00       		.byte	0
+ 503 024f 07       		.uleb128 0x7
+ 504 0250 70776D00 		.ascii	"pwm\000"
+ 505 0254 05       		.byte	0x5
+ 506 0255 72       		.byte	0x72
+ 507 0256 8C000000 		.4byte	0x8c
+ 508 025a 01       		.byte	0x1
+ 509 025b 08       		.uleb128 0x8
+ 510 025c 93020000 		.4byte	.LASF39
+ 511 0260 05       		.byte	0x5
+ 512 0261 73       		.byte	0x73
+ 513 0262 45010000 		.4byte	0x145
+ 514 0266 04       		.byte	0x4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 14
+
+
+ 515 0267 08       		.uleb128 0x8
+ 516 0268 C4000000 		.4byte	.LASF40
+ 517 026c 05       		.byte	0x5
+ 518 026d 74       		.byte	0x74
+ 519 026e 45010000 		.4byte	0x145
+ 520 0272 28       		.byte	0x28
+ 521 0273 08       		.uleb128 0x8
+ 522 0274 8D000000 		.4byte	.LASF41
+ 523 0278 05       		.byte	0x5
+ 524 0279 75       		.byte	0x75
+ 525 027a A6010000 		.4byte	0x1a6
+ 526 027e 4C       		.byte	0x4c
+ 527 027f 08       		.uleb128 0x8
+ 528 0280 D3000000 		.4byte	.LASF42
+ 529 0284 05       		.byte	0x5
+ 530 0285 76       		.byte	0x76
+ 531 0286 45010000 		.4byte	0x145
+ 532 028a 80       		.byte	0x80
+ 533 028b 00       		.byte	0
+ 534 028c 09       		.uleb128 0x9
+ 535 028d FF020000 		.4byte	.LASF60
+ 536 0291 01       		.byte	0x1
+ 537 0292 32       		.byte	0x32
+ 538 0293 AD000000 		.4byte	0xad
+ 539 0297 00000000 		.4byte	.LFB63
+ 540 029b 24000000 		.4byte	.LFE63-.LFB63
+ 541 029f 01       		.uleb128 0x1
+ 542 02a0 9C       		.byte	0x9c
+ 543 02a1 B7020000 		.4byte	0x2b7
+ 544 02a5 0A       		.uleb128 0xa
+ 545 02a6 AF010000 		.4byte	.LASF61
+ 546 02aa 01       		.byte	0x1
+ 547 02ab 34       		.byte	0x34
+ 548 02ac B8000000 		.4byte	0xb8
+ 549 02b0 05       		.uleb128 0x5
+ 550 02b1 03       		.byte	0x3
+ 551 02b2 00000000 		.4byte	time.10479
+ 552 02b6 00       		.byte	0
+ 553 02b7 0B       		.uleb128 0xb
+ 554 02b8 6A000000 		.4byte	.LASF43
+ 555 02bc 01       		.byte	0x1
+ 556 02bd 40       		.byte	0x40
+ 557 02be 00000000 		.4byte	.LFB64
+ 558 02c2 02000000 		.4byte	.LFE64-.LFB64
+ 559 02c6 01       		.uleb128 0x1
+ 560 02c7 9C       		.byte	0x9c
+ 561 02c8 0B       		.uleb128 0xb
+ 562 02c9 E8020000 		.4byte	.LASF44
+ 563 02cd 01       		.byte	0x1
+ 564 02ce 59       		.byte	0x59
+ 565 02cf 00000000 		.4byte	.LFB65
+ 566 02d3 02000000 		.4byte	.LFE65-.LFB65
+ 567 02d7 01       		.uleb128 0x1
+ 568 02d8 9C       		.byte	0x9c
+ 569 02d9 0C       		.uleb128 0xc
+ 570 02da 37000000 		.4byte	.LASF62
+ 571 02de 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 15
+
+
+ 572 02df 78       		.byte	0x78
+ 573 02e0 00000000 		.4byte	.LFB66
+ 574 02e4 28000000 		.4byte	.LFE66-.LFB66
+ 575 02e8 01       		.uleb128 0x1
+ 576 02e9 9C       		.byte	0x9c
+ 577 02ea 24030000 		.4byte	0x324
+ 578 02ee 0D       		.uleb128 0xd
+ 579 02ef 0A000000 		.4byte	.LVL0
+ 580 02f3 CD030000 		.4byte	0x3cd
+ 581 02f7 01030000 		.4byte	0x301
+ 582 02fb 0E       		.uleb128 0xe
+ 583 02fc 01       		.uleb128 0x1
+ 584 02fd 50       		.byte	0x50
+ 585 02fe 01       		.uleb128 0x1
+ 586 02ff 35       		.byte	0x35
+ 587 0300 00       		.byte	0
+ 588 0301 0F       		.uleb128 0xf
+ 589 0302 14000000 		.4byte	.LVL1
+ 590 0306 DE030000 		.4byte	0x3de
+ 591 030a 0F       		.uleb128 0xf
+ 592 030b 1C000000 		.4byte	.LVL2
+ 593 030f F8030000 		.4byte	0x3f8
+ 594 0313 10       		.uleb128 0x10
+ 595 0314 22000000 		.4byte	.LVL3
+ 596 0318 CD030000 		.4byte	0x3cd
+ 597 031c 0E       		.uleb128 0xe
+ 598 031d 01       		.uleb128 0x1
+ 599 031e 50       		.byte	0x50
+ 600 031f 02       		.uleb128 0x2
+ 601 0320 08       		.byte	0x8
+ 602 0321 32       		.byte	0x32
+ 603 0322 00       		.byte	0
+ 604 0323 00       		.byte	0
+ 605 0324 11       		.uleb128 0x11
+ 606 0325 2F030000 		.4byte	.LASF45
+ 607 0329 06       		.byte	0x6
+ 608 032a 2A06     		.2byte	0x62a
+ 609 032c 30030000 		.4byte	0x330
+ 610 0330 05       		.uleb128 0x5
+ 611 0331 A2000000 		.4byte	0xa2
+ 612 0335 12       		.uleb128 0x12
+ 613 0336 CF020000 		.4byte	.LASF46
+ 614 033a 01       		.byte	0x1
+ 615 033b 18       		.byte	0x18
+ 616 033c E3000000 		.4byte	0xe3
+ 617 0340 05       		.uleb128 0x5
+ 618 0341 03       		.byte	0x3
+ 619 0342 00000000 		.4byte	t1_100us_flag
+ 620 0346 12       		.uleb128 0x12
+ 621 0347 3A010000 		.4byte	.LASF47
+ 622 034b 01       		.byte	0x1
+ 623 034c 19       		.byte	0x19
+ 624 034d E3000000 		.4byte	0xe3
+ 625 0351 05       		.uleb128 0x5
+ 626 0352 03       		.byte	0x3
+ 627 0353 00000000 		.4byte	t1_time_share
+ 628 0357 12       		.uleb128 0x12
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 16
+
+
+ 629 0358 18010000 		.4byte	.LASF48
+ 630 035c 01       		.byte	0x1
+ 631 035d 19       		.byte	0x19
+ 632 035e E3000000 		.4byte	0xe3
+ 633 0362 05       		.uleb128 0x5
+ 634 0363 03       		.byte	0x3
+ 635 0364 00000000 		.4byte	t1_new_value
+ 636 0368 12       		.uleb128 0x12
+ 637 0369 29000000 		.4byte	.LASF49
+ 638 036d 01       		.byte	0x1
+ 639 036e 1C       		.byte	0x1c
+ 640 036f AD000000 		.4byte	0xad
+ 641 0373 05       		.uleb128 0x5
+ 642 0374 03       		.byte	0x3
+ 643 0375 00000000 		.4byte	adc_sar1_flag
+ 644 0379 12       		.uleb128 0x12
+ 645 037a 75020000 		.4byte	.LASF50
+ 646 037e 01       		.byte	0x1
+ 647 037f 20       		.byte	0x20
+ 648 0380 E3000000 		.4byte	0xe3
+ 649 0384 05       		.uleb128 0x5
+ 650 0385 03       		.byte	0x3
+ 651 0386 00000000 		.4byte	data_ready_485
+ 652 038a 12       		.uleb128 0x12
+ 653 038b 00000000 		.4byte	.LASF51
+ 654 038f 01       		.byte	0x1
+ 655 0390 23       		.byte	0x23
+ 656 0391 E3000000 		.4byte	0xe3
+ 657 0395 05       		.uleb128 0x5
+ 658 0396 03       		.byte	0x3
+ 659 0397 00000000 		.4byte	data_ready_usb
+ 660 039b 12       		.uleb128 0x12
+ 661 039c E5000000 		.4byte	.LASF52
+ 662 03a0 01       		.byte	0x1
+ 663 03a1 1D       		.byte	0x1d
+ 664 03a2 E3000000 		.4byte	0xe3
+ 665 03a6 05       		.uleb128 0x5
+ 666 03a7 03       		.byte	0x3
+ 667 03a8 00000000 		.4byte	adc_delsig_flag
+ 668 03ac 12       		.uleb128 0x12
+ 669 03ad A0020000 		.4byte	.LASF53
+ 670 03b1 01       		.byte	0x1
+ 671 03b2 26       		.byte	0x26
+ 672 03b3 B8000000 		.4byte	0xb8
+ 673 03b7 05       		.uleb128 0x5
+ 674 03b8 03       		.byte	0x3
+ 675 03b9 00000000 		.4byte	last_as5047_word
+ 676 03bd 13       		.uleb128 0x13
+ 677 03be E3020000 		.4byte	.LASF54
+ 678 03c2 07       		.byte	0x7
+ 679 03c3 17       		.byte	0x17
+ 680 03c4 C8030000 		.4byte	0x3c8
+ 681 03c8 05       		.uleb128 0x5
+ 682 03c9 37020000 		.4byte	0x237
+ 683 03cd 14       		.uleb128 0x14
+ 684 03ce 5E010000 		.4byte	.LASF55
+ 685 03d2 08       		.byte	0x8
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 17
+
+
+ 686 03d3 78       		.byte	0x78
+ 687 03d4 DE030000 		.4byte	0x3de
+ 688 03d8 15       		.uleb128 0x15
+ 689 03d9 B8000000 		.4byte	0xb8
+ 690 03dd 00       		.byte	0
+ 691 03de 16       		.uleb128 0x16
+ 692 03df 0F000000 		.4byte	.LASF63
+ 693 03e3 07       		.byte	0x7
+ 694 03e4 22       		.byte	0x22
+ 695 03e5 C3000000 		.4byte	0xc3
+ 696 03e9 F8030000 		.4byte	0x3f8
+ 697 03ed 15       		.uleb128 0x15
+ 698 03ee C3000000 		.4byte	0xc3
+ 699 03f2 15       		.uleb128 0x15
+ 700 03f3 C3000000 		.4byte	0xc3
+ 701 03f7 00       		.byte	0
+ 702 03f8 17       		.uleb128 0x17
+ 703 03f9 5E030000 		.4byte	.LASF56
+ 704 03fd 07       		.byte	0x7
+ 705 03fe 23       		.byte	0x23
+ 706 03ff C3000000 		.4byte	0xc3
+ 707 0403 15       		.uleb128 0x15
+ 708 0404 C3000000 		.4byte	0xc3
+ 709 0408 15       		.uleb128 0x15
+ 710 0409 C3000000 		.4byte	0xc3
+ 711 040d 00       		.byte	0
+ 712 040e 00       		.byte	0
+ 713              		.section	.debug_abbrev,"",%progbits
+ 714              	.Ldebug_abbrev0:
+ 715 0000 01       		.uleb128 0x1
+ 716 0001 11       		.uleb128 0x11
+ 717 0002 01       		.byte	0x1
+ 718 0003 25       		.uleb128 0x25
+ 719 0004 0E       		.uleb128 0xe
+ 720 0005 13       		.uleb128 0x13
+ 721 0006 0B       		.uleb128 0xb
+ 722 0007 03       		.uleb128 0x3
+ 723 0008 0E       		.uleb128 0xe
+ 724 0009 1B       		.uleb128 0x1b
+ 725 000a 0E       		.uleb128 0xe
+ 726 000b 55       		.uleb128 0x55
+ 727 000c 17       		.uleb128 0x17
+ 728 000d 11       		.uleb128 0x11
+ 729 000e 01       		.uleb128 0x1
+ 730 000f 10       		.uleb128 0x10
+ 731 0010 17       		.uleb128 0x17
+ 732 0011 00       		.byte	0
+ 733 0012 00       		.byte	0
+ 734 0013 02       		.uleb128 0x2
+ 735 0014 24       		.uleb128 0x24
+ 736 0015 00       		.byte	0
+ 737 0016 0B       		.uleb128 0xb
+ 738 0017 0B       		.uleb128 0xb
+ 739 0018 3E       		.uleb128 0x3e
+ 740 0019 0B       		.uleb128 0xb
+ 741 001a 03       		.uleb128 0x3
+ 742 001b 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 18
+
+
+ 743 001c 00       		.byte	0
+ 744 001d 00       		.byte	0
+ 745 001e 03       		.uleb128 0x3
+ 746 001f 16       		.uleb128 0x16
+ 747 0020 00       		.byte	0
+ 748 0021 03       		.uleb128 0x3
+ 749 0022 0E       		.uleb128 0xe
+ 750 0023 3A       		.uleb128 0x3a
+ 751 0024 0B       		.uleb128 0xb
+ 752 0025 3B       		.uleb128 0x3b
+ 753 0026 0B       		.uleb128 0xb
+ 754 0027 49       		.uleb128 0x49
+ 755 0028 13       		.uleb128 0x13
+ 756 0029 00       		.byte	0
+ 757 002a 00       		.byte	0
+ 758 002b 04       		.uleb128 0x4
+ 759 002c 24       		.uleb128 0x24
+ 760 002d 00       		.byte	0
+ 761 002e 0B       		.uleb128 0xb
+ 762 002f 0B       		.uleb128 0xb
+ 763 0030 3E       		.uleb128 0x3e
+ 764 0031 0B       		.uleb128 0xb
+ 765 0032 03       		.uleb128 0x3
+ 766 0033 08       		.uleb128 0x8
+ 767 0034 00       		.byte	0
+ 768 0035 00       		.byte	0
+ 769 0036 05       		.uleb128 0x5
+ 770 0037 35       		.uleb128 0x35
+ 771 0038 00       		.byte	0
+ 772 0039 49       		.uleb128 0x49
+ 773 003a 13       		.uleb128 0x13
+ 774 003b 00       		.byte	0
+ 775 003c 00       		.byte	0
+ 776 003d 06       		.uleb128 0x6
+ 777 003e 13       		.uleb128 0x13
+ 778 003f 01       		.byte	0x1
+ 779 0040 03       		.uleb128 0x3
+ 780 0041 0E       		.uleb128 0xe
+ 781 0042 0B       		.uleb128 0xb
+ 782 0043 0B       		.uleb128 0xb
+ 783 0044 3A       		.uleb128 0x3a
+ 784 0045 0B       		.uleb128 0xb
+ 785 0046 3B       		.uleb128 0x3b
+ 786 0047 0B       		.uleb128 0xb
+ 787 0048 01       		.uleb128 0x1
+ 788 0049 13       		.uleb128 0x13
+ 789 004a 00       		.byte	0
+ 790 004b 00       		.byte	0
+ 791 004c 07       		.uleb128 0x7
+ 792 004d 0D       		.uleb128 0xd
+ 793 004e 00       		.byte	0
+ 794 004f 03       		.uleb128 0x3
+ 795 0050 08       		.uleb128 0x8
+ 796 0051 3A       		.uleb128 0x3a
+ 797 0052 0B       		.uleb128 0xb
+ 798 0053 3B       		.uleb128 0x3b
+ 799 0054 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 19
+
+
+ 800 0055 49       		.uleb128 0x49
+ 801 0056 13       		.uleb128 0x13
+ 802 0057 38       		.uleb128 0x38
+ 803 0058 0B       		.uleb128 0xb
+ 804 0059 00       		.byte	0
+ 805 005a 00       		.byte	0
+ 806 005b 08       		.uleb128 0x8
+ 807 005c 0D       		.uleb128 0xd
+ 808 005d 00       		.byte	0
+ 809 005e 03       		.uleb128 0x3
+ 810 005f 0E       		.uleb128 0xe
+ 811 0060 3A       		.uleb128 0x3a
+ 812 0061 0B       		.uleb128 0xb
+ 813 0062 3B       		.uleb128 0x3b
+ 814 0063 0B       		.uleb128 0xb
+ 815 0064 49       		.uleb128 0x49
+ 816 0065 13       		.uleb128 0x13
+ 817 0066 38       		.uleb128 0x38
+ 818 0067 0B       		.uleb128 0xb
+ 819 0068 00       		.byte	0
+ 820 0069 00       		.byte	0
+ 821 006a 09       		.uleb128 0x9
+ 822 006b 2E       		.uleb128 0x2e
+ 823 006c 01       		.byte	0x1
+ 824 006d 3F       		.uleb128 0x3f
+ 825 006e 19       		.uleb128 0x19
+ 826 006f 03       		.uleb128 0x3
+ 827 0070 0E       		.uleb128 0xe
+ 828 0071 3A       		.uleb128 0x3a
+ 829 0072 0B       		.uleb128 0xb
+ 830 0073 3B       		.uleb128 0x3b
+ 831 0074 0B       		.uleb128 0xb
+ 832 0075 27       		.uleb128 0x27
+ 833 0076 19       		.uleb128 0x19
+ 834 0077 49       		.uleb128 0x49
+ 835 0078 13       		.uleb128 0x13
+ 836 0079 11       		.uleb128 0x11
+ 837 007a 01       		.uleb128 0x1
+ 838 007b 12       		.uleb128 0x12
+ 839 007c 06       		.uleb128 0x6
+ 840 007d 40       		.uleb128 0x40
+ 841 007e 18       		.uleb128 0x18
+ 842 007f 9742     		.uleb128 0x2117
+ 843 0081 19       		.uleb128 0x19
+ 844 0082 01       		.uleb128 0x1
+ 845 0083 13       		.uleb128 0x13
+ 846 0084 00       		.byte	0
+ 847 0085 00       		.byte	0
+ 848 0086 0A       		.uleb128 0xa
+ 849 0087 34       		.uleb128 0x34
+ 850 0088 00       		.byte	0
+ 851 0089 03       		.uleb128 0x3
+ 852 008a 0E       		.uleb128 0xe
+ 853 008b 3A       		.uleb128 0x3a
+ 854 008c 0B       		.uleb128 0xb
+ 855 008d 3B       		.uleb128 0x3b
+ 856 008e 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 20
+
+
+ 857 008f 49       		.uleb128 0x49
+ 858 0090 13       		.uleb128 0x13
+ 859 0091 02       		.uleb128 0x2
+ 860 0092 18       		.uleb128 0x18
+ 861 0093 00       		.byte	0
+ 862 0094 00       		.byte	0
+ 863 0095 0B       		.uleb128 0xb
+ 864 0096 2E       		.uleb128 0x2e
+ 865 0097 00       		.byte	0
+ 866 0098 3F       		.uleb128 0x3f
+ 867 0099 19       		.uleb128 0x19
+ 868 009a 03       		.uleb128 0x3
+ 869 009b 0E       		.uleb128 0xe
+ 870 009c 3A       		.uleb128 0x3a
+ 871 009d 0B       		.uleb128 0xb
+ 872 009e 3B       		.uleb128 0x3b
+ 873 009f 0B       		.uleb128 0xb
+ 874 00a0 27       		.uleb128 0x27
+ 875 00a1 19       		.uleb128 0x19
+ 876 00a2 11       		.uleb128 0x11
+ 877 00a3 01       		.uleb128 0x1
+ 878 00a4 12       		.uleb128 0x12
+ 879 00a5 06       		.uleb128 0x6
+ 880 00a6 40       		.uleb128 0x40
+ 881 00a7 18       		.uleb128 0x18
+ 882 00a8 9742     		.uleb128 0x2117
+ 883 00aa 19       		.uleb128 0x19
+ 884 00ab 00       		.byte	0
+ 885 00ac 00       		.byte	0
+ 886 00ad 0C       		.uleb128 0xc
+ 887 00ae 2E       		.uleb128 0x2e
+ 888 00af 01       		.byte	0x1
+ 889 00b0 3F       		.uleb128 0x3f
+ 890 00b1 19       		.uleb128 0x19
+ 891 00b2 03       		.uleb128 0x3
+ 892 00b3 0E       		.uleb128 0xe
+ 893 00b4 3A       		.uleb128 0x3a
+ 894 00b5 0B       		.uleb128 0xb
+ 895 00b6 3B       		.uleb128 0x3b
+ 896 00b7 0B       		.uleb128 0xb
+ 897 00b8 27       		.uleb128 0x27
+ 898 00b9 19       		.uleb128 0x19
+ 899 00ba 11       		.uleb128 0x11
+ 900 00bb 01       		.uleb128 0x1
+ 901 00bc 12       		.uleb128 0x12
+ 902 00bd 06       		.uleb128 0x6
+ 903 00be 40       		.uleb128 0x40
+ 904 00bf 18       		.uleb128 0x18
+ 905 00c0 9742     		.uleb128 0x2117
+ 906 00c2 19       		.uleb128 0x19
+ 907 00c3 01       		.uleb128 0x1
+ 908 00c4 13       		.uleb128 0x13
+ 909 00c5 00       		.byte	0
+ 910 00c6 00       		.byte	0
+ 911 00c7 0D       		.uleb128 0xd
+ 912 00c8 898201   		.uleb128 0x4109
+ 913 00cb 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 21
+
+
+ 914 00cc 11       		.uleb128 0x11
+ 915 00cd 01       		.uleb128 0x1
+ 916 00ce 31       		.uleb128 0x31
+ 917 00cf 13       		.uleb128 0x13
+ 918 00d0 01       		.uleb128 0x1
+ 919 00d1 13       		.uleb128 0x13
+ 920 00d2 00       		.byte	0
+ 921 00d3 00       		.byte	0
+ 922 00d4 0E       		.uleb128 0xe
+ 923 00d5 8A8201   		.uleb128 0x410a
+ 924 00d8 00       		.byte	0
+ 925 00d9 02       		.uleb128 0x2
+ 926 00da 18       		.uleb128 0x18
+ 927 00db 9142     		.uleb128 0x2111
+ 928 00dd 18       		.uleb128 0x18
+ 929 00de 00       		.byte	0
+ 930 00df 00       		.byte	0
+ 931 00e0 0F       		.uleb128 0xf
+ 932 00e1 898201   		.uleb128 0x4109
+ 933 00e4 00       		.byte	0
+ 934 00e5 11       		.uleb128 0x11
+ 935 00e6 01       		.uleb128 0x1
+ 936 00e7 31       		.uleb128 0x31
+ 937 00e8 13       		.uleb128 0x13
+ 938 00e9 00       		.byte	0
+ 939 00ea 00       		.byte	0
+ 940 00eb 10       		.uleb128 0x10
+ 941 00ec 898201   		.uleb128 0x4109
+ 942 00ef 01       		.byte	0x1
+ 943 00f0 11       		.uleb128 0x11
+ 944 00f1 01       		.uleb128 0x1
+ 945 00f2 31       		.uleb128 0x31
+ 946 00f3 13       		.uleb128 0x13
+ 947 00f4 00       		.byte	0
+ 948 00f5 00       		.byte	0
+ 949 00f6 11       		.uleb128 0x11
+ 950 00f7 34       		.uleb128 0x34
+ 951 00f8 00       		.byte	0
+ 952 00f9 03       		.uleb128 0x3
+ 953 00fa 0E       		.uleb128 0xe
+ 954 00fb 3A       		.uleb128 0x3a
+ 955 00fc 0B       		.uleb128 0xb
+ 956 00fd 3B       		.uleb128 0x3b
+ 957 00fe 05       		.uleb128 0x5
+ 958 00ff 49       		.uleb128 0x49
+ 959 0100 13       		.uleb128 0x13
+ 960 0101 3F       		.uleb128 0x3f
+ 961 0102 19       		.uleb128 0x19
+ 962 0103 3C       		.uleb128 0x3c
+ 963 0104 19       		.uleb128 0x19
+ 964 0105 00       		.byte	0
+ 965 0106 00       		.byte	0
+ 966 0107 12       		.uleb128 0x12
+ 967 0108 34       		.uleb128 0x34
+ 968 0109 00       		.byte	0
+ 969 010a 03       		.uleb128 0x3
+ 970 010b 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 22
+
+
+ 971 010c 3A       		.uleb128 0x3a
+ 972 010d 0B       		.uleb128 0xb
+ 973 010e 3B       		.uleb128 0x3b
+ 974 010f 0B       		.uleb128 0xb
+ 975 0110 49       		.uleb128 0x49
+ 976 0111 13       		.uleb128 0x13
+ 977 0112 3F       		.uleb128 0x3f
+ 978 0113 19       		.uleb128 0x19
+ 979 0114 02       		.uleb128 0x2
+ 980 0115 18       		.uleb128 0x18
+ 981 0116 00       		.byte	0
+ 982 0117 00       		.byte	0
+ 983 0118 13       		.uleb128 0x13
+ 984 0119 34       		.uleb128 0x34
+ 985 011a 00       		.byte	0
+ 986 011b 03       		.uleb128 0x3
+ 987 011c 0E       		.uleb128 0xe
+ 988 011d 3A       		.uleb128 0x3a
+ 989 011e 0B       		.uleb128 0xb
+ 990 011f 3B       		.uleb128 0x3b
+ 991 0120 0B       		.uleb128 0xb
+ 992 0121 49       		.uleb128 0x49
+ 993 0122 13       		.uleb128 0x13
+ 994 0123 3F       		.uleb128 0x3f
+ 995 0124 19       		.uleb128 0x19
+ 996 0125 3C       		.uleb128 0x3c
+ 997 0126 19       		.uleb128 0x19
+ 998 0127 00       		.byte	0
+ 999 0128 00       		.byte	0
+ 1000 0129 14       		.uleb128 0x14
+ 1001 012a 2E       		.uleb128 0x2e
+ 1002 012b 01       		.byte	0x1
+ 1003 012c 3F       		.uleb128 0x3f
+ 1004 012d 19       		.uleb128 0x19
+ 1005 012e 03       		.uleb128 0x3
+ 1006 012f 0E       		.uleb128 0xe
+ 1007 0130 3A       		.uleb128 0x3a
+ 1008 0131 0B       		.uleb128 0xb
+ 1009 0132 3B       		.uleb128 0x3b
+ 1010 0133 0B       		.uleb128 0xb
+ 1011 0134 27       		.uleb128 0x27
+ 1012 0135 19       		.uleb128 0x19
+ 1013 0136 3C       		.uleb128 0x3c
+ 1014 0137 19       		.uleb128 0x19
+ 1015 0138 01       		.uleb128 0x1
+ 1016 0139 13       		.uleb128 0x13
+ 1017 013a 00       		.byte	0
+ 1018 013b 00       		.byte	0
+ 1019 013c 15       		.uleb128 0x15
+ 1020 013d 05       		.uleb128 0x5
+ 1021 013e 00       		.byte	0
+ 1022 013f 49       		.uleb128 0x49
+ 1023 0140 13       		.uleb128 0x13
+ 1024 0141 00       		.byte	0
+ 1025 0142 00       		.byte	0
+ 1026 0143 16       		.uleb128 0x16
+ 1027 0144 2E       		.uleb128 0x2e
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 23
+
+
+ 1028 0145 01       		.byte	0x1
+ 1029 0146 3F       		.uleb128 0x3f
+ 1030 0147 19       		.uleb128 0x19
+ 1031 0148 03       		.uleb128 0x3
+ 1032 0149 0E       		.uleb128 0xe
+ 1033 014a 3A       		.uleb128 0x3a
+ 1034 014b 0B       		.uleb128 0xb
+ 1035 014c 3B       		.uleb128 0x3b
+ 1036 014d 0B       		.uleb128 0xb
+ 1037 014e 27       		.uleb128 0x27
+ 1038 014f 19       		.uleb128 0x19
+ 1039 0150 49       		.uleb128 0x49
+ 1040 0151 13       		.uleb128 0x13
+ 1041 0152 3C       		.uleb128 0x3c
+ 1042 0153 19       		.uleb128 0x19
+ 1043 0154 01       		.uleb128 0x1
+ 1044 0155 13       		.uleb128 0x13
+ 1045 0156 00       		.byte	0
+ 1046 0157 00       		.byte	0
+ 1047 0158 17       		.uleb128 0x17
+ 1048 0159 2E       		.uleb128 0x2e
+ 1049 015a 01       		.byte	0x1
+ 1050 015b 3F       		.uleb128 0x3f
+ 1051 015c 19       		.uleb128 0x19
+ 1052 015d 03       		.uleb128 0x3
+ 1053 015e 0E       		.uleb128 0xe
+ 1054 015f 3A       		.uleb128 0x3a
+ 1055 0160 0B       		.uleb128 0xb
+ 1056 0161 3B       		.uleb128 0x3b
+ 1057 0162 0B       		.uleb128 0xb
+ 1058 0163 27       		.uleb128 0x27
+ 1059 0164 19       		.uleb128 0x19
+ 1060 0165 49       		.uleb128 0x49
+ 1061 0166 13       		.uleb128 0x13
+ 1062 0167 3C       		.uleb128 0x3c
+ 1063 0168 19       		.uleb128 0x19
+ 1064 0169 00       		.byte	0
+ 1065 016a 00       		.byte	0
+ 1066 016b 00       		.byte	0
+ 1067              		.section	.debug_aranges,"",%progbits
+ 1068 0000 34000000 		.4byte	0x34
+ 1069 0004 0200     		.2byte	0x2
+ 1070 0006 00000000 		.4byte	.Ldebug_info0
+ 1071 000a 04       		.byte	0x4
+ 1072 000b 00       		.byte	0
+ 1073 000c 0000     		.2byte	0
+ 1074 000e 0000     		.2byte	0
+ 1075 0010 00000000 		.4byte	.LFB63
+ 1076 0014 24000000 		.4byte	.LFE63-.LFB63
+ 1077 0018 00000000 		.4byte	.LFB64
+ 1078 001c 02000000 		.4byte	.LFE64-.LFB64
+ 1079 0020 00000000 		.4byte	.LFB65
+ 1080 0024 02000000 		.4byte	.LFE65-.LFB65
+ 1081 0028 00000000 		.4byte	.LFB66
+ 1082 002c 28000000 		.4byte	.LFE66-.LFB66
+ 1083 0030 00000000 		.4byte	0
+ 1084 0034 00000000 		.4byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 24
+
+
+ 1085              		.section	.debug_ranges,"",%progbits
+ 1086              	.Ldebug_ranges0:
+ 1087 0000 00000000 		.4byte	.LFB63
+ 1088 0004 24000000 		.4byte	.LFE63
+ 1089 0008 00000000 		.4byte	.LFB64
+ 1090 000c 02000000 		.4byte	.LFE64
+ 1091 0010 00000000 		.4byte	.LFB65
+ 1092 0014 02000000 		.4byte	.LFE65
+ 1093 0018 00000000 		.4byte	.LFB66
+ 1094 001c 28000000 		.4byte	.LFE66
+ 1095 0020 00000000 		.4byte	0
+ 1096 0024 00000000 		.4byte	0
+ 1097              		.section	.debug_line,"",%progbits
+ 1098              	.Ldebug_line0:
+ 1099 0000 11020000 		.section	.debug_str,"MS",%progbits,1
+ 1099      0200A601 
+ 1099      00000201 
+ 1099      FB0E0D00 
+ 1099      01010101 
+ 1100              	.LASF51:
+ 1101 0000 64617461 		.ascii	"data_ready_usb\000"
+ 1101      5F726561 
+ 1101      64795F75 
+ 1101      736200
+ 1102              	.LASF63:
+ 1103 000f 6D6F746F 		.ascii	"motor_current_pid\000"
+ 1103      725F6375 
+ 1103      7272656E 
+ 1103      745F7069 
+ 1103      6400
+ 1104              	.LASF23:
+ 1105 0021 6761696E 		.ascii	"gains_s\000"
+ 1105      735F7300 
+ 1106              	.LASF49:
+ 1107 0029 6164635F 		.ascii	"adc_sar1_flag\000"
+ 1107      73617231 
+ 1107      5F666C61 
+ 1107      6700
+ 1108              	.LASF62:
+ 1109 0037 74696D69 		.ascii	"timing_test_blocking\000"
+ 1109      6E675F74 
+ 1109      6573745F 
+ 1109      626C6F63 
+ 1109      6B696E67 
+ 1110              	.LASF26:
+ 1111 004c 61637475 		.ascii	"actual_val\000"
+ 1111      616C5F76 
+ 1111      616C00
+ 1112              	.LASF2:
+ 1113 0057 73686F72 		.ascii	"short int\000"
+ 1113      7420696E 
+ 1113      7400
+ 1114              	.LASF21:
+ 1115 0061 73697A65 		.ascii	"sizetype\000"
+ 1115      74797065 
+ 1115      00
+ 1116              	.LASF43:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 25
+
+
+ 1117 006a 74657374 		.ascii	"test_code_blocking\000"
+ 1117      5F636F64 
+ 1117      655F626C 
+ 1117      6F636B69 
+ 1117      6E6700
+ 1118              	.LASF36:
+ 1119 007d 7370646D 		.ascii	"spdm\000"
+ 1119      00
+ 1120              	.LASF4:
+ 1121 0082 5F5F7569 		.ascii	"__uint16_t\000"
+ 1121      6E743136 
+ 1121      5F7400
+ 1122              	.LASF41:
+ 1123 008d 706F7369 		.ascii	"position\000"
+ 1123      74696F6E 
+ 1123      00
+ 1124              	.LASF59:
+ 1125 0096 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 1125      6C657853 
+ 1125      45415F61 
+ 1125      6C783837 
+ 1125      6772645C 
+ 1126              	.LASF40:
+ 1127 00c4 63757272 		.ascii	"current\000"
+ 1127      656E7400 
+ 1128              	.LASF16:
+ 1129 00cc 75696E74 		.ascii	"uint16\000"
+ 1129      313600
+ 1130              	.LASF42:
+ 1131 00d3 696D7065 		.ascii	"impedance\000"
+ 1131      64616E63 
+ 1131      6500
+ 1132              	.LASF12:
+ 1133 00dd 75696E74 		.ascii	"uint8_t\000"
+ 1133      385F7400 
+ 1134              	.LASF52:
+ 1135 00e5 6164635F 		.ascii	"adc_delsig_flag\000"
+ 1135      64656C73 
+ 1135      69675F66 
+ 1135      6C616700 
+ 1136              	.LASF15:
+ 1137 00f5 75696E74 		.ascii	"uint8\000"
+ 1137      3800
+ 1138              	.LASF18:
+ 1139 00fb 666C6F61 		.ascii	"float\000"
+ 1139      7400
+ 1140              	.LASF9:
+ 1141 0101 6C6F6E67 		.ascii	"long long int\000"
+ 1141      206C6F6E 
+ 1141      6720696E 
+ 1141      7400
+ 1142              	.LASF7:
+ 1143 010f 6C6F6E67 		.ascii	"long int\000"
+ 1143      20696E74 
+ 1143      00
+ 1144              	.LASF48:
+ 1145 0118 74315F6E 		.ascii	"t1_new_value\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 26
+
+
+ 1145      65775F76 
+ 1145      616C7565 
+ 1145      00
+ 1146              	.LASF3:
+ 1147 0125 5F5F7569 		.ascii	"__uint8_t\000"
+ 1147      6E74385F 
+ 1147      7400
+ 1148              	.LASF24:
+ 1149 012f 67656E5F 		.ascii	"gen_ctrl_s\000"
+ 1149      6374726C 
+ 1149      5F7300
+ 1150              	.LASF47:
+ 1151 013a 74315F74 		.ascii	"t1_time_share\000"
+ 1151      696D655F 
+ 1151      73686172 
+ 1151      6500
+ 1152              	.LASF22:
+ 1153 0148 6C6F6E67 		.ascii	"long double\000"
+ 1153      20646F75 
+ 1153      626C6500 
+ 1154              	.LASF30:
+ 1155 0154 6572726F 		.ascii	"error_sum\000"
+ 1155      725F7375 
+ 1155      6D00
+ 1156              	.LASF55:
+ 1157 015e 43794465 		.ascii	"CyDelayUs\000"
+ 1157      6C617955 
+ 1157      7300
+ 1158              	.LASF1:
+ 1159 0168 756E7369 		.ascii	"unsigned char\000"
+ 1159      676E6564 
+ 1159      20636861 
+ 1159      7200
+ 1160              	.LASF0:
+ 1161 0176 7369676E 		.ascii	"signed char\000"
+ 1161      65642063 
+ 1161      68617200 
+ 1162              	.LASF10:
+ 1163 0182 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1163      206C6F6E 
+ 1163      6720756E 
+ 1163      7369676E 
+ 1163      65642069 
+ 1164              	.LASF11:
+ 1165 0199 756E7369 		.ascii	"unsigned int\000"
+ 1165      676E6564 
+ 1165      20696E74 
+ 1165      00
+ 1166              	.LASF13:
+ 1167 01a6 75696E74 		.ascii	"uint16_t\000"
+ 1167      31365F74 
+ 1167      00
+ 1168              	.LASF61:
+ 1169 01af 74696D65 		.ascii	"time\000"
+ 1169      00
+ 1170              	.LASF29:
+ 1171 01b4 6572726F 		.ascii	"error_prev\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 27
+
+
+ 1171      725F7072 
+ 1171      657600
+ 1172              	.LASF25:
+ 1173 01bf 6761696E 		.ascii	"gain\000"
+ 1173      00
+ 1174              	.LASF5:
+ 1175 01c4 73686F72 		.ascii	"short unsigned int\000"
+ 1175      7420756E 
+ 1175      7369676E 
+ 1175      65642069 
+ 1175      6E7400
+ 1176              	.LASF32:
+ 1177 01d7 706F735F 		.ascii	"pos_ctrl_s\000"
+ 1177      6374726C 
+ 1177      5F7300
+ 1178              	.LASF20:
+ 1179 01e2 63686172 		.ascii	"char\000"
+ 1179      00
+ 1180              	.LASF57:
+ 1181 01e7 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 1181      4320342E 
+ 1181      392E3320 
+ 1181      32303135 
+ 1181      30333033 
+ 1182 021a 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 1182      20726576 
+ 1182      6973696F 
+ 1182      6E203232 
+ 1182      31323230 
+ 1183 024d 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1183      66756E63 
+ 1183      74696F6E 
+ 1183      2D736563 
+ 1183      74696F6E 
+ 1184              	.LASF50:
+ 1185 0275 64617461 		.ascii	"data_ready_485\000"
+ 1185      5F726561 
+ 1185      64795F34 
+ 1185      383500
+ 1186              	.LASF14:
+ 1187 0284 696E7433 		.ascii	"int32_t\000"
+ 1187      325F7400 
+ 1188              	.LASF37:
+ 1189 028c 6374726C 		.ascii	"ctrl_s\000"
+ 1189      5F7300
+ 1190              	.LASF39:
+ 1191 0293 67656E65 		.ascii	"generic\000"
+ 1191      72696300 
+ 1192              	.LASF33:
+ 1193 029b 73657470 		.ascii	"setp\000"
+ 1193      00
+ 1194              	.LASF53:
+ 1195 02a0 6C617374 		.ascii	"last_as5047_word\000"
+ 1195      5F617335 
+ 1195      3034375F 
+ 1195      776F7264 
+ 1195      00
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 28
+
+
+ 1196              	.LASF38:
+ 1197 02b1 61637469 		.ascii	"active_ctrl\000"
+ 1197      76655F63 
+ 1197      74726C00 
+ 1198              	.LASF8:
+ 1199 02bd 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1199      20756E73 
+ 1199      69676E65 
+ 1199      6420696E 
+ 1199      7400
+ 1200              	.LASF46:
+ 1201 02cf 74315F31 		.ascii	"t1_100us_flag\000"
+ 1201      30307573 
+ 1201      5F666C61 
+ 1201      6700
+ 1202              	.LASF17:
+ 1203 02dd 696E7433 		.ascii	"int32\000"
+ 1203      3200
+ 1204              	.LASF54:
+ 1205 02e3 6374726C 		.ascii	"ctrl\000"
+ 1205      00
+ 1206              	.LASF44:
+ 1207 02e8 74657374 		.ascii	"test_code_non_blocking\000"
+ 1207      5F636F64 
+ 1207      655F6E6F 
+ 1207      6E5F626C 
+ 1207      6F636B69 
+ 1208              	.LASF60:
+ 1209 02ff 74696D65 		.ascii	"timebase_1s\000"
+ 1209      62617365 
+ 1209      5F317300 
+ 1210              	.LASF6:
+ 1211 030b 5F5F696E 		.ascii	"__int32_t\000"
+ 1211      7433325F 
+ 1211      7400
+ 1212              	.LASF28:
+ 1213 0315 6572726F 		.ascii	"error\000"
+ 1213      7200
+ 1214              	.LASF27:
+ 1215 031b 73657470 		.ascii	"setpoint_val\000"
+ 1215      6F696E74 
+ 1215      5F76616C 
+ 1215      00
+ 1216              	.LASF19:
+ 1217 0328 646F7562 		.ascii	"double\000"
+ 1217      6C6500
+ 1218              	.LASF45:
+ 1219 032f 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 1219      52784275 
+ 1219      66666572 
+ 1219      00
+ 1220              	.LASF58:
+ 1221 033c 2E2E5C73 		.ascii	"..\\src\\misc.c\000"
+ 1221      72635C6D 
+ 1221      6973632E 
+ 1221      6300
+ 1222              	.LASF35:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccHikgbD.s 			page 29
+
+
+ 1223 034a 706F7366 		.ascii	"posf\000"
+ 1223      00
+ 1224              	.LASF34:
+ 1225 034f 706F7369 		.ascii	"posi\000"
+ 1225      00
+ 1226              	.LASF31:
+ 1227 0354 6572726F 		.ascii	"error_dif\000"
+ 1227      725F6469 
+ 1227      6600
+ 1228              	.LASF56:
+ 1229 035e 6D6F746F 		.ascii	"motor_current_pid_2\000"
+ 1229      725F6375 
+ 1229      7272656E 
+ 1229      745F7069 
+ 1229      645F3200 
+ 1230              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

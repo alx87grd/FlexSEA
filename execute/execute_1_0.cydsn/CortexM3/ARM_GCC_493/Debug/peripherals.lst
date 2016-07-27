@@ -1,0 +1,1263 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"peripherals.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.global _printf_float
+  19              		.thumb
+  20              		.section	.text.init_tb_timers,"ax",%progbits
+  21              		.align	2
+  22              		.global	init_tb_timers
+  23              		.thumb
+  24              		.thumb_func
+  25              		.type	init_tb_timers, %function
+  26              	init_tb_timers:
+  27              	.LFB64:
+  28              		.file 1 "..\\src\\peripherals.c"
+   1:..\src/peripherals.c **** //****************************************************************************
+   2:..\src/peripherals.c **** // MIT Media Lab - Biomechatronics
+   3:..\src/peripherals.c **** // Jean-Francois (Jeff) Duval
+   4:..\src/peripherals.c **** // jfduval@mit.edu
+   5:..\src/peripherals.c **** // 02/2015
+   6:..\src/peripherals.c **** //****************************************************************************
+   7:..\src/peripherals.c **** // peripherals: code for the general peripheral modules
+   8:..\src/peripherals.c **** //****************************************************************************
+   9:..\src/peripherals.c **** 
+  10:..\src/peripherals.c **** //Note:  many init_x() functions are included in other files to keep a logical
+  11:..\src/peripherals.c **** // organization. Place them here if they are not specific to one file.
+  12:..\src/peripherals.c **** 
+  13:..\src/peripherals.c **** //****************************************************************************
+  14:..\src/peripherals.c **** // Include(s)
+  15:..\src/peripherals.c **** //****************************************************************************
+  16:..\src/peripherals.c **** 
+  17:..\src/peripherals.c **** #include "main.h"
+  18:..\src/peripherals.c **** #include "peripherals.h"
+  19:..\src/peripherals.c **** 
+  20:..\src/peripherals.c **** //****************************************************************************
+  21:..\src/peripherals.c **** // Variable(s)
+  22:..\src/peripherals.c **** //****************************************************************************
+  23:..\src/peripherals.c **** 
+  24:..\src/peripherals.c **** uint8 uart_dma_rx_buf[96];	//ToDo #define
+  25:..\src/peripherals.c **** uint8 uart_dma_rx_buf_unwrapped[96];
+  26:..\src/peripherals.c **** uint8 uart_dma_tx_buf[96];
+  27:..\src/peripherals.c **** uint8 DMA_4_Chan;
+  28:..\src/peripherals.c **** uint8 DMA_4_TD[1];
+  29:..\src/peripherals.c **** uint8 gui_fsm_flag = DISABLED;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 2
+
+
+  30:..\src/peripherals.c **** 
+  31:..\src/peripherals.c **** //****************************************************************************
+  32:..\src/peripherals.c **** // Function(s)
+  33:..\src/peripherals.c **** //****************************************************************************
+  34:..\src/peripherals.c **** 
+  35:..\src/peripherals.c **** //Initialize and enables all the peripherals
+  36:..\src/peripherals.c **** void init_peripherals(void)
+  37:..\src/peripherals.c **** {
+  38:..\src/peripherals.c **** 	//Motor control variables & peripherals:
+  39:..\src/peripherals.c **** 	init_motor();
+  40:..\src/peripherals.c **** 	
+  41:..\src/peripherals.c **** 	//Init Control:
+  42:..\src/peripherals.c **** 	init_ctrl_data_structure();
+  43:..\src/peripherals.c **** 	
+  44:..\src/peripherals.c **** 	//Timebases:
+  45:..\src/peripherals.c **** 	init_tb_timers();
+  46:..\src/peripherals.c **** 	
+  47:..\src/peripherals.c **** 	//UART 2 - RS-485
+  48:..\src/peripherals.c **** 	init_rs485();
+  49:..\src/peripherals.c **** 	
+  50:..\src/peripherals.c **** 	//Analog, expansion port:
+  51:..\src/peripherals.c **** 	init_analog();
+  52:..\src/peripherals.c **** 	
+  53:..\src/peripherals.c **** 	//Clutch:
+  54:..\src/peripherals.c **** 	init_pwro();
+  55:..\src/peripherals.c **** 	
+  56:..\src/peripherals.c **** 	//Hall sensor for commutation?
+  57:..\src/peripherals.c **** 	#if(ENC_COMMUT == ENC_HALL)
+  58:..\src/peripherals.c **** 		Use_Hall_Write(HALL_PHYSICAL);	//Use Hall sensors (Expansion connector)
+  59:..\src/peripherals.c **** 	#else
+  60:..\src/peripherals.c **** 		Use_Hall_Write(HALL_VIRTUAL);	//Do not use, or use software version
+  61:..\src/peripherals.c **** 	#endif
+  62:..\src/peripherals.c **** 	
+  63:..\src/peripherals.c **** 	//Enable Global Interrupts
+  64:..\src/peripherals.c ****     CyGlobalIntEnable; 
+  65:..\src/peripherals.c **** 	
+  66:..\src/peripherals.c **** 	//I2C0 - 3V3, IMU & Expansion
+  67:..\src/peripherals.c **** 	#ifdef USE_I2C_0	
+  68:..\src/peripherals.c **** 		
+  69:..\src/peripherals.c **** 		init_i2c_0();
+  70:..\src/peripherals.c **** 		
+  71:..\src/peripherals.c **** 		//MPU-6500 IMU:
+  72:..\src/peripherals.c **** 		#ifdef USE_IMU
+  73:..\src/peripherals.c **** 			
+  74:..\src/peripherals.c **** 		init_imu();
+  75:..\src/peripherals.c **** 		CyDelay(25);
+  76:..\src/peripherals.c **** 		init_imu();
+  77:..\src/peripherals.c **** 		CyDelay(25);
+  78:..\src/peripherals.c **** 		init_imu();
+  79:..\src/peripherals.c **** 		CyDelay(25);
+  80:..\src/peripherals.c **** 		
+  81:..\src/peripherals.c **** 		#endif	//USE_IMU
+  82:..\src/peripherals.c **** 		
+  83:..\src/peripherals.c **** 		//External RGB LED:
+  84:..\src/peripherals.c **** 		#ifdef USE_MINM_RGB
+  85:..\src/peripherals.c **** 			
+  86:..\src/peripherals.c **** 		//Set RGB LED - Starts Green
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 3
+
+
+  87:..\src/peripherals.c **** 		i2c_init_minm(MINM_GREEN);
+  88:..\src/peripherals.c **** 		
+  89:..\src/peripherals.c **** 		#endif 	//USE_MINM_RGB
+  90:..\src/peripherals.c **** 	
+  91:..\src/peripherals.c **** 	#endif	//USE_I2C_0
+  92:..\src/peripherals.c **** 	
+  93:..\src/peripherals.c **** 	//I2C1 - 5V, Safety-CoP & strain gauge pot
+  94:..\src/peripherals.c **** 	#ifdef USE_I2C_1	
+  95:..\src/peripherals.c **** 		
+  96:..\src/peripherals.c **** 		//I2C1 peripheral:
+  97:..\src/peripherals.c **** 		init_i2c_1();
+  98:..\src/peripherals.c **** 		
+  99:..\src/peripherals.c **** 		//Strain amplifier:
+ 100:..\src/peripherals.c **** 		#ifdef USE_STRAIN
+ 101:..\src/peripherals.c **** 			
+ 102:..\src/peripherals.c **** 		init_strain();
+ 103:..\src/peripherals.c **** 		
+ 104:..\src/peripherals.c **** 		#endif	//USE_STRAIN
+ 105:..\src/peripherals.c **** 		
+ 106:..\src/peripherals.c **** 	#endif	//USE_I2C_1	
+ 107:..\src/peripherals.c **** 	
+ 108:..\src/peripherals.c **** 	//Magnetic encoder:
+ 109:..\src/peripherals.c **** 	#ifdef USE_AS5047		
+ 110:..\src/peripherals.c **** 	
+ 111:..\src/peripherals.c **** 	init_as5047();
+ 112:..\src/peripherals.c **** 	
+ 113:..\src/peripherals.c **** 	#endif //USE_AS5047
+ 114:..\src/peripherals.c **** 	
+ 115:..\src/peripherals.c **** 	#ifdef USE_SPI_COMMUT
+ 116:..\src/peripherals.c **** 	//...	
+ 117:..\src/peripherals.c **** 	#endif 	//USE_SPI_COMMUT
+ 118:..\src/peripherals.c **** 	
+ 119:..\src/peripherals.c **** 	//Die temperatuire measurement
+ 120:..\src/peripherals.c **** 	#ifdef USE_DIETEMP	
+ 121:..\src/peripherals.c **** 	DieTemp_1_GetTemp(&temp);
+ 122:..\src/peripherals.c **** 	#endif
+ 123:..\src/peripherals.c **** 	
+ 124:..\src/peripherals.c **** 	//Special color when waiting for USB (Yellow):
+ 125:..\src/peripherals.c **** 	set_led_rgb(1, 1, 0);
+ 126:..\src/peripherals.c **** 	
+ 127:..\src/peripherals.c **** 	//USB CDC
+ 128:..\src/peripherals.c **** 	#ifdef USE_USB	
+ 129:..\src/peripherals.c **** 	init_usb();
+ 130:..\src/peripherals.c **** 	#endif	//USE_USB
+ 131:..\src/peripherals.c **** 	
+ 132:..\src/peripherals.c **** 	//Notify the GUI that a FSM is running:
+ 133:..\src/peripherals.c **** 	#if(RUNTIME_FSM == ENABLED)
+ 134:..\src/peripherals.c **** 	gui_fsm_flag = ENABLED;
+ 135:..\src/peripherals.c **** 	#endif	//(RUNTIME_FSM == ENABLED)
+ 136:..\src/peripherals.c **** 	
+ 137:..\src/peripherals.c **** 	//Start with an empty buffer
+ 138:..\src/peripherals.c **** 	flexsea_clear_slave_read_buffer();
+ 139:..\src/peripherals.c **** }
+ 140:..\src/peripherals.c **** 
+ 141:..\src/peripherals.c **** //Timebase timers init:
+ 142:..\src/peripherals.c **** void init_tb_timers(void)
+ 143:..\src/peripherals.c **** {
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 4
+
+
+  29              		.loc 1 143 0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 08B5     		push	{r3, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 3, -8
+  36              		.cfi_offset 14, -4
+ 144:..\src/peripherals.c **** 	//Timer 1: 1ms (LEDs, PID)
+ 145:..\src/peripherals.c **** 	Timer_1_Init();
+  37              		.loc 1 145 0
+  38 0002 FFF7FEFF 		bl	Timer_1_Init
+  39              	.LVL0:
+ 146:..\src/peripherals.c **** 	Timer_1_Start();
+  40              		.loc 1 146 0
+  41 0006 FFF7FEFF 		bl	Timer_1_Start
+  42              	.LVL1:
+ 147:..\src/peripherals.c **** 	isr_t1_Start();
+  43              		.loc 1 147 0
+  44 000a FFF7FEFF 		bl	isr_t1_Start
+  45              	.LVL2:
+  46 000e 08BD     		pop	{r3, pc}
+  47              		.cfi_endproc
+  48              	.LFE64:
+  49              		.size	init_tb_timers, .-init_tb_timers
+  50              		.section	.text.init_peripherals,"ax",%progbits
+  51              		.align	2
+  52              		.global	init_peripherals
+  53              		.thumb
+  54              		.thumb_func
+  55              		.type	init_peripherals, %function
+  56              	init_peripherals:
+  57              	.LFB63:
+  37:..\src/peripherals.c **** 	//Motor control variables & peripherals:
+  58              		.loc 1 37 0
+  59              		.cfi_startproc
+  60              		@ args = 0, pretend = 0, frame = 0
+  61              		@ frame_needed = 0, uses_anonymous_args = 0
+  62 0000 08B5     		push	{r3, lr}
+  63              		.cfi_def_cfa_offset 8
+  64              		.cfi_offset 3, -8
+  65              		.cfi_offset 14, -4
+  39:..\src/peripherals.c **** 	
+  66              		.loc 1 39 0
+  67 0002 FFF7FEFF 		bl	init_motor
+  68              	.LVL3:
+  42:..\src/peripherals.c **** 	
+  69              		.loc 1 42 0
+  70 0006 FFF7FEFF 		bl	init_ctrl_data_structure
+  71              	.LVL4:
+  45:..\src/peripherals.c **** 	
+  72              		.loc 1 45 0
+  73 000a FFF7FEFF 		bl	init_tb_timers
+  74              	.LVL5:
+  48:..\src/peripherals.c **** 	
+  75              		.loc 1 48 0
+  76 000e FFF7FEFF 		bl	init_rs485
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 5
+
+
+  77              	.LVL6:
+  51:..\src/peripherals.c **** 	
+  78              		.loc 1 51 0
+  79 0012 FFF7FEFF 		bl	init_analog
+  80              	.LVL7:
+  54:..\src/peripherals.c **** 	
+  81              		.loc 1 54 0
+  82 0016 FFF7FEFF 		bl	init_pwro
+  83              	.LVL8:
+  60:..\src/peripherals.c **** 	#endif
+  84              		.loc 1 60 0
+  85 001a 0120     		movs	r0, #1
+  86 001c FFF7FEFF 		bl	Use_Hall_Write
+  87              	.LVL9:
+  64:..\src/peripherals.c **** 	
+  88              		.loc 1 64 0
+  89              	@ 64 "..\src\peripherals.c" 1
+  90 0020 62B6     		CPSIE   i
+  91              	@ 0 "" 2
+  69:..\src/peripherals.c **** 		
+  92              		.loc 1 69 0
+  93              		.thumb
+  94 0022 FFF7FEFF 		bl	init_i2c_0
+  95              	.LVL10:
+  74:..\src/peripherals.c **** 		CyDelay(25);
+  96              		.loc 1 74 0
+  97 0026 FFF7FEFF 		bl	init_imu
+  98              	.LVL11:
+  75:..\src/peripherals.c **** 		init_imu();
+  99              		.loc 1 75 0
+ 100 002a 1920     		movs	r0, #25
+ 101 002c FFF7FEFF 		bl	CyDelay
+ 102              	.LVL12:
+  76:..\src/peripherals.c **** 		CyDelay(25);
+ 103              		.loc 1 76 0
+ 104 0030 FFF7FEFF 		bl	init_imu
+ 105              	.LVL13:
+  77:..\src/peripherals.c **** 		init_imu();
+ 106              		.loc 1 77 0
+ 107 0034 1920     		movs	r0, #25
+ 108 0036 FFF7FEFF 		bl	CyDelay
+ 109              	.LVL14:
+  78:..\src/peripherals.c **** 		CyDelay(25);
+ 110              		.loc 1 78 0
+ 111 003a FFF7FEFF 		bl	init_imu
+ 112              	.LVL15:
+  79:..\src/peripherals.c **** 		
+ 113              		.loc 1 79 0
+ 114 003e 1920     		movs	r0, #25
+ 115 0040 FFF7FEFF 		bl	CyDelay
+ 116              	.LVL16:
+  97:..\src/peripherals.c **** 		
+ 117              		.loc 1 97 0
+ 118 0044 FFF7FEFF 		bl	init_i2c_1
+ 119              	.LVL17:
+ 125:..\src/peripherals.c **** 	
+ 120              		.loc 1 125 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 6
+
+
+ 121 0048 0120     		movs	r0, #1
+ 122 004a 0146     		mov	r1, r0
+ 123 004c 0022     		movs	r2, #0
+ 124 004e FFF7FEFF 		bl	set_led_rgb
+ 125              	.LVL18:
+ 129:..\src/peripherals.c **** 	#endif	//USE_USB
+ 126              		.loc 1 129 0
+ 127 0052 FFF7FEFF 		bl	init_usb
+ 128              	.LVL19:
+ 134:..\src/peripherals.c **** 	#endif	//(RUNTIME_FSM == ENABLED)
+ 129              		.loc 1 134 0
+ 130 0056 0122     		movs	r2, #1
+ 131 0058 024B     		ldr	r3, .L5
+ 132 005a 1A70     		strb	r2, [r3]
+ 138:..\src/peripherals.c **** }
+ 133              		.loc 1 138 0
+ 134 005c FFF7FEFF 		bl	flexsea_clear_slave_read_buffer
+ 135              	.LVL20:
+ 136 0060 08BD     		pop	{r3, pc}
+ 137              	.L6:
+ 138 0062 00BF     		.align	2
+ 139              	.L5:
+ 140 0064 00000000 		.word	.LANCHOR0
+ 141              		.cfi_endproc
+ 142              	.LFE63:
+ 143              		.size	init_peripherals, .-init_peripherals
+ 144              		.global	gui_fsm_flag
+ 145              		.comm	DMA_4_TD,1,4
+ 146              		.comm	DMA_4_Chan,1,1
+ 147              		.comm	uart_dma_tx_buf,96,4
+ 148              		.comm	uart_dma_rx_buf_unwrapped,96,4
+ 149              		.comm	uart_dma_rx_buf,96,4
+ 150              		.bss
+ 151              		.set	.LANCHOR0,. + 0
+ 152              		.type	gui_fsm_flag, %object
+ 153              		.size	gui_fsm_flag, 1
+ 154              	gui_fsm_flag:
+ 155 0000 00       		.space	1
+ 156              		.text
+ 157              	.Letext0:
+ 158              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 159              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 160              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 161              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 162              		.file 6 "Generated_Source\\PSoC5/Timer_1.h"
+ 163              		.file 7 "Generated_Source\\PSoC5/isr_t1.h"
+ 164              		.file 8 "..\\inc/motor.h"
+ 165              		.file 9 "..\\inc/control.h"
+ 166              		.file 10 "..\\inc/serial.h"
+ 167              		.file 11 "..\\inc/analog.h"
+ 168              		.file 12 "..\\inc/ext_output.h"
+ 169              		.file 13 "..\\inc/i2c.h"
+ 170              		.file 14 "..\\inc/imu.h"
+ 171              		.file 15 "Generated_Source\\PSoC5/Use_Hall.h"
+ 172              		.file 16 "Generated_Source\\PSoC5/CyLib.h"
+ 173              		.file 17 "..\\inc/ui.h"
+ 174              		.file 18 "..\\inc/flexsea_board.h"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 7
+
+
+ 175              		.file 19 "..\\inc/usb.h"
+ 176              		.section	.debug_info,"",%progbits
+ 177              	.Ldebug_info0:
+ 178 0000 0F030000 		.4byte	0x30f
+ 179 0004 0400     		.2byte	0x4
+ 180 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 181 000a 04       		.byte	0x4
+ 182 000b 01       		.uleb128 0x1
+ 183 000c 18010000 		.4byte	.LASF42
+ 184 0010 01       		.byte	0x1
+ 185 0011 5A000000 		.4byte	.LASF43
+ 186 0015 17000000 		.4byte	.LASF44
+ 187 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 188 001d 00000000 		.4byte	0
+ 189 0021 00000000 		.4byte	.Ldebug_line0
+ 190 0025 02       		.uleb128 0x2
+ 191 0026 01       		.byte	0x1
+ 192 0027 06       		.byte	0x6
+ 193 0028 BB020000 		.4byte	.LASF0
+ 194 002c 02       		.uleb128 0x2
+ 195 002d 01       		.byte	0x1
+ 196 002e 08       		.byte	0x8
+ 197 002f 89000000 		.4byte	.LASF1
+ 198 0033 02       		.uleb128 0x2
+ 199 0034 02       		.byte	0x2
+ 200 0035 05       		.byte	0x5
+ 201 0036 63020000 		.4byte	.LASF2
+ 202 003a 02       		.uleb128 0x2
+ 203 003b 02       		.byte	0x2
+ 204 003c 07       		.byte	0x7
+ 205 003d B9000000 		.4byte	.LASF3
+ 206 0041 03       		.uleb128 0x3
+ 207 0042 50000000 		.4byte	.LASF9
+ 208 0046 02       		.byte	0x2
+ 209 0047 3F       		.byte	0x3f
+ 210 0048 4C000000 		.4byte	0x4c
+ 211 004c 02       		.uleb128 0x2
+ 212 004d 04       		.byte	0x4
+ 213 004e 05       		.byte	0x5
+ 214 004f 90020000 		.4byte	.LASF4
+ 215 0053 02       		.uleb128 0x2
+ 216 0054 04       		.byte	0x4
+ 217 0055 07       		.byte	0x7
+ 218 0056 A7000000 		.4byte	.LASF5
+ 219 005a 02       		.uleb128 0x2
+ 220 005b 08       		.byte	0x8
+ 221 005c 05       		.byte	0x5
+ 222 005d 00000000 		.4byte	.LASF6
+ 223 0061 02       		.uleb128 0x2
+ 224 0062 08       		.byte	0x8
+ 225 0063 07       		.byte	0x7
+ 226 0064 CD010000 		.4byte	.LASF7
+ 227 0068 04       		.uleb128 0x4
+ 228 0069 04       		.byte	0x4
+ 229 006a 05       		.byte	0x5
+ 230 006b 696E7400 		.ascii	"int\000"
+ 231 006f 02       		.uleb128 0x2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 8
+
+
+ 232 0070 04       		.byte	0x4
+ 233 0071 07       		.byte	0x7
+ 234 0072 A6010000 		.4byte	.LASF8
+ 235 0076 03       		.uleb128 0x3
+ 236 0077 EF010000 		.4byte	.LASF10
+ 237 007b 03       		.byte	0x3
+ 238 007c 2C       		.byte	0x2c
+ 239 007d 41000000 		.4byte	0x41
+ 240 0081 03       		.uleb128 0x3
+ 241 0082 83000000 		.4byte	.LASF11
+ 242 0086 04       		.byte	0x4
+ 243 0087 C2       		.byte	0xc2
+ 244 0088 2C000000 		.4byte	0x2c
+ 245 008c 03       		.uleb128 0x3
+ 246 008d 11010000 		.4byte	.LASF12
+ 247 0091 04       		.byte	0x4
+ 248 0092 C4       		.byte	0xc4
+ 249 0093 53000000 		.4byte	0x53
+ 250 0097 02       		.uleb128 0x2
+ 251 0098 04       		.byte	0x4
+ 252 0099 04       		.byte	0x4
+ 253 009a 6F000000 		.4byte	.LASF13
+ 254 009e 02       		.uleb128 0x2
+ 255 009f 08       		.byte	0x8
+ 256 00a0 04       		.byte	0x4
+ 257 00a1 FB000000 		.4byte	.LASF14
+ 258 00a5 02       		.uleb128 0x2
+ 259 00a6 01       		.byte	0x1
+ 260 00a7 08       		.byte	0x8
+ 261 00a8 39020000 		.4byte	.LASF15
+ 262 00ac 02       		.uleb128 0x2
+ 263 00ad 04       		.byte	0x4
+ 264 00ae 07       		.byte	0x7
+ 265 00af F7010000 		.4byte	.LASF16
+ 266 00b3 02       		.uleb128 0x2
+ 267 00b4 08       		.byte	0x8
+ 268 00b5 04       		.byte	0x4
+ 269 00b6 AF020000 		.4byte	.LASF17
+ 270 00ba 05       		.uleb128 0x5
+ 271 00bb 2A020000 		.4byte	.LASF18
+ 272 00bf 01       		.byte	0x1
+ 273 00c0 8E       		.byte	0x8e
+ 274 00c1 00000000 		.4byte	.LFB64
+ 275 00c5 10000000 		.4byte	.LFE64-.LFB64
+ 276 00c9 01       		.uleb128 0x1
+ 277 00ca 9C       		.byte	0x9c
+ 278 00cb EB000000 		.4byte	0xeb
+ 279 00cf 06       		.uleb128 0x6
+ 280 00d0 06000000 		.4byte	.LVL0
+ 281 00d4 76020000 		.4byte	0x276
+ 282 00d8 06       		.uleb128 0x6
+ 283 00d9 0A000000 		.4byte	.LVL1
+ 284 00dd 7D020000 		.4byte	0x27d
+ 285 00e1 06       		.uleb128 0x6
+ 286 00e2 0E000000 		.4byte	.LVL2
+ 287 00e6 84020000 		.4byte	0x284
+ 288 00ea 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 9
+
+
+ 289 00eb 05       		.uleb128 0x5
+ 290 00ec EA020000 		.4byte	.LASF19
+ 291 00f0 01       		.byte	0x1
+ 292 00f1 24       		.byte	0x24
+ 293 00f2 00000000 		.4byte	.LFB63
+ 294 00f6 68000000 		.4byte	.LFE63-.LFB63
+ 295 00fa 01       		.uleb128 0x1
+ 296 00fb 9C       		.byte	0x9c
+ 297 00fc DF010000 		.4byte	0x1df
+ 298 0100 06       		.uleb128 0x6
+ 299 0101 06000000 		.4byte	.LVL3
+ 300 0105 8B020000 		.4byte	0x28b
+ 301 0109 06       		.uleb128 0x6
+ 302 010a 0A000000 		.4byte	.LVL4
+ 303 010e 92020000 		.4byte	0x292
+ 304 0112 06       		.uleb128 0x6
+ 305 0113 0E000000 		.4byte	.LVL5
+ 306 0117 BA000000 		.4byte	0xba
+ 307 011b 06       		.uleb128 0x6
+ 308 011c 12000000 		.4byte	.LVL6
+ 309 0120 99020000 		.4byte	0x299
+ 310 0124 06       		.uleb128 0x6
+ 311 0125 16000000 		.4byte	.LVL7
+ 312 0129 A0020000 		.4byte	0x2a0
+ 313 012d 06       		.uleb128 0x6
+ 314 012e 1A000000 		.4byte	.LVL8
+ 315 0132 A7020000 		.4byte	0x2a7
+ 316 0136 07       		.uleb128 0x7
+ 317 0137 20000000 		.4byte	.LVL9
+ 318 013b AE020000 		.4byte	0x2ae
+ 319 013f 49010000 		.4byte	0x149
+ 320 0143 08       		.uleb128 0x8
+ 321 0144 01       		.uleb128 0x1
+ 322 0145 50       		.byte	0x50
+ 323 0146 01       		.uleb128 0x1
+ 324 0147 31       		.byte	0x31
+ 325 0148 00       		.byte	0
+ 326 0149 06       		.uleb128 0x6
+ 327 014a 26000000 		.4byte	.LVL10
+ 328 014e BF020000 		.4byte	0x2bf
+ 329 0152 06       		.uleb128 0x6
+ 330 0153 2A000000 		.4byte	.LVL11
+ 331 0157 C6020000 		.4byte	0x2c6
+ 332 015b 07       		.uleb128 0x7
+ 333 015c 30000000 		.4byte	.LVL12
+ 334 0160 CD020000 		.4byte	0x2cd
+ 335 0164 6E010000 		.4byte	0x16e
+ 336 0168 08       		.uleb128 0x8
+ 337 0169 01       		.uleb128 0x1
+ 338 016a 50       		.byte	0x50
+ 339 016b 01       		.uleb128 0x1
+ 340 016c 49       		.byte	0x49
+ 341 016d 00       		.byte	0
+ 342 016e 06       		.uleb128 0x6
+ 343 016f 34000000 		.4byte	.LVL13
+ 344 0173 C6020000 		.4byte	0x2c6
+ 345 0177 07       		.uleb128 0x7
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 10
+
+
+ 346 0178 3A000000 		.4byte	.LVL14
+ 347 017c CD020000 		.4byte	0x2cd
+ 348 0180 8A010000 		.4byte	0x18a
+ 349 0184 08       		.uleb128 0x8
+ 350 0185 01       		.uleb128 0x1
+ 351 0186 50       		.byte	0x50
+ 352 0187 01       		.uleb128 0x1
+ 353 0188 49       		.byte	0x49
+ 354 0189 00       		.byte	0
+ 355 018a 06       		.uleb128 0x6
+ 356 018b 3E000000 		.4byte	.LVL15
+ 357 018f C6020000 		.4byte	0x2c6
+ 358 0193 07       		.uleb128 0x7
+ 359 0194 44000000 		.4byte	.LVL16
+ 360 0198 CD020000 		.4byte	0x2cd
+ 361 019c A6010000 		.4byte	0x1a6
+ 362 01a0 08       		.uleb128 0x8
+ 363 01a1 01       		.uleb128 0x1
+ 364 01a2 50       		.byte	0x50
+ 365 01a3 01       		.uleb128 0x1
+ 366 01a4 49       		.byte	0x49
+ 367 01a5 00       		.byte	0
+ 368 01a6 06       		.uleb128 0x6
+ 369 01a7 48000000 		.4byte	.LVL17
+ 370 01ab DE020000 		.4byte	0x2de
+ 371 01af 07       		.uleb128 0x7
+ 372 01b0 52000000 		.4byte	.LVL18
+ 373 01b4 E5020000 		.4byte	0x2e5
+ 374 01b8 CC010000 		.4byte	0x1cc
+ 375 01bc 08       		.uleb128 0x8
+ 376 01bd 01       		.uleb128 0x1
+ 377 01be 52       		.byte	0x52
+ 378 01bf 01       		.uleb128 0x1
+ 379 01c0 30       		.byte	0x30
+ 380 01c1 08       		.uleb128 0x8
+ 381 01c2 01       		.uleb128 0x1
+ 382 01c3 51       		.byte	0x51
+ 383 01c4 01       		.uleb128 0x1
+ 384 01c5 31       		.byte	0x31
+ 385 01c6 08       		.uleb128 0x8
+ 386 01c7 01       		.uleb128 0x1
+ 387 01c8 50       		.byte	0x50
+ 388 01c9 01       		.uleb128 0x1
+ 389 01ca 31       		.byte	0x31
+ 390 01cb 00       		.byte	0
+ 391 01cc 06       		.uleb128 0x6
+ 392 01cd 56000000 		.4byte	.LVL19
+ 393 01d1 00030000 		.4byte	0x300
+ 394 01d5 06       		.uleb128 0x6
+ 395 01d6 60000000 		.4byte	.LVL20
+ 396 01da 0B030000 		.4byte	0x30b
+ 397 01de 00       		.byte	0
+ 398 01df 09       		.uleb128 0x9
+ 399 01e0 E1000000 		.4byte	.LASF20
+ 400 01e4 05       		.byte	0x5
+ 401 01e5 2A06     		.2byte	0x62a
+ 402 01e7 EB010000 		.4byte	0x1eb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 11
+
+
+ 403 01eb 0A       		.uleb128 0xa
+ 404 01ec 76000000 		.4byte	0x76
+ 405 01f0 0B       		.uleb128 0xb
+ 406 01f1 81000000 		.4byte	0x81
+ 407 01f5 00020000 		.4byte	0x200
+ 408 01f9 0C       		.uleb128 0xc
+ 409 01fa AC000000 		.4byte	0xac
+ 410 01fe 5F       		.byte	0x5f
+ 411 01ff 00       		.byte	0
+ 412 0200 0D       		.uleb128 0xd
+ 413 0201 CF020000 		.4byte	.LASF21
+ 414 0205 01       		.byte	0x1
+ 415 0206 18       		.byte	0x18
+ 416 0207 F0010000 		.4byte	0x1f0
+ 417 020b 05       		.uleb128 0x5
+ 418 020c 03       		.byte	0x3
+ 419 020d 00000000 		.4byte	uart_dma_rx_buf
+ 420 0211 0D       		.uleb128 0xd
+ 421 0212 97000000 		.4byte	.LASF22
+ 422 0216 01       		.byte	0x1
+ 423 0217 1A       		.byte	0x1a
+ 424 0218 F0010000 		.4byte	0x1f0
+ 425 021c 05       		.uleb128 0x5
+ 426 021d 03       		.byte	0x3
+ 427 021e 00000000 		.4byte	uart_dma_tx_buf
+ 428 0222 0D       		.uleb128 0xd
+ 429 0223 76020000 		.4byte	.LASF23
+ 430 0227 01       		.byte	0x1
+ 431 0228 19       		.byte	0x19
+ 432 0229 F0010000 		.4byte	0x1f0
+ 433 022d 05       		.uleb128 0x5
+ 434 022e 03       		.byte	0x3
+ 435 022f 00000000 		.4byte	uart_dma_rx_buf_unwrapped
+ 436 0233 0D       		.uleb128 0xd
+ 437 0234 B3010000 		.4byte	.LASF24
+ 438 0238 01       		.byte	0x1
+ 439 0239 1D       		.byte	0x1d
+ 440 023a 81000000 		.4byte	0x81
+ 441 023e 05       		.uleb128 0x5
+ 442 023f 03       		.byte	0x3
+ 443 0240 00000000 		.4byte	gui_fsm_flag
+ 444 0244 0D       		.uleb128 0xd
+ 445 0245 DF020000 		.4byte	.LASF25
+ 446 0249 01       		.byte	0x1
+ 447 024a 1B       		.byte	0x1b
+ 448 024b 81000000 		.4byte	0x81
+ 449 024f 05       		.uleb128 0x5
+ 450 0250 03       		.byte	0x3
+ 451 0251 00000000 		.4byte	DMA_4_Chan
+ 452 0255 0B       		.uleb128 0xb
+ 453 0256 81000000 		.4byte	0x81
+ 454 025a 65020000 		.4byte	0x265
+ 455 025e 0C       		.uleb128 0xc
+ 456 025f AC000000 		.4byte	0xac
+ 457 0263 00       		.byte	0
+ 458 0264 00       		.byte	0
+ 459 0265 0D       		.uleb128 0xd
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 12
+
+
+ 460 0266 0E000000 		.4byte	.LASF26
+ 461 026a 01       		.byte	0x1
+ 462 026b 1C       		.byte	0x1c
+ 463 026c 55020000 		.4byte	0x255
+ 464 0270 05       		.uleb128 0x5
+ 465 0271 03       		.byte	0x3
+ 466 0272 00000000 		.4byte	DMA_4_TD
+ 467 0276 0E       		.uleb128 0xe
+ 468 0277 C0010000 		.4byte	.LASF27
+ 469 027b 06       		.byte	0x6
+ 470 027c 8A       		.byte	0x8a
+ 471 027d 0E       		.uleb128 0xe
+ 472 027e 75000000 		.4byte	.LASF28
+ 473 0282 06       		.byte	0x6
+ 474 0283 5A       		.byte	0x5a
+ 475 0284 0E       		.uleb128 0xe
+ 476 0285 EE000000 		.4byte	.LASF29
+ 477 0289 07       		.byte	0x7
+ 478 028a 17       		.byte	0x17
+ 479 028b 0E       		.uleb128 0xe
+ 480 028c E4010000 		.4byte	.LASF30
+ 481 0290 08       		.byte	0x8
+ 482 0291 1B       		.byte	0x1b
+ 483 0292 0E       		.uleb128 0xe
+ 484 0293 4A020000 		.4byte	.LASF31
+ 485 0297 09       		.byte	0x9
+ 486 0298 1F       		.byte	0x1f
+ 487 0299 0E       		.uleb128 0xe
+ 488 029a 45000000 		.4byte	.LASF32
+ 489 029e 0A       		.byte	0xa
+ 490 029f 17       		.byte	0x17
+ 491 02a0 0E       		.uleb128 0xe
+ 492 02a1 3E020000 		.4byte	.LASF33
+ 493 02a5 0B       		.byte	0xb
+ 494 02a6 17       		.byte	0x17
+ 495 02a7 0E       		.uleb128 0xe
+ 496 02a8 20020000 		.4byte	.LASF34
+ 497 02ac 0C       		.byte	0xc
+ 498 02ad 1B       		.byte	0x1b
+ 499 02ae 0F       		.uleb128 0xf
+ 500 02af 02010000 		.4byte	.LASF37
+ 501 02b3 0F       		.byte	0xf
+ 502 02b4 27       		.byte	0x27
+ 503 02b5 BF020000 		.4byte	0x2bf
+ 504 02b9 10       		.uleb128 0x10
+ 505 02ba 81000000 		.4byte	0x81
+ 506 02be 00       		.byte	0
+ 507 02bf 0E       		.uleb128 0xe
+ 508 02c0 99020000 		.4byte	.LASF35
+ 509 02c4 0D       		.byte	0xd
+ 510 02c5 1F       		.byte	0x1f
+ 511 02c6 0E       		.uleb128 0xe
+ 512 02c7 6D020000 		.4byte	.LASF36
+ 513 02cb 0E       		.byte	0xe
+ 514 02cc 80       		.byte	0x80
+ 515 02cd 0F       		.uleb128 0xf
+ 516 02ce C7020000 		.4byte	.LASF38
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 13
+
+
+ 517 02d2 10       		.byte	0x10
+ 518 02d3 77       		.byte	0x77
+ 519 02d4 DE020000 		.4byte	0x2de
+ 520 02d8 10       		.uleb128 0x10
+ 521 02d9 8C000000 		.4byte	0x8c
+ 522 02dd 00       		.byte	0
+ 523 02de 0E       		.uleb128 0xe
+ 524 02df A4020000 		.4byte	.LASF39
+ 525 02e3 0D       		.byte	0xd
+ 526 02e4 20       		.byte	0x20
+ 527 02e5 0F       		.uleb128 0xf
+ 528 02e6 D5000000 		.4byte	.LASF40
+ 529 02ea 11       		.byte	0x11
+ 530 02eb 24       		.byte	0x24
+ 531 02ec 00030000 		.4byte	0x300
+ 532 02f0 10       		.uleb128 0x10
+ 533 02f1 2C000000 		.4byte	0x2c
+ 534 02f5 10       		.uleb128 0x10
+ 535 02f6 2C000000 		.4byte	0x2c
+ 536 02fa 10       		.uleb128 0x10
+ 537 02fb 2C000000 		.4byte	0x2c
+ 538 02ff 00       		.byte	0
+ 539 0300 11       		.uleb128 0x11
+ 540 0301 CC000000 		.4byte	.LASF45
+ 541 0305 13       		.byte	0x13
+ 542 0306 17       		.byte	0x17
+ 543 0307 81000000 		.4byte	0x81
+ 544 030b 0E       		.uleb128 0xe
+ 545 030c 00020000 		.4byte	.LASF41
+ 546 0310 12       		.byte	0x12
+ 547 0311 1B       		.byte	0x1b
+ 548 0312 00       		.byte	0
+ 549              		.section	.debug_abbrev,"",%progbits
+ 550              	.Ldebug_abbrev0:
+ 551 0000 01       		.uleb128 0x1
+ 552 0001 11       		.uleb128 0x11
+ 553 0002 01       		.byte	0x1
+ 554 0003 25       		.uleb128 0x25
+ 555 0004 0E       		.uleb128 0xe
+ 556 0005 13       		.uleb128 0x13
+ 557 0006 0B       		.uleb128 0xb
+ 558 0007 03       		.uleb128 0x3
+ 559 0008 0E       		.uleb128 0xe
+ 560 0009 1B       		.uleb128 0x1b
+ 561 000a 0E       		.uleb128 0xe
+ 562 000b 55       		.uleb128 0x55
+ 563 000c 17       		.uleb128 0x17
+ 564 000d 11       		.uleb128 0x11
+ 565 000e 01       		.uleb128 0x1
+ 566 000f 10       		.uleb128 0x10
+ 567 0010 17       		.uleb128 0x17
+ 568 0011 00       		.byte	0
+ 569 0012 00       		.byte	0
+ 570 0013 02       		.uleb128 0x2
+ 571 0014 24       		.uleb128 0x24
+ 572 0015 00       		.byte	0
+ 573 0016 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 14
+
+
+ 574 0017 0B       		.uleb128 0xb
+ 575 0018 3E       		.uleb128 0x3e
+ 576 0019 0B       		.uleb128 0xb
+ 577 001a 03       		.uleb128 0x3
+ 578 001b 0E       		.uleb128 0xe
+ 579 001c 00       		.byte	0
+ 580 001d 00       		.byte	0
+ 581 001e 03       		.uleb128 0x3
+ 582 001f 16       		.uleb128 0x16
+ 583 0020 00       		.byte	0
+ 584 0021 03       		.uleb128 0x3
+ 585 0022 0E       		.uleb128 0xe
+ 586 0023 3A       		.uleb128 0x3a
+ 587 0024 0B       		.uleb128 0xb
+ 588 0025 3B       		.uleb128 0x3b
+ 589 0026 0B       		.uleb128 0xb
+ 590 0027 49       		.uleb128 0x49
+ 591 0028 13       		.uleb128 0x13
+ 592 0029 00       		.byte	0
+ 593 002a 00       		.byte	0
+ 594 002b 04       		.uleb128 0x4
+ 595 002c 24       		.uleb128 0x24
+ 596 002d 00       		.byte	0
+ 597 002e 0B       		.uleb128 0xb
+ 598 002f 0B       		.uleb128 0xb
+ 599 0030 3E       		.uleb128 0x3e
+ 600 0031 0B       		.uleb128 0xb
+ 601 0032 03       		.uleb128 0x3
+ 602 0033 08       		.uleb128 0x8
+ 603 0034 00       		.byte	0
+ 604 0035 00       		.byte	0
+ 605 0036 05       		.uleb128 0x5
+ 606 0037 2E       		.uleb128 0x2e
+ 607 0038 01       		.byte	0x1
+ 608 0039 3F       		.uleb128 0x3f
+ 609 003a 19       		.uleb128 0x19
+ 610 003b 03       		.uleb128 0x3
+ 611 003c 0E       		.uleb128 0xe
+ 612 003d 3A       		.uleb128 0x3a
+ 613 003e 0B       		.uleb128 0xb
+ 614 003f 3B       		.uleb128 0x3b
+ 615 0040 0B       		.uleb128 0xb
+ 616 0041 27       		.uleb128 0x27
+ 617 0042 19       		.uleb128 0x19
+ 618 0043 11       		.uleb128 0x11
+ 619 0044 01       		.uleb128 0x1
+ 620 0045 12       		.uleb128 0x12
+ 621 0046 06       		.uleb128 0x6
+ 622 0047 40       		.uleb128 0x40
+ 623 0048 18       		.uleb128 0x18
+ 624 0049 9742     		.uleb128 0x2117
+ 625 004b 19       		.uleb128 0x19
+ 626 004c 01       		.uleb128 0x1
+ 627 004d 13       		.uleb128 0x13
+ 628 004e 00       		.byte	0
+ 629 004f 00       		.byte	0
+ 630 0050 06       		.uleb128 0x6
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 15
+
+
+ 631 0051 898201   		.uleb128 0x4109
+ 632 0054 00       		.byte	0
+ 633 0055 11       		.uleb128 0x11
+ 634 0056 01       		.uleb128 0x1
+ 635 0057 31       		.uleb128 0x31
+ 636 0058 13       		.uleb128 0x13
+ 637 0059 00       		.byte	0
+ 638 005a 00       		.byte	0
+ 639 005b 07       		.uleb128 0x7
+ 640 005c 898201   		.uleb128 0x4109
+ 641 005f 01       		.byte	0x1
+ 642 0060 11       		.uleb128 0x11
+ 643 0061 01       		.uleb128 0x1
+ 644 0062 31       		.uleb128 0x31
+ 645 0063 13       		.uleb128 0x13
+ 646 0064 01       		.uleb128 0x1
+ 647 0065 13       		.uleb128 0x13
+ 648 0066 00       		.byte	0
+ 649 0067 00       		.byte	0
+ 650 0068 08       		.uleb128 0x8
+ 651 0069 8A8201   		.uleb128 0x410a
+ 652 006c 00       		.byte	0
+ 653 006d 02       		.uleb128 0x2
+ 654 006e 18       		.uleb128 0x18
+ 655 006f 9142     		.uleb128 0x2111
+ 656 0071 18       		.uleb128 0x18
+ 657 0072 00       		.byte	0
+ 658 0073 00       		.byte	0
+ 659 0074 09       		.uleb128 0x9
+ 660 0075 34       		.uleb128 0x34
+ 661 0076 00       		.byte	0
+ 662 0077 03       		.uleb128 0x3
+ 663 0078 0E       		.uleb128 0xe
+ 664 0079 3A       		.uleb128 0x3a
+ 665 007a 0B       		.uleb128 0xb
+ 666 007b 3B       		.uleb128 0x3b
+ 667 007c 05       		.uleb128 0x5
+ 668 007d 49       		.uleb128 0x49
+ 669 007e 13       		.uleb128 0x13
+ 670 007f 3F       		.uleb128 0x3f
+ 671 0080 19       		.uleb128 0x19
+ 672 0081 3C       		.uleb128 0x3c
+ 673 0082 19       		.uleb128 0x19
+ 674 0083 00       		.byte	0
+ 675 0084 00       		.byte	0
+ 676 0085 0A       		.uleb128 0xa
+ 677 0086 35       		.uleb128 0x35
+ 678 0087 00       		.byte	0
+ 679 0088 49       		.uleb128 0x49
+ 680 0089 13       		.uleb128 0x13
+ 681 008a 00       		.byte	0
+ 682 008b 00       		.byte	0
+ 683 008c 0B       		.uleb128 0xb
+ 684 008d 01       		.uleb128 0x1
+ 685 008e 01       		.byte	0x1
+ 686 008f 49       		.uleb128 0x49
+ 687 0090 13       		.uleb128 0x13
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 16
+
+
+ 688 0091 01       		.uleb128 0x1
+ 689 0092 13       		.uleb128 0x13
+ 690 0093 00       		.byte	0
+ 691 0094 00       		.byte	0
+ 692 0095 0C       		.uleb128 0xc
+ 693 0096 21       		.uleb128 0x21
+ 694 0097 00       		.byte	0
+ 695 0098 49       		.uleb128 0x49
+ 696 0099 13       		.uleb128 0x13
+ 697 009a 2F       		.uleb128 0x2f
+ 698 009b 0B       		.uleb128 0xb
+ 699 009c 00       		.byte	0
+ 700 009d 00       		.byte	0
+ 701 009e 0D       		.uleb128 0xd
+ 702 009f 34       		.uleb128 0x34
+ 703 00a0 00       		.byte	0
+ 704 00a1 03       		.uleb128 0x3
+ 705 00a2 0E       		.uleb128 0xe
+ 706 00a3 3A       		.uleb128 0x3a
+ 707 00a4 0B       		.uleb128 0xb
+ 708 00a5 3B       		.uleb128 0x3b
+ 709 00a6 0B       		.uleb128 0xb
+ 710 00a7 49       		.uleb128 0x49
+ 711 00a8 13       		.uleb128 0x13
+ 712 00a9 3F       		.uleb128 0x3f
+ 713 00aa 19       		.uleb128 0x19
+ 714 00ab 02       		.uleb128 0x2
+ 715 00ac 18       		.uleb128 0x18
+ 716 00ad 00       		.byte	0
+ 717 00ae 00       		.byte	0
+ 718 00af 0E       		.uleb128 0xe
+ 719 00b0 2E       		.uleb128 0x2e
+ 720 00b1 00       		.byte	0
+ 721 00b2 3F       		.uleb128 0x3f
+ 722 00b3 19       		.uleb128 0x19
+ 723 00b4 03       		.uleb128 0x3
+ 724 00b5 0E       		.uleb128 0xe
+ 725 00b6 3A       		.uleb128 0x3a
+ 726 00b7 0B       		.uleb128 0xb
+ 727 00b8 3B       		.uleb128 0x3b
+ 728 00b9 0B       		.uleb128 0xb
+ 729 00ba 27       		.uleb128 0x27
+ 730 00bb 19       		.uleb128 0x19
+ 731 00bc 3C       		.uleb128 0x3c
+ 732 00bd 19       		.uleb128 0x19
+ 733 00be 00       		.byte	0
+ 734 00bf 00       		.byte	0
+ 735 00c0 0F       		.uleb128 0xf
+ 736 00c1 2E       		.uleb128 0x2e
+ 737 00c2 01       		.byte	0x1
+ 738 00c3 3F       		.uleb128 0x3f
+ 739 00c4 19       		.uleb128 0x19
+ 740 00c5 03       		.uleb128 0x3
+ 741 00c6 0E       		.uleb128 0xe
+ 742 00c7 3A       		.uleb128 0x3a
+ 743 00c8 0B       		.uleb128 0xb
+ 744 00c9 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 17
+
+
+ 745 00ca 0B       		.uleb128 0xb
+ 746 00cb 27       		.uleb128 0x27
+ 747 00cc 19       		.uleb128 0x19
+ 748 00cd 3C       		.uleb128 0x3c
+ 749 00ce 19       		.uleb128 0x19
+ 750 00cf 01       		.uleb128 0x1
+ 751 00d0 13       		.uleb128 0x13
+ 752 00d1 00       		.byte	0
+ 753 00d2 00       		.byte	0
+ 754 00d3 10       		.uleb128 0x10
+ 755 00d4 05       		.uleb128 0x5
+ 756 00d5 00       		.byte	0
+ 757 00d6 49       		.uleb128 0x49
+ 758 00d7 13       		.uleb128 0x13
+ 759 00d8 00       		.byte	0
+ 760 00d9 00       		.byte	0
+ 761 00da 11       		.uleb128 0x11
+ 762 00db 2E       		.uleb128 0x2e
+ 763 00dc 00       		.byte	0
+ 764 00dd 3F       		.uleb128 0x3f
+ 765 00de 19       		.uleb128 0x19
+ 766 00df 03       		.uleb128 0x3
+ 767 00e0 0E       		.uleb128 0xe
+ 768 00e1 3A       		.uleb128 0x3a
+ 769 00e2 0B       		.uleb128 0xb
+ 770 00e3 3B       		.uleb128 0x3b
+ 771 00e4 0B       		.uleb128 0xb
+ 772 00e5 27       		.uleb128 0x27
+ 773 00e6 19       		.uleb128 0x19
+ 774 00e7 49       		.uleb128 0x49
+ 775 00e8 13       		.uleb128 0x13
+ 776 00e9 3C       		.uleb128 0x3c
+ 777 00ea 19       		.uleb128 0x19
+ 778 00eb 00       		.byte	0
+ 779 00ec 00       		.byte	0
+ 780 00ed 00       		.byte	0
+ 781              		.section	.debug_aranges,"",%progbits
+ 782 0000 24000000 		.4byte	0x24
+ 783 0004 0200     		.2byte	0x2
+ 784 0006 00000000 		.4byte	.Ldebug_info0
+ 785 000a 04       		.byte	0x4
+ 786 000b 00       		.byte	0
+ 787 000c 0000     		.2byte	0
+ 788 000e 0000     		.2byte	0
+ 789 0010 00000000 		.4byte	.LFB64
+ 790 0014 10000000 		.4byte	.LFE64-.LFB64
+ 791 0018 00000000 		.4byte	.LFB63
+ 792 001c 68000000 		.4byte	.LFE63-.LFB63
+ 793 0020 00000000 		.4byte	0
+ 794 0024 00000000 		.4byte	0
+ 795              		.section	.debug_ranges,"",%progbits
+ 796              	.Ldebug_ranges0:
+ 797 0000 00000000 		.4byte	.LFB64
+ 798 0004 10000000 		.4byte	.LFE64
+ 799 0008 00000000 		.4byte	.LFB63
+ 800 000c 68000000 		.4byte	.LFE63
+ 801 0010 00000000 		.4byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 18
+
+
+ 802 0014 00000000 		.4byte	0
+ 803              		.section	.debug_line,"",%progbits
+ 804              	.Ldebug_line0:
+ 805 0000 44020000 		.section	.debug_str,"MS",%progbits,1
+ 805      02000402 
+ 805      00000201 
+ 805      FB0E0D00 
+ 805      01010101 
+ 806              	.LASF6:
+ 807 0000 6C6F6E67 		.ascii	"long long int\000"
+ 807      206C6F6E 
+ 807      6720696E 
+ 807      7400
+ 808              	.LASF26:
+ 809 000e 444D415F 		.ascii	"DMA_4_TD\000"
+ 809      345F5444 
+ 809      00
+ 810              	.LASF44:
+ 811 0017 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 811      6C657853 
+ 811      45415F61 
+ 811      6C783837 
+ 811      6772645C 
+ 812              	.LASF32:
+ 813 0045 696E6974 		.ascii	"init_rs485\000"
+ 813      5F727334 
+ 813      383500
+ 814              	.LASF9:
+ 815 0050 5F5F696E 		.ascii	"__int32_t\000"
+ 815      7433325F 
+ 815      7400
+ 816              	.LASF43:
+ 817 005a 2E2E5C73 		.ascii	"..\\src\\peripherals.c\000"
+ 817      72635C70 
+ 817      65726970 
+ 817      68657261 
+ 817      6C732E63 
+ 818              	.LASF13:
+ 819 006f 666C6F61 		.ascii	"float\000"
+ 819      7400
+ 820              	.LASF28:
+ 821 0075 54696D65 		.ascii	"Timer_1_Start\000"
+ 821      725F315F 
+ 821      53746172 
+ 821      7400
+ 822              	.LASF11:
+ 823 0083 75696E74 		.ascii	"uint8\000"
+ 823      3800
+ 824              	.LASF1:
+ 825 0089 756E7369 		.ascii	"unsigned char\000"
+ 825      676E6564 
+ 825      20636861 
+ 825      7200
+ 826              	.LASF22:
+ 827 0097 75617274 		.ascii	"uart_dma_tx_buf\000"
+ 827      5F646D61 
+ 827      5F74785F 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 19
+
+
+ 827      62756600 
+ 828              	.LASF5:
+ 829 00a7 6C6F6E67 		.ascii	"long unsigned int\000"
+ 829      20756E73 
+ 829      69676E65 
+ 829      6420696E 
+ 829      7400
+ 830              	.LASF3:
+ 831 00b9 73686F72 		.ascii	"short unsigned int\000"
+ 831      7420756E 
+ 831      7369676E 
+ 831      65642069 
+ 831      6E7400
+ 832              	.LASF45:
+ 833 00cc 696E6974 		.ascii	"init_usb\000"
+ 833      5F757362 
+ 833      00
+ 834              	.LASF40:
+ 835 00d5 7365745F 		.ascii	"set_led_rgb\000"
+ 835      6C65645F 
+ 835      72676200 
+ 836              	.LASF20:
+ 837 00e1 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 837      52784275 
+ 837      66666572 
+ 837      00
+ 838              	.LASF29:
+ 839 00ee 6973725F 		.ascii	"isr_t1_Start\000"
+ 839      74315F53 
+ 839      74617274 
+ 839      00
+ 840              	.LASF14:
+ 841 00fb 646F7562 		.ascii	"double\000"
+ 841      6C6500
+ 842              	.LASF37:
+ 843 0102 5573655F 		.ascii	"Use_Hall_Write\000"
+ 843      48616C6C 
+ 843      5F577269 
+ 843      746500
+ 844              	.LASF12:
+ 845 0111 75696E74 		.ascii	"uint32\000"
+ 845      333200
+ 846              	.LASF42:
+ 847 0118 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 847      4320342E 
+ 847      392E3320 
+ 847      32303135 
+ 847      30333033 
+ 848 014b 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 848      20726576 
+ 848      6973696F 
+ 848      6E203232 
+ 848      31323230 
+ 849 017e 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 849      66756E63 
+ 849      74696F6E 
+ 849      2D736563 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 20
+
+
+ 849      74696F6E 
+ 850              	.LASF8:
+ 851 01a6 756E7369 		.ascii	"unsigned int\000"
+ 851      676E6564 
+ 851      20696E74 
+ 851      00
+ 852              	.LASF24:
+ 853 01b3 6775695F 		.ascii	"gui_fsm_flag\000"
+ 853      66736D5F 
+ 853      666C6167 
+ 853      00
+ 854              	.LASF27:
+ 855 01c0 54696D65 		.ascii	"Timer_1_Init\000"
+ 855      725F315F 
+ 855      496E6974 
+ 855      00
+ 856              	.LASF7:
+ 857 01cd 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 857      206C6F6E 
+ 857      6720756E 
+ 857      7369676E 
+ 857      65642069 
+ 858              	.LASF30:
+ 859 01e4 696E6974 		.ascii	"init_motor\000"
+ 859      5F6D6F74 
+ 859      6F7200
+ 860              	.LASF10:
+ 861 01ef 696E7433 		.ascii	"int32_t\000"
+ 861      325F7400 
+ 862              	.LASF16:
+ 863 01f7 73697A65 		.ascii	"sizetype\000"
+ 863      74797065 
+ 863      00
+ 864              	.LASF41:
+ 865 0200 666C6578 		.ascii	"flexsea_clear_slave_read_buffer\000"
+ 865      7365615F 
+ 865      636C6561 
+ 865      725F736C 
+ 865      6176655F 
+ 866              	.LASF34:
+ 867 0220 696E6974 		.ascii	"init_pwro\000"
+ 867      5F707772 
+ 867      6F00
+ 868              	.LASF18:
+ 869 022a 696E6974 		.ascii	"init_tb_timers\000"
+ 869      5F74625F 
+ 869      74696D65 
+ 869      727300
+ 870              	.LASF15:
+ 871 0239 63686172 		.ascii	"char\000"
+ 871      00
+ 872              	.LASF33:
+ 873 023e 696E6974 		.ascii	"init_analog\000"
+ 873      5F616E61 
+ 873      6C6F6700 
+ 874              	.LASF31:
+ 875 024a 696E6974 		.ascii	"init_ctrl_data_structure\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 21
+
+
+ 875      5F637472 
+ 875      6C5F6461 
+ 875      74615F73 
+ 875      74727563 
+ 876              	.LASF2:
+ 877 0263 73686F72 		.ascii	"short int\000"
+ 877      7420696E 
+ 877      7400
+ 878              	.LASF36:
+ 879 026d 696E6974 		.ascii	"init_imu\000"
+ 879      5F696D75 
+ 879      00
+ 880              	.LASF23:
+ 881 0276 75617274 		.ascii	"uart_dma_rx_buf_unwrapped\000"
+ 881      5F646D61 
+ 881      5F72785F 
+ 881      6275665F 
+ 881      756E7772 
+ 882              	.LASF4:
+ 883 0290 6C6F6E67 		.ascii	"long int\000"
+ 883      20696E74 
+ 883      00
+ 884              	.LASF35:
+ 885 0299 696E6974 		.ascii	"init_i2c_0\000"
+ 885      5F693263 
+ 885      5F3000
+ 886              	.LASF39:
+ 887 02a4 696E6974 		.ascii	"init_i2c_1\000"
+ 887      5F693263 
+ 887      5F3100
+ 888              	.LASF17:
+ 889 02af 6C6F6E67 		.ascii	"long double\000"
+ 889      20646F75 
+ 889      626C6500 
+ 890              	.LASF0:
+ 891 02bb 7369676E 		.ascii	"signed char\000"
+ 891      65642063 
+ 891      68617200 
+ 892              	.LASF38:
+ 893 02c7 43794465 		.ascii	"CyDelay\000"
+ 893      6C617900 
+ 894              	.LASF21:
+ 895 02cf 75617274 		.ascii	"uart_dma_rx_buf\000"
+ 895      5F646D61 
+ 895      5F72785F 
+ 895      62756600 
+ 896              	.LASF25:
+ 897 02df 444D415F 		.ascii	"DMA_4_Chan\000"
+ 897      345F4368 
+ 897      616E00
+ 898              	.LASF19:
+ 899 02ea 696E6974 		.ascii	"init_peripherals\000"
+ 899      5F706572 
+ 899      69706865 
+ 899      72616C73 
+ 899      00
+ 900              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccrELq92.s 			page 22
+
+
