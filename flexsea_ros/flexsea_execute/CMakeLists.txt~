@@ -15,6 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
+# QT5
+find_package(Qt5Widgets REQUIRED)
+
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -118,6 +121,9 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  inc
+  ../../flexsea-comm/inc
+  ../../flexsea-system/inc
 )
 
 ## Declare a C++ library
@@ -133,6 +139,23 @@ include_directories(
 ## Declare a C++ executable
 # add_executable(flexsea_execute_node src/flexsea_execute_node.cpp)
 
+## Declare a C++ executable
+add_executable(flexsea_execute_node src/main.cpp src/Driver_Node.cpp 
+ ../../flexsea-comm/src/flexsea.c
+ ../../flexsea-comm/src/flexsea_buffers.c
+ ../../flexsea-comm/src/flexsea_comm.c
+ ../../flexsea-comm/src/flexsea_payload.c
+ ../../flexsea-system/src/flexsea_cmd_application.c
+ ../../flexsea-system/src/flexsea_cmd_control.c
+ ../../flexsea-system/src/flexsea_cmd_data.c
+ ../../flexsea-system/src/flexsea_cmd_external.c
+ ../../flexsea-system/src/flexsea_cmd_sensors.c
+ ../../flexsea-system/src/flexsea_system.c
+ src/flexsea_board.c
+ src/plan_serial.c
+ src/iolib.c
+)
+
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(flexsea_execute_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -141,6 +164,14 @@ include_directories(
 # target_link_libraries(flexsea_execute_node
 #   ${catkin_LIBRARIES}
 # )
+
+target_link_libraries(flexsea_execute_node
+  ${catkin_LIBRARIES}
+  Qt5::Widgets
+)
+
+qt5_use_modules(flexsea_execute_node Core SerialPort)
+
 
 #############
 ## Install ##
