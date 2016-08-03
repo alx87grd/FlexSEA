@@ -1,0 +1,19 @@
+<launch>
+ 	<group ns="a1">
+	<rosparam command="load" file="$(find flexsea_driver)/config/a1.yaml"/>
+        <node pkg="flexsea_driver" type="driver" name="FlexSEA_driver" output="screen">
+        </node>
+ 	</group>
+
+	<group ns="a0">
+	<rosparam command="load" file="$(find flexsea_driver)/config/a0.yaml"/>
+        <node pkg="flexsea_driver" type="driver" name="FlexSEA_driver" output="screen">
+        </node>
+ 	</group>
+
+	<group ns="a2">
+	<rosparam command="load" file="$(find flexsea_driver)/config/a2.yaml"/>
+        <node pkg="flexsea_driver" type="driver" name="FlexSEA_driver" output="screen">
+        </node>
+ 	</group>
+ </launch>

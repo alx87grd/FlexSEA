@@ -1,0 +1,7 @@
+<launch>
+ 	<group ns="a1">
+	<rosparam command="load" file="$(find qt_serial_tests)/config/a1.yaml"/>
+        <node pkg="qt_serial_tests" type="main_test" name="FlexSEA_driver" output="screen">
+        </node>
+ 	</group>
+ </launch>
