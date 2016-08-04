@@ -8,11 +8,11 @@ Driver_Node::Driver_Node(){
 	
 	// Initial Values
 	usb_is_open     = false;
-	serialport_name = "/dev/ttyACM0";
+    //serialport_name = "/dev/ttyACM0";  --> now loaded as ROS param
 
     // Flexsea-comm params
     active_slave_1_index = 0       ;
-    active_slave_1       = 40      ;
+    active_slave_1       = 40      ; // default value is for execute_1 --> change the config file
 
     // TODO load all from a config file of ROS params
 
@@ -89,13 +89,17 @@ void Driver_Node::input_callback(const flexsea_execute::inputs u_msg){
 
 void Driver_Node::load_ROS_param(){
 	
+    // Load USB port to use
 	std::string port_name_string;
 	n.param<std::string>("port_name", port_name_string , "defaut_port_name");
 	
 	// String to qtstring
 	serialport_name = QString::fromStdString( port_name_string );
-	
-	ROS_INFO("Loaded serial port name : %s", serialport_name.toStdString().c_str());
+
+    // Load ID number of the board
+    n.param("execute_ID", active_slave_1, 40);
+
+    ROS_INFO("Loaded serial port name : %s  and execute_ID: %i", serialport_name.toStdString().c_str() , active_slave_1 );
 	    
 }
 

@@ -1,3 +1,0 @@
-# Parameters for FlexSEA driver
-port_name: '/dev/ttyACM0'
-actuator_name: 'actuator #0'

@@ -1,3 +1,3 @@
 # Parameters for FlexSEA driver
-port_name: 'a0_port'
-actuator_name: 'actuator #0'
+port_name: 'a2_port'
+actuator_name: 'actuator #2'
