@@ -271,42 +271,93 @@ void Driver_Node::publish_sensor_msg(){
     // Orientation
     y_msg.imu.orientation_covariance[0] = -1 ; // Convention for orientation not inlcuded in IMU msg
 
-    // Accel
-    float g2ms2 = 9.80665 ;
-    y_msg.imu.linear_acceleration.x = (double) exec1.accel.x /8192 * g2ms2 ;
-    y_msg.imu.linear_acceleration.y = (double) exec1.accel.y /8192 * g2ms2 ;
-    y_msg.imu.linear_acceleration.z = (double) exec1.accel.z /8192 * g2ms2 ;
 
-    // Velocity
-    float deg2rad = 0.01745329 ;
-    y_msg.imu.angular_velocity.x = (double) exec1.gyro.x /16.4 * deg2rad ;
-    y_msg.imu.angular_velocity.y = (double) exec1.gyro.y /16.4 * deg2rad ;
-    y_msg.imu.angular_velocity.z = (double) exec1.gyro.z /16.4 * deg2rad ;
+    // TODO change publishing for general case (now only works for ID 1 or 2)
+    // Board Execute ID #1
+    if ( active_slave_1 == 40 ){
 
-    // Strain sensor
-    y_msg.e = ( (double) ( exec1.strain-32768 ) / 32768 ) * 100 ; // Convertion to [%]
+        // Accel
+        float g2ms2 = 9.80665 ;
+        y_msg.imu.linear_acceleration.x = (double) exec1.accel.x /8192 * g2ms2 ;
+        y_msg.imu.linear_acceleration.y = (double) exec1.accel.y /8192 * g2ms2 ;
+        y_msg.imu.linear_acceleration.z = (double) exec1.accel.z /8192 * g2ms2 ;
 
-    // Analog inputs
-    y_msg.analog_0 = ((float)exec1.analog[0]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[0] ;
-    y_msg.analog_1 = ((float)exec1.analog[1]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[1] ;
+        // Velocity
+        float deg2rad = 0.01745329 ;
+        y_msg.imu.angular_velocity.x = (double) exec1.gyro.x /16.4 * deg2rad ;
+        y_msg.imu.angular_velocity.y = (double) exec1.gyro.y /16.4 * deg2rad ;
+        y_msg.imu.angular_velocity.z = (double) exec1.gyro.z /16.4 * deg2rad ;
 
-    // Current
-    int current_offset = 0;
-    y_msg.current = (float) ( exec1.current - current_offset ) * 18.5;
+        // Strain sensor
+        y_msg.e = ( (double) ( exec1.strain-32768 ) / 32768 ) * 100 ; // Convertion to [%]
 
-    // Encoder
-    y_msg.encoder = exec1.enc_display ;
+        // Analog inputs
+        y_msg.analog_0 = ((float)exec1.analog[0]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[0] ;
+        y_msg.analog_1 = ((float)exec1.analog[1]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[1] ;
 
-    // Supply tension
-    y_msg.vb = P4_ADC_SUPPLY*((16*(float)exec1.volt_batt/3 + 302 )/P4_ADC_MAX) / 0.0738 ; // exec1.volt_batt ;
-    y_msg.vg = P4_ADC_SUPPLY*((26*(float)exec1.volt_int/3 + 440 )/P4_ADC_MAX)  / 0.43   ;  // exec1.volt_int  ;
+        // Current
+        int current_offset = 0;
+        y_msg.current = (float) ( exec1.current - current_offset ) * 18.5;
 
-    // Temperature
-    y_msg.temp = ((((2.625*(float)exec1.temp + 41)/P4_ADC_MAX)*P4_ADC_SUPPLY) - P4_T0) / P4_TC ; // exec1.temp ;
+        // Encoder
+        y_msg.encoder = exec1.enc_display ;
 
-    // Status
-    y_msg.status_1 = exec1.status1 ;
-    y_msg.status_2 = exec1.status2 ;
+        // Supply tension
+        y_msg.vb = P4_ADC_SUPPLY*((16*(float)exec1.volt_batt/3 + 302 )/P4_ADC_MAX) / 0.0738 ; // exec1.volt_batt ;
+        y_msg.vg = P4_ADC_SUPPLY*((26*(float)exec1.volt_int/3 + 440 )/P4_ADC_MAX)  / 0.43   ;  // exec1.volt_int  ;
+
+        // Temperature
+        y_msg.temp = ((((2.625*(float)exec1.temp + 41)/P4_ADC_MAX)*P4_ADC_SUPPLY) - P4_T0) / P4_TC ; // exec1.temp ;
+
+        // Status
+        y_msg.status_1 = exec1.status1 ;
+        y_msg.status_2 = exec1.status2 ;
+
+    // Board Execute ID #2
+    } else if ( active_slave_1 == 41 ){
+
+        // Accel
+        float g2ms2 = 9.80665 ;
+        y_msg.imu.linear_acceleration.x = (double) exec2.accel.x /8192 * g2ms2 ;
+        y_msg.imu.linear_acceleration.y = (double) exec2.accel.y /8192 * g2ms2 ;
+        y_msg.imu.linear_acceleration.z = (double) exec2.accel.z /8192 * g2ms2 ;
+
+        // Velocity
+        float deg2rad = 0.01745329 ;
+        y_msg.imu.angular_velocity.x = (double) exec2.gyro.x /16.4 * deg2rad ;
+        y_msg.imu.angular_velocity.y = (double) exec2.gyro.y /16.4 * deg2rad ;
+        y_msg.imu.angular_velocity.z = (double) exec2.gyro.z /16.4 * deg2rad ;
+
+        // Strain sensor
+        y_msg.e = ( (double) ( exec2.strain-32768 ) / 32768 ) * 100 ; // Convertion to [%]
+
+        // Analog inputs
+        y_msg.analog_0 = ((float)exec2.analog[0]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[0] ;
+        y_msg.analog_1 = ((float)exec2.analog[1]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[1] ;
+
+        // Current
+        int current_offset = 0;
+        y_msg.current = (float) ( exec2.current - current_offset ) * 18.5;
+
+        // Encoder
+        y_msg.encoder = exec2.enc_display ;
+
+        // Supply tension
+        y_msg.vb = P4_ADC_SUPPLY*((16*(float)exec2.volt_batt/3 + 302 )/P4_ADC_MAX) / 0.0738 ; // exec1.volt_batt ;
+        y_msg.vg = P4_ADC_SUPPLY*((26*(float)exec2.volt_int/3 + 440 )/P4_ADC_MAX)  / 0.43   ;  // exec1.volt_int  ;
+
+        // Temperature
+        y_msg.temp = ((((2.625*(float)exec2.temp + 41)/P4_ADC_MAX)*P4_ADC_SUPPLY) - P4_T0) / P4_TC ; // exec1.temp ;
+
+        // Status
+        y_msg.status_1 = exec2.status1 ;
+        y_msg.status_2 = exec2.status2 ;
+
+
+    } else {
+
+        qDebug("Cannot read from this board ID : TODO ");
+    }
 
     std::stringstream ss;
     //ss << "Accel axis : x = " << exec1.accel.x << " y : " << exec1.accel.y << " z : " << exec1.accel.z << "  Encoder Display : " << exec1.enc_display;
