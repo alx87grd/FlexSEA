@@ -20,7 +20,7 @@ Driver_Node::Driver_Node(){
     // Init Sub-pub-timers
     sub   = n.subscribe("u", 1000, &Driver_Node::input_callback, this );
     pub   = n.advertise<flexsea_execute::outputs>("y", 1000);
-    timer = n.createTimer( ros::Duration(0.002), &Driver_Node::timer_callback, this );
+    timer = n.createTimer( ros::Duration(0.01), &Driver_Node::timer_callback, this );
 	
 	// Load ROS params
 	load_ROS_param();
