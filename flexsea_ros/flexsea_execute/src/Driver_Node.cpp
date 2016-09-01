@@ -65,7 +65,9 @@ void Driver_Node::timer_callback(const ros::TimerEvent&){
 void Driver_Node::input_callback(const flexsea_execute::inputs u_msg){
 
     // Print received cmd
-    ROS_INFO("Driver Cmd: u=%d mode=%d", (int)u_msg.ctrl_setpoint, (int)u_msg.ctrl_mode);
+    if (verbose){
+        ROS_INFO("Driver Cmd: u=%d mode=%d", (int)u_msg.ctrl_setpoint, (int)u_msg.ctrl_mode);
+    }
 
     // Request new control mode & gains if changed
     update_ctrl_if_needed( u_msg );
@@ -76,14 +78,6 @@ void Driver_Node::input_callback(const flexsea_execute::inputs u_msg){
     // Publish new setpoint
     request_new_ctrl_setpoint();
 
-    /*
-    // Test new position ref
-    if ( u_msg.ctrl_mode == 2 ){
-        send_ref_position_ctl_test( u_msg.ctrl_setpoint );
-         ROS_INFO("Ctrl mode=%d : new set_point", (int)ctrl_mode);
-
-        }
-    */
 }
 
 
@@ -546,7 +540,10 @@ void Driver_Node::request_new_ctrl_setpoint(){
         //read_USB_port( usb_rx );
         //decode_usb_rx( usb_rx );
 
-        ROS_INFO("New ctrl setpoint requested");
+        if (verbose){
+
+            ROS_INFO("New ctrl setpoint requested");
+        }
     }
 }
 
@@ -564,7 +561,7 @@ void Driver_Node::request_brake_pwm(){
     read_USB_port( usb_rx );
     decode_usb_rx( usb_rx );
 
-    ROS_INFO("Ctrl Mode %d requested", (int)ctrl_mode);
+    ROS_INFO("Brake state updated");
 
 }
 

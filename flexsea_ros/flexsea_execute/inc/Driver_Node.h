@@ -48,6 +48,9 @@ private:
     bool        trap_mode;
     int32_t     trap_values[6] = {0,0,0,50000,50000,0};
     int16_t     brake_pwm;
+
+    // Debug params
+    bool verbose = false;
 	
 public:
 	// Functions
