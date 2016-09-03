@@ -487,6 +487,8 @@ void Driver_Node::request_new_ctrl_setpoint(){
 
     int trap_pos = 0, trap_posi = 0, trap_posf = 0, trap_spd = 0, trap_acc = 0;
 
+
+
     // Optionnal trap mode
     if ( trap_mode ) {
         trap_pos  = trap_values[0];
@@ -501,6 +503,8 @@ void Driver_Node::request_new_ctrl_setpoint(){
         trap_spd  = 50000;
         trap_acc  = 50000;
     }
+
+    qDebug() << "ctl_setpoint: " << ctrl_setpoint;
 
     switch( ctrl_mode )
     {
