@@ -268,6 +268,8 @@ void MainWindow::controller_setpoint(int val)
 {
     uint numb = 0, valid = 0;
 
+    qDebug() << "ctl_setpoint: " << val << " PAYLOAD_BUF_LEN: " << PAYLOAD_BUF_LEN << " payload_str: " << payload_str;
+
     switch(wanted_controller)
     {
         case 0: //Null

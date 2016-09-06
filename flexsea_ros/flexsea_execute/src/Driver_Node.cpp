@@ -504,7 +504,9 @@ void Driver_Node::request_new_ctrl_setpoint(){
         trap_acc  = 50000;
     }
 
-    qDebug() << "ctl_setpoint: " << ctrl_setpoint;
+    //uint8_t payload_str_test[PAYLOAD_BUF_LEN];
+
+    //qDebug() << "ctl_setpoint: " << ctrl_setpoint << " PAYLOAD_BUF_LEN: " << PAYLOAD_BUF_LEN << "payload_str: " << payload_str;
 
     switch( ctrl_mode )
     {
