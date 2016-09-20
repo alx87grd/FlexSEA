@@ -67,6 +67,8 @@ void MainWindow::disp_execute(struct execute_s *ex, uint8_t slave_ab)
 
         ui->disp_current->setText(QString::number(ex->current));
 
+        qDebug() << "______________________ctl_actual_raw: " << (ex->current);
+
         ui->disp_vb->setText(QString::number(ex->volt_batt));
         ui->disp_vg->setText(QString::number(ex->volt_int));
         ui->disp_temp->setText(QString::number(ex->temp));

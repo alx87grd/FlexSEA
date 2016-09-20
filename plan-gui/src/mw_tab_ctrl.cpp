@@ -268,7 +268,7 @@ void MainWindow::controller_setpoint(int val)
 {
     uint numb = 0, valid = 0;
 
-    qDebug() << "ctl_setpoint: " << val << " PAYLOAD_BUF_LEN: " << PAYLOAD_BUF_LEN << " payload_str: " << payload_str;
+    //qDebug() << "ctl_setpoint: " << val << " PAYLOAD_BUF_LEN: " << PAYLOAD_BUF_LEN << " payload_str: " << payload_str;
 
     switch(wanted_controller)
     {
@@ -288,6 +288,7 @@ void MainWindow::controller_setpoint(int val)
              break;
         case 3: //Current
             valid = 1;
+            qDebug() << "ctl_setpoint_raw: " << val;
             numb = tx_cmd_ctrl_i(active_slave_1, CMD_WRITE, payload_str, PAYLOAD_BUF_LEN, val, 0);
             break;
         //case 4: //Impedance
