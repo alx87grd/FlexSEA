@@ -1,0 +1,2775 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"USBUART_1_hid.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.section	.text.USBUART_1_UpdateHIDTimer,"ax",%progbits
+  19              		.align	2
+  20              		.global	USBUART_1_UpdateHIDTimer
+  21              		.thumb
+  22              		.thumb_func
+  23              		.type	USBUART_1_UpdateHIDTimer, %function
+  24              	USBUART_1_UpdateHIDTimer:
+  25              	.LFB0:
+  26              		.file 1 ".\\Generated_Source\\PSoC5\\USBUART_1_hid.c"
+   1:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /*******************************************************************************
+   2:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * File Name: USBUART_1_hid.c
+   3:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Version 2.80
+   4:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+   5:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Description:
+   6:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  USB HID Class request handler.
+   7:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+   8:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Related Document:
+   9:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  Device Class Definition for Human Interface Devices (HID) Version 1.11
+  10:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  11:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Note:
+  12:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  13:.\Generated_Source\PSoC5/USBUART_1_hid.c **** ********************************************************************************
+  14:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Copyright 2008-2014, Cypress Semiconductor Corporation.  All rights reserved.
+  15:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * You may use this file only in accordance with the license, terms, conditions,
+  16:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * disclaimers, and limitations in the end user license agreement accompanying
+  17:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * the software package with which this file was provided.
+  18:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *******************************************************************************/
+  19:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  20:.\Generated_Source\PSoC5/USBUART_1_hid.c **** #include "USBUART_1.h"
+  21:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  22:.\Generated_Source\PSoC5/USBUART_1_hid.c **** #if defined(USBUART_1_ENABLE_HID_CLASS)
+  23:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  24:.\Generated_Source\PSoC5/USBUART_1_hid.c **** #include "USBUART_1_pvt.h"
+  25:.\Generated_Source\PSoC5/USBUART_1_hid.c **** #include "USBUART_1_hid.h"
+  26:.\Generated_Source\PSoC5/USBUART_1_hid.c **** #include "cyapicallbacks.h"
+  27:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  28:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  29:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /***************************************
+  30:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *    HID Variables
+  31:.\Generated_Source\PSoC5/USBUART_1_hid.c **** ***************************************/
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 2
+
+
+  32:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  33:.\Generated_Source\PSoC5/USBUART_1_hid.c **** volatile uint8 USBUART_1_hidProtocol[USBUART_1_MAX_INTERFACES_NUMBER];  /* HID device protocol stat
+  34:.\Generated_Source\PSoC5/USBUART_1_hid.c **** volatile uint8 USBUART_1_hidIdleRate[USBUART_1_MAX_INTERFACES_NUMBER];  /* HID device idle reload v
+  35:.\Generated_Source\PSoC5/USBUART_1_hid.c **** volatile uint8 USBUART_1_hidIdleTimer[USBUART_1_MAX_INTERFACES_NUMBER]; /* HID device idle rate val
+  36:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  37:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  38:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /***************************************
+  39:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Custom Declarations
+  40:.\Generated_Source\PSoC5/USBUART_1_hid.c **** ***************************************/
+  41:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  42:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /* `#START HID_CUSTOM_DECLARATIONS` Place your declaration here */
+  43:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  44:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /* `#END` */
+  45:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  46:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  47:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /*******************************************************************************
+  48:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Function Name: USBUART_1_UpdateHIDTimer
+  49:.\Generated_Source\PSoC5/USBUART_1_hid.c **** ********************************************************************************
+  50:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  51:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Summary:
+  52:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  Updates the HID report timer and reloads it if expired
+  53:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  54:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Parameters:
+  55:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  interface:  Interface Number.
+  56:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  57:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Return:
+  58:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  status.
+  59:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  60:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Reentrant:
+  61:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  No.
+  62:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  63:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *******************************************************************************/
+  64:.\Generated_Source\PSoC5/USBUART_1_hid.c **** uint8 USBUART_1_UpdateHIDTimer(uint8 interface) 
+  65:.\Generated_Source\PSoC5/USBUART_1_hid.c **** {
+  27              		.loc 1 65 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  66:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     uint8 stat = USBUART_1_IDLE_TIMER_INDEFINITE;
+  67:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  68:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     if(USBUART_1_hidIdleRate[interface] != 0u)
+  33              		.loc 1 68 0
+  34 0000 0C4B     		ldr	r3, .L5
+  35 0002 1B5C     		ldrb	r3, [r3, r0]	@ zero_extendqisi2
+  36 0004 13F0FF0F 		tst	r3, #255
+  37 0008 12D0     		beq	.L4
+  69:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     {
+  70:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         if(USBUART_1_hidIdleTimer[interface] > 0u)
+  38              		.loc 1 70 0
+  39 000a 0B4B     		ldr	r3, .L5+4
+  40 000c 1B5C     		ldrb	r3, [r3, r0]	@ zero_extendqisi2
+  41 000e 13F0FF0F 		tst	r3, #255
+  42 0012 06D0     		beq	.L3
+  71:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         {
+  72:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             USBUART_1_hidIdleTimer[interface]--;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 3
+
+
+  43              		.loc 1 72 0
+  44 0014 084A     		ldr	r2, .L5+4
+  45 0016 135C     		ldrb	r3, [r2, r0]	@ zero_extendqisi2
+  46 0018 013B     		subs	r3, r3, #1
+  47 001a DBB2     		uxtb	r3, r3
+  48 001c 1354     		strb	r3, [r2, r0]
+  49              	.LVL1:
+  73:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             stat = USBUART_1_IDLE_TIMER_RUNNING;
+  50              		.loc 1 73 0
+  51 001e 0220     		movs	r0, #2
+  52              	.LVL2:
+  53 0020 7047     		bx	lr
+  54              	.LVL3:
+  55              	.L3:
+  74:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         }
+  75:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         else
+  76:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         {
+  77:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             USBUART_1_hidIdleTimer[interface] = USBUART_1_hidIdleRate[interface];
+  56              		.loc 1 77 0
+  57 0022 044B     		ldr	r3, .L5
+  58 0024 1B5C     		ldrb	r3, [r3, r0]	@ zero_extendqisi2
+  59 0026 DBB2     		uxtb	r3, r3
+  60 0028 034A     		ldr	r2, .L5+4
+  61 002a 1354     		strb	r3, [r2, r0]
+  62              	.LVL4:
+  78:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             stat = USBUART_1_IDLE_TIMER_EXPIRED;
+  63              		.loc 1 78 0
+  64 002c 0120     		movs	r0, #1
+  65              	.LVL5:
+  66 002e 7047     		bx	lr
+  67              	.LVL6:
+  68              	.L4:
+  66:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  69              		.loc 1 66 0
+  70 0030 0020     		movs	r0, #0
+  71              	.LVL7:
+  79:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         }
+  80:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     }
+  81:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  82:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     return(stat);
+  83:.\Generated_Source\PSoC5/USBUART_1_hid.c **** }
+  72              		.loc 1 83 0
+  73 0032 7047     		bx	lr
+  74              	.L6:
+  75              		.align	2
+  76              	.L5:
+  77 0034 00000000 		.word	USBUART_1_hidIdleRate
+  78 0038 00000000 		.word	USBUART_1_hidIdleTimer
+  79              		.cfi_endproc
+  80              	.LFE0:
+  81              		.size	USBUART_1_UpdateHIDTimer, .-USBUART_1_UpdateHIDTimer
+  82              		.section	.text.USBUART_1_GetProtocol,"ax",%progbits
+  83              		.align	2
+  84              		.global	USBUART_1_GetProtocol
+  85              		.thumb
+  86              		.thumb_func
+  87              		.type	USBUART_1_GetProtocol, %function
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 4
+
+
+  88              	USBUART_1_GetProtocol:
+  89              	.LFB1:
+  84:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  85:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+  86:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /*******************************************************************************
+  87:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Function Name: USBUART_1_GetProtocol
+  88:.\Generated_Source\PSoC5/USBUART_1_hid.c **** ********************************************************************************
+  89:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  90:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Summary:
+  91:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  Returns the selected protocol value to the application
+  92:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  93:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Parameters:
+  94:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  interface:  Interface Number.
+  95:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  96:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Return:
+  97:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  Interface protocol.
+  98:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+  99:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *******************************************************************************/
+ 100:.\Generated_Source\PSoC5/USBUART_1_hid.c **** uint8 USBUART_1_GetProtocol(uint8 interface) 
+ 101:.\Generated_Source\PSoC5/USBUART_1_hid.c **** {
+  90              		.loc 1 101 0
+  91              		.cfi_startproc
+  92              		@ args = 0, pretend = 0, frame = 0
+  93              		@ frame_needed = 0, uses_anonymous_args = 0
+  94              		@ link register save eliminated.
+  95              	.LVL8:
+ 102:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     return(USBUART_1_hidProtocol[interface]);
+  96              		.loc 1 102 0
+  97 0000 014B     		ldr	r3, .L8
+  98 0002 185C     		ldrb	r0, [r3, r0]	@ zero_extendqisi2
+  99              	.LVL9:
+ 103:.\Generated_Source\PSoC5/USBUART_1_hid.c **** }
+ 100              		.loc 1 103 0
+ 101 0004 7047     		bx	lr
+ 102              	.L9:
+ 103 0006 00BF     		.align	2
+ 104              	.L8:
+ 105 0008 00000000 		.word	USBUART_1_hidProtocol
+ 106              		.cfi_endproc
+ 107              	.LFE1:
+ 108              		.size	USBUART_1_GetProtocol, .-USBUART_1_GetProtocol
+ 109              		.section	.text.USBUART_1_FindHidClassDecriptor,"ax",%progbits
+ 110              		.align	2
+ 111              		.global	USBUART_1_FindHidClassDecriptor
+ 112              		.thumb
+ 113              		.thumb_func
+ 114              		.type	USBUART_1_FindHidClassDecriptor, %function
+ 115              	USBUART_1_FindHidClassDecriptor:
+ 116              	.LFB3:
+ 104:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 105:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 106:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /*******************************************************************************
+ 107:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Function Name: USBUART_1_DispatchHIDClassRqst
+ 108:.\Generated_Source\PSoC5/USBUART_1_hid.c **** ********************************************************************************
+ 109:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 110:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Summary:
+ 111:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  This routine dispatches class requests
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 5
+
+
+ 112:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 113:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Parameters:
+ 114:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  None.
+ 115:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 116:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Return:
+ 117:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  requestHandled
+ 118:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 119:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Reentrant:
+ 120:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  No.
+ 121:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 122:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *******************************************************************************/
+ 123:.\Generated_Source\PSoC5/USBUART_1_hid.c **** uint8 USBUART_1_DispatchHIDClassRqst(void) 
+ 124:.\Generated_Source\PSoC5/USBUART_1_hid.c **** {
+ 125:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     uint8 requestHandled = USBUART_1_FALSE;
+ 126:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     uint8 interfaceNumber;
+ 127:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 128:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     interfaceNumber = CY_GET_REG8(USBUART_1_wIndexLo);
+ 129:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     if ((CY_GET_REG8(USBUART_1_bmRequestType) & USBUART_1_RQST_DIR_MASK) == USBUART_1_RQST_DIR_D2H)
+ 130:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     {   /* Control Read */
+ 131:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         switch (CY_GET_REG8(USBUART_1_bRequest))
+ 132:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         {
+ 133:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             case USBUART_1_GET_DESCRIPTOR:
+ 134:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 if (CY_GET_REG8(USBUART_1_wValueHi) == USBUART_1_DESCR_HID_CLASS)
+ 135:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 136:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     USBUART_1_FindHidClassDecriptor();
+ 137:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     if (USBUART_1_currentTD.count != 0u)
+ 138:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     {
+ 139:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         requestHandled = USBUART_1_InitControlRead();
+ 140:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     }
+ 141:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 142:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 else if (CY_GET_REG8(USBUART_1_wValueHi) == USBUART_1_DESCR_HID_REPORT)
+ 143:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 144:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     USBUART_1_FindReportDescriptor();
+ 145:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     if (USBUART_1_currentTD.count != 0u)
+ 146:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     {
+ 147:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         requestHandled = USBUART_1_InitControlRead();
+ 148:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     }
+ 149:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 150:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 else
+ 151:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {   /* requestHandled is initialezed as FALSE by default */
+ 152:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 153:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 break;
+ 154:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             case USBUART_1_HID_GET_REPORT:
+ 155:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 USBUART_1_FindReport();
+ 156:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 if (USBUART_1_currentTD.count != 0u)
+ 157:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 158:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     requestHandled = USBUART_1_InitControlRead();
+ 159:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 160:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 break;
+ 161:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 162:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             case USBUART_1_HID_GET_IDLE:
+ 163:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 /* This function does not support multiple reports per interface*/
+ 164:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 /* Validate interfaceNumber and Report ID (should be 0) */
+ 165:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 if( (interfaceNumber < USBUART_1_MAX_INTERFACES_NUMBER) &&
+ 166:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     (CY_GET_REG8(USBUART_1_wValueLo) == 0u ) ) /* Do not support Idle per Report ID
+ 167:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 168:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     USBUART_1_currentTD.count = 1u;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 6
+
+
+ 169:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     USBUART_1_currentTD.pData = &USBUART_1_hidIdleRate[interfaceNumber];
+ 170:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     requestHandled  = USBUART_1_InitControlRead();
+ 171:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 172:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 break;
+ 173:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             case USBUART_1_HID_GET_PROTOCOL:
+ 174:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 /* Validate interfaceNumber */
+ 175:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 if( interfaceNumber < USBUART_1_MAX_INTERFACES_NUMBER)
+ 176:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 177:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     USBUART_1_currentTD.count = 1u;
+ 178:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     USBUART_1_currentTD.pData = &USBUART_1_hidProtocol[interfaceNumber];
+ 179:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     requestHandled  = USBUART_1_InitControlRead();
+ 180:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 181:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 break;
+ 182:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             default:    /* requestHandled is initialized as FALSE by default */
+ 183:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 break;
+ 184:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         }
+ 185:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     }
+ 186:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     else if ((CY_GET_REG8(USBUART_1_bmRequestType) & USBUART_1_RQST_DIR_MASK) ==
+ 187:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                                                                             USBUART_1_RQST_DIR_H2D)
+ 188:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     {   /* Control Write */
+ 189:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         switch (CY_GET_REG8(USBUART_1_bRequest))
+ 190:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         {
+ 191:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             case USBUART_1_HID_SET_REPORT:
+ 192:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 USBUART_1_FindReport();
+ 193:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 if (USBUART_1_currentTD.count != 0u)
+ 194:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 195:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     requestHandled = USBUART_1_InitControlWrite();
+ 196:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 197:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 break;
+ 198:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             case USBUART_1_HID_SET_IDLE:
+ 199:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 /* This function does not support multiple reports per interface */
+ 200:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 /* Validate interfaceNumber and Report ID (should be 0) */
+ 201:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 if( (interfaceNumber < USBUART_1_MAX_INTERFACES_NUMBER) &&
+ 202:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     (CY_GET_REG8(USBUART_1_wValueLo) == 0u ) ) /* Do not support Idle per Report ID
+ 203:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 204:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     USBUART_1_hidIdleRate[interfaceNumber] = CY_GET_REG8(USBUART_1_wValueHi);
+ 205:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     /* With regards to HID spec: "7.2.4 Set_Idle Request"
+ 206:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     *  Latency. If the current period has gone past the
+ 207:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     *  newly proscribed time duration, then a report
+ 208:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     *  will be generated immediately.
+ 209:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     */
+ 210:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     if(USBUART_1_hidIdleRate[interfaceNumber] <
+ 211:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                        USBUART_1_hidIdleTimer[interfaceNumber])
+ 212:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     {
+ 213:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         /* Set the timer to zero and let the UpdateHIDTimer() API return IDLE_TIMER
+ 214:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         USBUART_1_hidIdleTimer[interfaceNumber] = 0u;
+ 215:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     }
+ 216:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     /* If the new request is received within 4 milliseconds
+ 217:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     *  (1 count) of the end of the current period, then the
+ 218:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     *  new request will have no effect until after the report.
+ 219:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     */
+ 220:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     else if(USBUART_1_hidIdleTimer[interfaceNumber] <= 1u)
+ 221:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     {
+ 222:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         /* Do nothing.
+ 223:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         *  Let the UpdateHIDTimer() API continue to work and
+ 224:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         *  return IDLE_TIMER_EXPIRED status
+ 225:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         */
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 7
+
+
+ 226:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     }
+ 227:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     else
+ 228:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     {   /* Reload the timer*/
+ 229:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         USBUART_1_hidIdleTimer[interfaceNumber] =
+ 230:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         USBUART_1_hidIdleRate[interfaceNumber];
+ 231:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     }
+ 232:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     requestHandled = USBUART_1_InitNoDataControlTransfer();
+ 233:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 234:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 break;
+ 235:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 236:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             case USBUART_1_HID_SET_PROTOCOL:
+ 237:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 /* Validate interfaceNumber and protocol (must be 0 or 1) */
+ 238:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 if( (interfaceNumber < USBUART_1_MAX_INTERFACES_NUMBER) &&
+ 239:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     (CY_GET_REG8(USBUART_1_wValueLo) <= 1u) )
+ 240:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 241:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     USBUART_1_hidProtocol[interfaceNumber] = CY_GET_REG8(USBUART_1_wValueLo);
+ 242:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     requestHandled = USBUART_1_InitNoDataControlTransfer();
+ 243:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 244:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 break;
+ 245:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             default:    /* requestHandled is initialized as FALSE by default */
+ 246:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 break;
+ 247:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         }
+ 248:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     }
+ 249:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     else
+ 250:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     {   /* requestHandled is initialized as FALSE by default */
+ 251:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     }
+ 252:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 253:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     return(requestHandled);
+ 254:.\Generated_Source\PSoC5/USBUART_1_hid.c **** }
+ 255:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 256:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 257:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /*******************************************************************************
+ 258:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Function Name: USB_FindHidClassDescriptor
+ 259:.\Generated_Source\PSoC5/USBUART_1_hid.c **** ********************************************************************************
+ 260:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 261:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Summary:
+ 262:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  This routine find Hid Class Descriptor pointer based on the Interface number
+ 263:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  and Alternate setting then loads the currentTD structure with the address of
+ 264:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  the buffer and the size.
+ 265:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  The HID Class Descriptor resides inside the config descriptor.
+ 266:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 267:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Parameters:
+ 268:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  None.
+ 269:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 270:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Return:
+ 271:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  currentTD
+ 272:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 273:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Reentrant:
+ 274:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  No.
+ 275:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 276:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *******************************************************************************/
+ 277:.\Generated_Source\PSoC5/USBUART_1_hid.c **** void USBUART_1_FindHidClassDecriptor(void) 
+ 278:.\Generated_Source\PSoC5/USBUART_1_hid.c **** {
+ 117              		.loc 1 278 0
+ 118              		.cfi_startproc
+ 119              		@ args = 0, pretend = 0, frame = 0
+ 120              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 8
+
+
+ 121 0000 08B5     		push	{r3, lr}
+ 122              		.cfi_def_cfa_offset 8
+ 123              		.cfi_offset 3, -8
+ 124              		.cfi_offset 14, -4
+ 279:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     const T_USBUART_1_LUT CYCODE *pTmp;
+ 280:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     volatile uint8 *pDescr;
+ 281:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     uint8 interfaceN;
+ 282:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 283:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = USBUART_1_GetConfigTablePtr(USBUART_1_configuration - 1u);
+ 125              		.loc 1 283 0
+ 126 0002 0B4B     		ldr	r3, .L12
+ 127 0004 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 128 0006 0138     		subs	r0, r0, #1
+ 129 0008 C0B2     		uxtb	r0, r0
+ 130 000a FFF7FEFF 		bl	USBUART_1_GetConfigTablePtr
+ 131              	.LVL10:
+ 284:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     interfaceN = CY_GET_REG8(USBUART_1_wIndexLo);
+ 132              		.loc 1 284 0
+ 133 000e 094B     		ldr	r3, .L12+4
+ 134 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 135 0012 DBB2     		uxtb	r3, r3
+ 136              	.LVL11:
+ 285:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* Third entry in the LUT starts the Interface Table pointers */
+ 286:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* Now use the request interface number*/
+ 287:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = &pTmp[interfaceN + 2u];
+ 137              		.loc 1 287 0
+ 138 0014 00EBC300 		add	r0, r0, r3, lsl #3
+ 139              	.LVL12:
+ 288:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* USB_DEVICEx_CONFIGURATIONy_INTERFACEz_TABLE */
+ 289:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = (const T_USBUART_1_LUT CYCODE *) pTmp->p_list;
+ 140              		.loc 1 289 0
+ 141 0018 4269     		ldr	r2, [r0, #20]
+ 142              	.LVL13:
+ 290:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* Now use Alternate setting number */
+ 291:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = &pTmp[USBUART_1_interfaceSetting[interfaceN]];
+ 143              		.loc 1 291 0
+ 144 001a 0749     		ldr	r1, .L12+8
+ 145 001c CB5C     		ldrb	r3, [r1, r3]	@ zero_extendqisi2
+ 146              	.LVL14:
+ 147 001e 02EBC303 		add	r3, r2, r3, lsl #3
+ 148              	.LVL15:
+ 292:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* USB_DEVICEx_CONFIGURATIONy_INTERFACEz_ALTERNATEi_HID_TABLE */
+ 293:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = (const T_USBUART_1_LUT CYCODE *) pTmp->p_list;
+ 149              		.loc 1 293 0
+ 150 0022 5B68     		ldr	r3, [r3, #4]
+ 151              	.LVL16:
+ 294:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* Fifth entry in the LUT points to Hid Class Descriptor in Configuration Descriptor */
+ 295:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = &pTmp[4u];
+ 296:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pDescr = (volatile uint8 *)pTmp->p_list;
+ 152              		.loc 1 296 0
+ 153 0024 596A     		ldr	r1, [r3, #36]
+ 154              	.LVL17:
+ 297:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* The first byte contains the descriptor length */
+ 298:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     USBUART_1_currentTD.count = *pDescr;
+ 155              		.loc 1 298 0
+ 156 0026 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 157              	.LVL18:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 9
+
+
+ 158 0028 044A     		ldr	r2, .L12+12
+ 159 002a 1380     		strh	r3, [r2]	@ movhi
+ 299:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     USBUART_1_currentTD.pData = pDescr;
+ 160              		.loc 1 299 0
+ 161 002c 5160     		str	r1, [r2, #4]
+ 162 002e 08BD     		pop	{r3, pc}
+ 163              	.L13:
+ 164              		.align	2
+ 165              	.L12:
+ 166 0030 00000000 		.word	USBUART_1_configuration
+ 167 0034 04600040 		.word	1073766404
+ 168 0038 00000000 		.word	USBUART_1_interfaceSetting
+ 169 003c 00000000 		.word	USBUART_1_currentTD
+ 170              		.cfi_endproc
+ 171              	.LFE3:
+ 172              		.size	USBUART_1_FindHidClassDecriptor, .-USBUART_1_FindHidClassDecriptor
+ 173              		.section	.text.USBUART_1_FindReportDescriptor,"ax",%progbits
+ 174              		.align	2
+ 175              		.global	USBUART_1_FindReportDescriptor
+ 176              		.thumb
+ 177              		.thumb_func
+ 178              		.type	USBUART_1_FindReportDescriptor, %function
+ 179              	USBUART_1_FindReportDescriptor:
+ 180              	.LFB4:
+ 300:.\Generated_Source\PSoC5/USBUART_1_hid.c **** }
+ 301:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 302:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 303:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /*******************************************************************************
+ 304:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Function Name: USB_FindReportDescriptor
+ 305:.\Generated_Source\PSoC5/USBUART_1_hid.c **** ********************************************************************************
+ 306:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 307:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Summary:
+ 308:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  This routine find Hid Report Descriptor pointer based on the Interface
+ 309:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  number, then loads the currentTD structure with the address of the buffer
+ 310:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  and the size.
+ 311:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  Hid Report Descriptor is located after IN/OUT/FEATURE reports.
+ 312:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 313:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Parameters:
+ 314:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *   void
+ 315:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 316:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Return:
+ 317:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  currentTD
+ 318:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 319:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Reentrant:
+ 320:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  No.
+ 321:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 322:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *******************************************************************************/
+ 323:.\Generated_Source\PSoC5/USBUART_1_hid.c **** void USBUART_1_FindReportDescriptor(void) 
+ 324:.\Generated_Source\PSoC5/USBUART_1_hid.c **** {
+ 181              		.loc 1 324 0
+ 182              		.cfi_startproc
+ 183              		@ args = 0, pretend = 0, frame = 0
+ 184              		@ frame_needed = 0, uses_anonymous_args = 0
+ 185 0000 08B5     		push	{r3, lr}
+ 186              		.cfi_def_cfa_offset 8
+ 187              		.cfi_offset 3, -8
+ 188              		.cfi_offset 14, -4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 10
+
+
+ 325:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     const T_USBUART_1_LUT CYCODE *pTmp;
+ 326:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     volatile uint8 *pDescr;
+ 327:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     uint8 interfaceN;
+ 328:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 329:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = USBUART_1_GetConfigTablePtr(USBUART_1_configuration - 1u);
+ 189              		.loc 1 329 0
+ 190 0002 0D4B     		ldr	r3, .L16
+ 191 0004 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 192 0006 0138     		subs	r0, r0, #1
+ 193 0008 C0B2     		uxtb	r0, r0
+ 194 000a FFF7FEFF 		bl	USBUART_1_GetConfigTablePtr
+ 195              	.LVL19:
+ 330:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     interfaceN = CY_GET_REG8(USBUART_1_wIndexLo);
+ 196              		.loc 1 330 0
+ 197 000e 0B4B     		ldr	r3, .L16+4
+ 198 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 199 0012 DBB2     		uxtb	r3, r3
+ 200              	.LVL20:
+ 331:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* Third entry in the LUT starts the Interface Table pointers */
+ 332:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* Now use the request interface number */
+ 333:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = &pTmp[interfaceN + 2u];
+ 201              		.loc 1 333 0
+ 202 0014 00EBC300 		add	r0, r0, r3, lsl #3
+ 203              	.LVL21:
+ 334:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* USB_DEVICEx_CONFIGURATIONy_INTERFACEz_TABLE */
+ 335:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = (const T_USBUART_1_LUT CYCODE *) pTmp->p_list;
+ 204              		.loc 1 335 0
+ 205 0018 4269     		ldr	r2, [r0, #20]
+ 206              	.LVL22:
+ 336:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* Now use Alternate setting number */
+ 337:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = &pTmp[USBUART_1_interfaceSetting[interfaceN]];
+ 207              		.loc 1 337 0
+ 208 001a 0949     		ldr	r1, .L16+8
+ 209 001c CB5C     		ldrb	r3, [r1, r3]	@ zero_extendqisi2
+ 210              	.LVL23:
+ 211 001e 02EBC303 		add	r3, r2, r3, lsl #3
+ 212              	.LVL24:
+ 338:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* USB_DEVICEx_CONFIGURATIONy_INTERFACEz_ALTERNATEi_HID_TABLE */
+ 339:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = (const T_USBUART_1_LUT CYCODE *) pTmp->p_list;
+ 213              		.loc 1 339 0
+ 214 0022 5B68     		ldr	r3, [r3, #4]
+ 215              	.LVL25:
+ 340:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* Fourth entry in the LUT starts the Hid Report Descriptor */
+ 341:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = &pTmp[3u];
+ 342:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pDescr = (volatile uint8 *)pTmp->p_list;
+ 216              		.loc 1 342 0
+ 217 0024 DB69     		ldr	r3, [r3, #28]
+ 218              	.LVL26:
+ 343:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* The 1st and 2nd bytes of descriptor contain its length. LSB is 1st. */
+ 344:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     USBUART_1_currentTD.count =  (((uint16)pDescr[1u] << 8u) | pDescr[0u]);
+ 219              		.loc 1 344 0
+ 220 0026 5978     		ldrb	r1, [r3, #1]	@ zero_extendqisi2
+ 221 0028 13F8022B 		ldrb	r2, [r3], #2	@ zero_extendqisi2
+ 222              	.LVL27:
+ 223 002c 42EA0122 		orr	r2, r2, r1, lsl #8
+ 224 0030 0449     		ldr	r1, .L16+12
+ 225 0032 0A80     		strh	r2, [r1]	@ movhi
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 11
+
+
+ 345:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     USBUART_1_currentTD.pData = &pDescr[2u];
+ 226              		.loc 1 345 0
+ 227 0034 4B60     		str	r3, [r1, #4]
+ 228 0036 08BD     		pop	{r3, pc}
+ 229              	.LVL28:
+ 230              	.L17:
+ 231              		.align	2
+ 232              	.L16:
+ 233 0038 00000000 		.word	USBUART_1_configuration
+ 234 003c 04600040 		.word	1073766404
+ 235 0040 00000000 		.word	USBUART_1_interfaceSetting
+ 236 0044 00000000 		.word	USBUART_1_currentTD
+ 237              		.cfi_endproc
+ 238              	.LFE4:
+ 239              		.size	USBUART_1_FindReportDescriptor, .-USBUART_1_FindReportDescriptor
+ 240              		.section	.text.USBUART_1_FindReport,"ax",%progbits
+ 241              		.align	2
+ 242              		.global	USBUART_1_FindReport
+ 243              		.thumb
+ 244              		.thumb_func
+ 245              		.type	USBUART_1_FindReport, %function
+ 246              	USBUART_1_FindReport:
+ 247              	.LFB5:
+ 346:.\Generated_Source\PSoC5/USBUART_1_hid.c **** }
+ 347:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 348:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 349:.\Generated_Source\PSoC5/USBUART_1_hid.c **** /*******************************************************************************
+ 350:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Function Name: USBUART_1_FindReport
+ 351:.\Generated_Source\PSoC5/USBUART_1_hid.c **** ********************************************************************************
+ 352:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 353:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Summary:
+ 354:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  This routine sets up a transfer based on the Interface number, Report Type
+ 355:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  and Report ID, then loads the currentTD structure with the address of the
+ 356:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  buffer and the size.  The caller has to decide if it is a control read or
+ 357:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  control write.
+ 358:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 359:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Parameters:
+ 360:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  None.
+ 361:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 362:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Return:
+ 363:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  currentTD
+ 364:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 365:.\Generated_Source\PSoC5/USBUART_1_hid.c **** * Reentrant:
+ 366:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *  No.
+ 367:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *
+ 368:.\Generated_Source\PSoC5/USBUART_1_hid.c **** *******************************************************************************/
+ 369:.\Generated_Source\PSoC5/USBUART_1_hid.c **** void USBUART_1_FindReport(void) 
+ 370:.\Generated_Source\PSoC5/USBUART_1_hid.c **** {
+ 248              		.loc 1 370 0
+ 249              		.cfi_startproc
+ 250              		@ args = 0, pretend = 0, frame = 0
+ 251              		@ frame_needed = 0, uses_anonymous_args = 0
+ 252 0000 10B5     		push	{r4, lr}
+ 253              		.cfi_def_cfa_offset 8
+ 254              		.cfi_offset 4, -8
+ 255              		.cfi_offset 14, -4
+ 371:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     const T_USBUART_1_LUT CYCODE *pTmp;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 12
+
+
+ 372:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     T_USBUART_1_TD *pTD;
+ 373:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     uint8 interfaceN;
+ 374:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     uint8 reportType;
+ 375:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 376:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* `#START HID_FINDREPORT` Place custom handling here */
+ 377:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 378:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* `#END` */
+ 379:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     
+ 380:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     #ifdef USBUART_1_FIND_REPORT_CALLBACK
+ 381:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         USBUART_1_FindReport_Callback();
+ 382:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     #endif /* USBUART_1_FIND_REPORT_CALLBACK */
+ 383:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     
+ 384:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     USBUART_1_currentTD.count = 0u;   /* Init not supported condition */
+ 256              		.loc 1 384 0
+ 257 0002 0022     		movs	r2, #0
+ 258 0004 1A4B     		ldr	r3, .L21
+ 259 0006 1A80     		strh	r2, [r3]	@ movhi
+ 385:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = USBUART_1_GetConfigTablePtr(USBUART_1_configuration - 1u);
+ 260              		.loc 1 385 0
+ 261 0008 1A4B     		ldr	r3, .L21+4
+ 262 000a 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 263 000c 0138     		subs	r0, r0, #1
+ 264 000e C0B2     		uxtb	r0, r0
+ 265 0010 FFF7FEFF 		bl	USBUART_1_GetConfigTablePtr
+ 266              	.LVL29:
+ 386:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     reportType = CY_GET_REG8(USBUART_1_wValueHi);
+ 267              		.loc 1 386 0
+ 268 0014 184B     		ldr	r3, .L21+8
+ 269 0016 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 270 0018 DAB2     		uxtb	r2, r3
+ 271              	.LVL30:
+ 387:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     interfaceN = CY_GET_REG8(USBUART_1_wIndexLo);
+ 272              		.loc 1 387 0
+ 273 001a 184B     		ldr	r3, .L21+12
+ 274 001c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 275 001e DBB2     		uxtb	r3, r3
+ 276              	.LVL31:
+ 388:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* Third entry in the LUT COnfiguration Table starts the Interface Table pointers */
+ 389:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* Now use the request interface number */
+ 390:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = &pTmp[interfaceN + 2u];
+ 277              		.loc 1 390 0
+ 278 0020 00EBC300 		add	r0, r0, r3, lsl #3
+ 279              	.LVL32:
+ 391:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     /* USB_DEVICEx_CONFIGURATIONy_INTERFACEz_TABLE*/
+ 392:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     pTmp = (const T_USBUART_1_LUT CYCODE *) pTmp->p_list;
+ 280              		.loc 1 392 0
+ 281 0024 4169     		ldr	r1, [r0, #20]
+ 282              	.LVL33:
+ 393:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     if(interfaceN < USBUART_1_MAX_INTERFACES_NUMBER)
+ 283              		.loc 1 393 0
+ 284 0026 012B     		cmp	r3, #1
+ 285 0028 20D8     		bhi	.L18
+ 394:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     {
+ 395:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         /* Now use Alternate setting number */
+ 396:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         pTmp = &pTmp[USBUART_1_interfaceSetting[interfaceN]];
+ 286              		.loc 1 396 0
+ 287 002a 1548     		ldr	r0, .L21+16
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 13
+
+
+ 288 002c C35C     		ldrb	r3, [r0, r3]	@ zero_extendqisi2
+ 289              	.LVL34:
+ 290 002e 01EBC301 		add	r1, r1, r3, lsl #3
+ 291              	.LVL35:
+ 397:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         /* USB_DEVICEx_CONFIGURATIONy_INTERFACEz_ALTERNATEi_HID_TABLE */
+ 398:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         pTmp = (const T_USBUART_1_LUT CYCODE *) pTmp->p_list;
+ 292              		.loc 1 398 0
+ 293 0032 4968     		ldr	r1, [r1, #4]
+ 294              	.LVL36:
+ 399:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         /* Validate reportType to comply with "7.2.1 Get_Report Request" */
+ 400:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         if((reportType >= USBUART_1_HID_GET_REPORT_INPUT) &&
+ 295              		.loc 1 400 0
+ 296 0034 531E     		subs	r3, r2, #1
+ 297 0036 DBB2     		uxtb	r3, r3
+ 298 0038 022B     		cmp	r3, #2
+ 299 003a 17D8     		bhi	.L18
+ 401:.\Generated_Source\PSoC5/USBUART_1_hid.c ****            (reportType <= USBUART_1_HID_GET_REPORT_FEATURE))
+ 402:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         {
+ 403:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             /* Get the entry proper TD (IN, OUT or Feature Report Table)*/
+ 404:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             pTmp = &pTmp[reportType - 1u];
+ 300              		.loc 1 404 0
+ 301 003c 02F10053 		add	r3, r2, #536870912
+ 302 0040 013B     		subs	r3, r3, #1
+ 303 0042 01EBC300 		add	r0, r1, r3, lsl #3
+ 304              	.LVL37:
+ 405:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             reportType = CY_GET_REG8(USBUART_1_wValueLo);    /* Get reportID */
+ 305              		.loc 1 405 0
+ 306 0046 0F4A     		ldr	r2, .L21+20
+ 307              	.LVL38:
+ 308 0048 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 309 004a D2B2     		uxtb	r2, r2
+ 310              	.LVL39:
+ 406:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             /* Validate table support by the HID descriptor, compare table count with reportID */
+ 407:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             if(pTmp->c >= reportType)
+ 311              		.loc 1 407 0
+ 312 004c 11F83330 		ldrb	r3, [r1, r3, lsl #3]	@ zero_extendqisi2
+ 313 0050 9342     		cmp	r3, r2
+ 314 0052 0BD3     		bcc	.L18
+ 408:.\Generated_Source\PSoC5/USBUART_1_hid.c ****             {
+ 409:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 pTD = (T_USBUART_1_TD *) pTmp->p_list;
+ 315              		.loc 1 409 0
+ 316 0054 4068     		ldr	r0, [r0, #4]
+ 317              	.LVL40:
+ 410:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 pTD = &pTD[reportType];                          /* select entry depend on report I
+ 318              		.loc 1 410 0
+ 319 0056 02EB4202 		add	r2, r2, r2, lsl #1
+ 320              	.LVL41:
+ 321 005a 9200     		lsls	r2, r2, #2
+ 322 005c 8118     		adds	r1, r0, r2
+ 323              	.LVL42:
+ 411:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 USBUART_1_currentTD.pData = pTD->pData;   /* Buffer pointer */
+ 324              		.loc 1 411 0
+ 325 005e 4C68     		ldr	r4, [r1, #4]
+ 326 0060 034B     		ldr	r3, .L21
+ 327 0062 5C60     		str	r4, [r3, #4]
+ 412:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 USBUART_1_currentTD.count = pTD->count;   /* Buffer Size */
+ 328              		.loc 1 412 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 14
+
+
+ 329 0064 825A     		ldrh	r2, [r0, r2]
+ 330 0066 1A80     		strh	r2, [r3]	@ movhi
+ 413:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 USBUART_1_currentTD.pStatusBlock = pTD->pStatusBlock;
+ 331              		.loc 1 413 0
+ 332 0068 8A68     		ldr	r2, [r1, #8]
+ 333 006a 9A60     		str	r2, [r3, #8]
+ 334              	.LVL43:
+ 335              	.L18:
+ 336 006c 10BD     		pop	{r4, pc}
+ 337              	.L22:
+ 338 006e 00BF     		.align	2
+ 339              	.L21:
+ 340 0070 00000000 		.word	USBUART_1_currentTD
+ 341 0074 00000000 		.word	USBUART_1_configuration
+ 342 0078 03600040 		.word	1073766403
+ 343 007c 04600040 		.word	1073766404
+ 344 0080 00000000 		.word	USBUART_1_interfaceSetting
+ 345 0084 02600040 		.word	1073766402
+ 346              		.cfi_endproc
+ 347              	.LFE5:
+ 348              		.size	USBUART_1_FindReport, .-USBUART_1_FindReport
+ 349              		.section	.text.USBUART_1_DispatchHIDClassRqst,"ax",%progbits
+ 350              		.align	2
+ 351              		.global	USBUART_1_DispatchHIDClassRqst
+ 352              		.thumb
+ 353              		.thumb_func
+ 354              		.type	USBUART_1_DispatchHIDClassRqst, %function
+ 355              	USBUART_1_DispatchHIDClassRqst:
+ 356              	.LFB2:
+ 124:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     uint8 requestHandled = USBUART_1_FALSE;
+ 357              		.loc 1 124 0
+ 358              		.cfi_startproc
+ 359              		@ args = 0, pretend = 0, frame = 0
+ 360              		@ frame_needed = 0, uses_anonymous_args = 0
+ 361 0000 08B5     		push	{r3, lr}
+ 362              		.cfi_def_cfa_offset 8
+ 363              		.cfi_offset 3, -8
+ 364              		.cfi_offset 14, -4
+ 365              	.LVL44:
+ 128:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     if ((CY_GET_REG8(USBUART_1_bmRequestType) & USBUART_1_RQST_DIR_MASK) == USBUART_1_RQST_DIR_D2H)
+ 366              		.loc 1 128 0
+ 367 0002 5F4B     		ldr	r3, .L54
+ 368 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 369 0006 DAB2     		uxtb	r2, r3
+ 370              	.LVL45:
+ 129:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     {   /* Control Read */
+ 371              		.loc 1 129 0
+ 372 0008 5E4B     		ldr	r3, .L54+4
+ 373 000a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 374 000c 13F0800F 		tst	r3, #128
+ 375 0010 4ED0     		beq	.L24
+ 131:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         {
+ 376              		.loc 1 131 0
+ 377 0012 5D4B     		ldr	r3, .L54+8
+ 378 0014 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 379 0016 013B     		subs	r3, r3, #1
+ 380 0018 052B     		cmp	r3, #5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 15
+
+
+ 381 001a 00F29380 		bhi	.L37
+ 382 001e DFE803F0 		tbb	[pc, r3]
+ 383              	.L27:
+ 384 0022 22       		.byte	(.L26-.L27)/2
+ 385 0023 2C       		.byte	(.L28-.L27)/2
+ 386 0024 3C       		.byte	(.L29-.L27)/2
+ 387 0025 91       		.byte	(.L37-.L27)/2
+ 388 0026 91       		.byte	(.L37-.L27)/2
+ 389 0027 03       		.byte	(.L30-.L27)/2
+ 390              		.p2align 1
+ 391              	.L30:
+ 134:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 392              		.loc 1 134 0
+ 393 0028 584B     		ldr	r3, .L54+12
+ 394 002a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 395 002c DBB2     		uxtb	r3, r3
+ 396 002e 212B     		cmp	r3, #33
+ 397 0030 0AD1     		bne	.L31
+ 136:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     if (USBUART_1_currentTD.count != 0u)
+ 398              		.loc 1 136 0
+ 399 0032 FFF7FEFF 		bl	USBUART_1_FindHidClassDecriptor
+ 400              	.LVL46:
+ 137:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     {
+ 401              		.loc 1 137 0
+ 402 0036 564B     		ldr	r3, .L54+16
+ 403 0038 1B88     		ldrh	r3, [r3]
+ 404 003a 9BB2     		uxth	r3, r3
+ 405 003c 002B     		cmp	r3, #0
+ 406 003e 00F08380 		beq	.L38
+ 139:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     }
+ 407              		.loc 1 139 0
+ 408 0042 FFF7FEFF 		bl	USBUART_1_InitControlRead
+ 409              	.LVL47:
+ 410 0046 08BD     		pop	{r3, pc}
+ 411              	.LVL48:
+ 412              	.L31:
+ 142:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 413              		.loc 1 142 0
+ 414 0048 504B     		ldr	r3, .L54+12
+ 415 004a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 416 004c DBB2     		uxtb	r3, r3
+ 417 004e 222B     		cmp	r3, #34
+ 418 0050 7CD1     		bne	.L39
+ 144:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     if (USBUART_1_currentTD.count != 0u)
+ 419              		.loc 1 144 0
+ 420 0052 FFF7FEFF 		bl	USBUART_1_FindReportDescriptor
+ 421              	.LVL49:
+ 145:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     {
+ 422              		.loc 1 145 0
+ 423 0056 4E4B     		ldr	r3, .L54+16
+ 424 0058 1B88     		ldrh	r3, [r3]
+ 425 005a 9BB2     		uxth	r3, r3
+ 426 005c 002B     		cmp	r3, #0
+ 427 005e 77D0     		beq	.L40
+ 147:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     }
+ 428              		.loc 1 147 0
+ 429 0060 FFF7FEFF 		bl	USBUART_1_InitControlRead
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 16
+
+
+ 430              	.LVL50:
+ 431 0064 08BD     		pop	{r3, pc}
+ 432              	.LVL51:
+ 433              	.L26:
+ 155:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 if (USBUART_1_currentTD.count != 0u)
+ 434              		.loc 1 155 0
+ 435 0066 FFF7FEFF 		bl	USBUART_1_FindReport
+ 436              	.LVL52:
+ 156:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 437              		.loc 1 156 0
+ 438 006a 494B     		ldr	r3, .L54+16
+ 439 006c 1B88     		ldrh	r3, [r3]
+ 440 006e 9BB2     		uxth	r3, r3
+ 441 0070 002B     		cmp	r3, #0
+ 442 0072 6FD0     		beq	.L41
+ 158:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 443              		.loc 1 158 0
+ 444 0074 FFF7FEFF 		bl	USBUART_1_InitControlRead
+ 445              	.LVL53:
+ 446 0078 08BD     		pop	{r3, pc}
+ 447              	.LVL54:
+ 448              	.L28:
+ 165:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     (CY_GET_REG8(USBUART_1_wValueLo) == 0u ) ) /* Do not support Idle per Report ID
+ 449              		.loc 1 165 0
+ 450 007a 012A     		cmp	r2, #1
+ 451 007c 6CD8     		bhi	.L42
+ 166:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 452              		.loc 1 166 0 discriminator 1
+ 453 007e 454B     		ldr	r3, .L54+20
+ 454 0080 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 165:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     (CY_GET_REG8(USBUART_1_wValueLo) == 0u ) ) /* Do not support Idle per Report ID
+ 455              		.loc 1 165 0 discriminator 1
+ 456 0082 13F0FF0F 		tst	r3, #255
+ 457 0086 69D1     		bne	.L43
+ 168:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     USBUART_1_currentTD.pData = &USBUART_1_hidIdleRate[interfaceNumber];
+ 458              		.loc 1 168 0
+ 459 0088 4149     		ldr	r1, .L54+16
+ 460 008a 0123     		movs	r3, #1
+ 461 008c 0B80     		strh	r3, [r1]	@ movhi
+ 169:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     requestHandled  = USBUART_1_InitControlRead();
+ 462              		.loc 1 169 0
+ 463 008e 424B     		ldr	r3, .L54+24
+ 464 0090 1344     		add	r3, r3, r2
+ 465 0092 4B60     		str	r3, [r1, #4]
+ 170:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 466              		.loc 1 170 0
+ 467 0094 FFF7FEFF 		bl	USBUART_1_InitControlRead
+ 468              	.LVL55:
+ 469 0098 08BD     		pop	{r3, pc}
+ 470              	.LVL56:
+ 471              	.L29:
+ 175:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 472              		.loc 1 175 0
+ 473 009a 012A     		cmp	r2, #1
+ 474 009c 60D8     		bhi	.L44
+ 177:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     USBUART_1_currentTD.pData = &USBUART_1_hidProtocol[interfaceNumber];
+ 475              		.loc 1 177 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 17
+
+
+ 476 009e 3C49     		ldr	r1, .L54+16
+ 477 00a0 0123     		movs	r3, #1
+ 478 00a2 0B80     		strh	r3, [r1]	@ movhi
+ 178:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     requestHandled  = USBUART_1_InitControlRead();
+ 479              		.loc 1 178 0
+ 480 00a4 3D4B     		ldr	r3, .L54+28
+ 481 00a6 1344     		add	r3, r3, r2
+ 482 00a8 4B60     		str	r3, [r1, #4]
+ 179:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 483              		.loc 1 179 0
+ 484 00aa FFF7FEFF 		bl	USBUART_1_InitControlRead
+ 485              	.LVL57:
+ 486 00ae 08BD     		pop	{r3, pc}
+ 487              	.LVL58:
+ 488              	.L24:
+ 186:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                                                                             USBUART_1_RQST_DIR_H2D)
+ 489              		.loc 1 186 0
+ 490 00b0 344B     		ldr	r3, .L54+4
+ 491 00b2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 492 00b4 13F0800F 		tst	r3, #128
+ 493 00b8 54D1     		bne	.L45
+ 189:.\Generated_Source\PSoC5/USBUART_1_hid.c ****         {
+ 494              		.loc 1 189 0
+ 495 00ba 334B     		ldr	r3, .L54+8
+ 496 00bc 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 497 00be DBB2     		uxtb	r3, r3
+ 498 00c0 0A2B     		cmp	r3, #10
+ 499 00c2 0DD0     		beq	.L32
+ 500 00c4 0B2B     		cmp	r3, #11
+ 501 00c6 2ED0     		beq	.L33
+ 502 00c8 092B     		cmp	r3, #9
+ 503 00ca 4DD1     		bne	.L52
+ 192:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 if (USBUART_1_currentTD.count != 0u)
+ 504              		.loc 1 192 0
+ 505 00cc FFF7FEFF 		bl	USBUART_1_FindReport
+ 506              	.LVL59:
+ 193:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 507              		.loc 1 193 0
+ 508 00d0 2F4B     		ldr	r3, .L54+16
+ 509 00d2 1B88     		ldrh	r3, [r3]
+ 510 00d4 9BB2     		uxth	r3, r3
+ 511 00d6 002B     		cmp	r3, #0
+ 512 00d8 48D0     		beq	.L47
+ 195:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 513              		.loc 1 195 0
+ 514 00da FFF7FEFF 		bl	USBUART_1_InitControlWrite
+ 515              	.LVL60:
+ 516 00de 08BD     		pop	{r3, pc}
+ 517              	.LVL61:
+ 518              	.L32:
+ 201:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     (CY_GET_REG8(USBUART_1_wValueLo) == 0u ) ) /* Do not support Idle per Report ID
+ 519              		.loc 1 201 0
+ 520 00e0 012A     		cmp	r2, #1
+ 521 00e2 45D8     		bhi	.L48
+ 202:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 522              		.loc 1 202 0 discriminator 1
+ 523 00e4 2B4B     		ldr	r3, .L54+20
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 18
+
+
+ 524 00e6 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 201:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     (CY_GET_REG8(USBUART_1_wValueLo) == 0u ) ) /* Do not support Idle per Report ID
+ 525              		.loc 1 201 0 discriminator 1
+ 526 00e8 13F0FF0F 		tst	r3, #255
+ 527 00ec 42D1     		bne	.L49
+ 204:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     /* With regards to HID spec: "7.2.4 Set_Idle Request"
+ 528              		.loc 1 204 0
+ 529 00ee 274B     		ldr	r3, .L54+12
+ 530 00f0 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 531 00f2 DBB2     		uxtb	r3, r3
+ 532 00f4 2849     		ldr	r1, .L54+24
+ 533 00f6 8B54     		strb	r3, [r1, r2]
+ 210:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                        USBUART_1_hidIdleTimer[interfaceNumber])
+ 534              		.loc 1 210 0
+ 535 00f8 8B5C     		ldrb	r3, [r1, r2]	@ zero_extendqisi2
+ 211:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     {
+ 536              		.loc 1 211 0
+ 537 00fa 2949     		ldr	r1, .L54+32
+ 538 00fc 895C     		ldrb	r1, [r1, r2]	@ zero_extendqisi2
+ 539 00fe DBB2     		uxtb	r3, r3
+ 210:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                        USBUART_1_hidIdleTimer[interfaceNumber])
+ 540              		.loc 1 210 0
+ 541 0100 8B42     		cmp	r3, r1
+ 542 0102 03D2     		bcs	.L35
+ 214:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     }
+ 543              		.loc 1 214 0
+ 544 0104 0021     		movs	r1, #0
+ 545 0106 264B     		ldr	r3, .L54+32
+ 546 0108 9954     		strb	r1, [r3, r2]
+ 547 010a 09E0     		b	.L36
+ 548              	.L35:
+ 220:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     {
+ 549              		.loc 1 220 0
+ 550 010c 244B     		ldr	r3, .L54+32
+ 551 010e 9B5C     		ldrb	r3, [r3, r2]	@ zero_extendqisi2
+ 552 0110 DBB2     		uxtb	r3, r3
+ 553 0112 012B     		cmp	r3, #1
+ 554 0114 04D9     		bls	.L36
+ 230:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     }
+ 555              		.loc 1 230 0
+ 556 0116 204B     		ldr	r3, .L54+24
+ 557 0118 9B5C     		ldrb	r3, [r3, r2]	@ zero_extendqisi2
+ 558 011a DBB2     		uxtb	r3, r3
+ 229:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                         USBUART_1_hidIdleRate[interfaceNumber];
+ 559              		.loc 1 229 0
+ 560 011c 2049     		ldr	r1, .L54+32
+ 561 011e 8B54     		strb	r3, [r1, r2]
+ 562              	.L36:
+ 232:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 563              		.loc 1 232 0
+ 564 0120 FFF7FEFF 		bl	USBUART_1_InitNoDataControlTransfer
+ 565              	.LVL62:
+ 566 0124 08BD     		pop	{r3, pc}
+ 567              	.LVL63:
+ 568              	.L33:
+ 238:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     (CY_GET_REG8(USBUART_1_wValueLo) <= 1u) )
+ 569              		.loc 1 238 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 19
+
+
+ 570 0126 012A     		cmp	r2, #1
+ 571 0128 26D8     		bhi	.L50
+ 239:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 {
+ 572              		.loc 1 239 0 discriminator 1
+ 573 012a 1A4B     		ldr	r3, .L54+20
+ 574 012c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 575 012e DBB2     		uxtb	r3, r3
+ 238:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     (CY_GET_REG8(USBUART_1_wValueLo) <= 1u) )
+ 576              		.loc 1 238 0 discriminator 1
+ 577 0130 012B     		cmp	r3, #1
+ 578 0132 23D8     		bhi	.L51
+ 241:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                     requestHandled = USBUART_1_InitNoDataControlTransfer();
+ 579              		.loc 1 241 0
+ 580 0134 174B     		ldr	r3, .L54+20
+ 581 0136 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 582 0138 DBB2     		uxtb	r3, r3
+ 583 013a 1849     		ldr	r1, .L54+28
+ 584 013c 8B54     		strb	r3, [r1, r2]
+ 242:.\Generated_Source\PSoC5/USBUART_1_hid.c ****                 }
+ 585              		.loc 1 242 0
+ 586 013e FFF7FEFF 		bl	USBUART_1_InitNoDataControlTransfer
+ 587              	.LVL64:
+ 588 0142 08BD     		pop	{r3, pc}
+ 589              	.LVL65:
+ 590              	.L37:
+ 125:.\Generated_Source\PSoC5/USBUART_1_hid.c ****     uint8 interfaceNumber;
+ 591              		.loc 1 125 0
+ 592 0144 0020     		movs	r0, #0
+ 593 0146 08BD     		pop	{r3, pc}
+ 594              	.LVL66:
+ 595              	.L38:
+ 596 0148 0020     		movs	r0, #0
+ 597 014a 08BD     		pop	{r3, pc}
+ 598              	.LVL67:
+ 599              	.L39:
+ 600 014c 0020     		movs	r0, #0
+ 601 014e 08BD     		pop	{r3, pc}
+ 602              	.LVL68:
+ 603              	.L40:
+ 604 0150 0020     		movs	r0, #0
+ 605 0152 08BD     		pop	{r3, pc}
+ 606              	.L41:
+ 607 0154 0020     		movs	r0, #0
+ 608 0156 08BD     		pop	{r3, pc}
+ 609              	.LVL69:
+ 610              	.L42:
+ 611 0158 0020     		movs	r0, #0
+ 612 015a 08BD     		pop	{r3, pc}
+ 613              	.L43:
+ 614 015c 0020     		movs	r0, #0
+ 615 015e 08BD     		pop	{r3, pc}
+ 616              	.L44:
+ 617 0160 0020     		movs	r0, #0
+ 618 0162 08BD     		pop	{r3, pc}
+ 619              	.L45:
+ 620 0164 0020     		movs	r0, #0
+ 621 0166 08BD     		pop	{r3, pc}
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 20
+
+
+ 622              	.L52:
+ 623 0168 0020     		movs	r0, #0
+ 624 016a 08BD     		pop	{r3, pc}
+ 625              	.LVL70:
+ 626              	.L47:
+ 627 016c 0020     		movs	r0, #0
+ 628 016e 08BD     		pop	{r3, pc}
+ 629              	.LVL71:
+ 630              	.L48:
+ 631 0170 0020     		movs	r0, #0
+ 632 0172 08BD     		pop	{r3, pc}
+ 633              	.L49:
+ 634 0174 0020     		movs	r0, #0
+ 635 0176 08BD     		pop	{r3, pc}
+ 636              	.L50:
+ 637 0178 0020     		movs	r0, #0
+ 638 017a 08BD     		pop	{r3, pc}
+ 639              	.L51:
+ 640 017c 0020     		movs	r0, #0
+ 641              	.LVL72:
+ 254:.\Generated_Source\PSoC5/USBUART_1_hid.c **** 
+ 642              		.loc 1 254 0
+ 643 017e 08BD     		pop	{r3, pc}
+ 644              	.L55:
+ 645              		.align	2
+ 646              	.L54:
+ 647 0180 04600040 		.word	1073766404
+ 648 0184 00600040 		.word	1073766400
+ 649 0188 01600040 		.word	1073766401
+ 650 018c 03600040 		.word	1073766403
+ 651 0190 00000000 		.word	USBUART_1_currentTD
+ 652 0194 02600040 		.word	1073766402
+ 653 0198 00000000 		.word	USBUART_1_hidIdleRate
+ 654 019c 00000000 		.word	USBUART_1_hidProtocol
+ 655 01a0 00000000 		.word	USBUART_1_hidIdleTimer
+ 656              		.cfi_endproc
+ 657              	.LFE2:
+ 658              		.size	USBUART_1_DispatchHIDClassRqst, .-USBUART_1_DispatchHIDClassRqst
+ 659              		.comm	USBUART_1_hidIdleTimer,2,4
+ 660              		.comm	USBUART_1_hidIdleRate,2,4
+ 661              		.comm	USBUART_1_hidProtocol,2,4
+ 662              		.text
+ 663              	.Letext0:
+ 664              		.file 2 ".\\Generated_Source\\PSoC5\\cytypes.h"
+ 665              		.file 3 ".\\Generated_Source\\PSoC5\\USBUART_1.h"
+ 666              		.file 4 ".\\Generated_Source\\PSoC5\\USBUART_1_pvt.h"
+ 667              		.section	.debug_info,"",%progbits
+ 668              	.Ldebug_info0:
+ 669 0000 14040000 		.4byte	0x414
+ 670 0004 0400     		.2byte	0x4
+ 671 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 672 000a 04       		.byte	0x4
+ 673 000b 01       		.uleb128 0x1
+ 674 000c 47020000 		.4byte	.LASF48
+ 675 0010 01       		.byte	0x1
+ 676 0011 49010000 		.4byte	.LASF49
+ 677 0015 23000000 		.4byte	.LASF50
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 21
+
+
+ 678 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 679 001d 00000000 		.4byte	0
+ 680 0021 00000000 		.4byte	.Ldebug_line0
+ 681 0025 02       		.uleb128 0x2
+ 682 0026 01       		.byte	0x1
+ 683 0027 06       		.byte	0x6
+ 684 0028 C0030000 		.4byte	.LASF0
+ 685 002c 02       		.uleb128 0x2
+ 686 002d 01       		.byte	0x1
+ 687 002e 08       		.byte	0x8
+ 688 002f EB000000 		.4byte	.LASF1
+ 689 0033 02       		.uleb128 0x2
+ 690 0034 02       		.byte	0x2
+ 691 0035 05       		.byte	0x5
+ 692 0036 74030000 		.4byte	.LASF2
+ 693 003a 02       		.uleb128 0x2
+ 694 003b 02       		.byte	0x2
+ 695 003c 07       		.byte	0x7
+ 696 003d 90000000 		.4byte	.LASF3
+ 697 0041 02       		.uleb128 0x2
+ 698 0042 04       		.byte	0x4
+ 699 0043 05       		.byte	0x5
+ 700 0044 9E030000 		.4byte	.LASF4
+ 701 0048 02       		.uleb128 0x2
+ 702 0049 04       		.byte	0x4
+ 703 004a 07       		.byte	0x7
+ 704 004b 1A010000 		.4byte	.LASF5
+ 705 004f 02       		.uleb128 0x2
+ 706 0050 08       		.byte	0x8
+ 707 0051 05       		.byte	0x5
+ 708 0052 EB020000 		.4byte	.LASF6
+ 709 0056 02       		.uleb128 0x2
+ 710 0057 08       		.byte	0x8
+ 711 0058 07       		.byte	0x7
+ 712 0059 11020000 		.4byte	.LASF7
+ 713 005d 03       		.uleb128 0x3
+ 714 005e 04       		.byte	0x4
+ 715 005f 05       		.byte	0x5
+ 716 0060 696E7400 		.ascii	"int\000"
+ 717 0064 02       		.uleb128 0x2
+ 718 0065 04       		.byte	0x4
+ 719 0066 07       		.byte	0x7
+ 720 0067 EA010000 		.4byte	.LASF8
+ 721 006b 04       		.uleb128 0x4
+ 722 006c 2C010000 		.4byte	.LASF9
+ 723 0070 02       		.byte	0x2
+ 724 0071 C2       		.byte	0xc2
+ 725 0072 2C000000 		.4byte	0x2c
+ 726 0076 04       		.uleb128 0x4
+ 727 0077 AD010000 		.4byte	.LASF10
+ 728 007b 02       		.byte	0x2
+ 729 007c C3       		.byte	0xc3
+ 730 007d 3A000000 		.4byte	0x3a
+ 731 0081 02       		.uleb128 0x2
+ 732 0082 04       		.byte	0x4
+ 733 0083 04       		.byte	0x4
+ 734 0084 DA000000 		.4byte	.LASF11
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 22
+
+
+ 735 0088 02       		.uleb128 0x2
+ 736 0089 08       		.byte	0x8
+ 737 008a 04       		.byte	0x4
+ 738 008b 42010000 		.4byte	.LASF12
+ 739 008f 02       		.uleb128 0x2
+ 740 0090 01       		.byte	0x1
+ 741 0091 08       		.byte	0x8
+ 742 0092 A7030000 		.4byte	.LASF13
+ 743 0096 05       		.uleb128 0x5
+ 744 0097 15010000 		.4byte	.LASF14
+ 745 009b 02       		.byte	0x2
+ 746 009c 6C01     		.2byte	0x16c
+ 747 009e A2000000 		.4byte	0xa2
+ 748 00a2 06       		.uleb128 0x6
+ 749 00a3 6B000000 		.4byte	0x6b
+ 750 00a7 02       		.uleb128 0x2
+ 751 00a8 04       		.byte	0x4
+ 752 00a9 07       		.byte	0x7
+ 753 00aa 3E020000 		.4byte	.LASF15
+ 754 00ae 07       		.uleb128 0x7
+ 755 00af 04       		.byte	0x4
+ 756 00b0 03       		.byte	0x3
+ 757 00b1 94       		.byte	0x94
+ 758 00b2 CF000000 		.4byte	0xcf
+ 759 00b6 08       		.uleb128 0x8
+ 760 00b7 BE000000 		.4byte	.LASF16
+ 761 00bb 03       		.byte	0x3
+ 762 00bc 96       		.byte	0x96
+ 763 00bd 6B000000 		.4byte	0x6b
+ 764 00c1 00       		.byte	0
+ 765 00c2 08       		.uleb128 0x8
+ 766 00c3 EB030000 		.4byte	.LASF17
+ 767 00c7 03       		.byte	0x3
+ 768 00c8 97       		.byte	0x97
+ 769 00c9 76000000 		.4byte	0x76
+ 770 00cd 02       		.byte	0x2
+ 771 00ce 00       		.byte	0
+ 772 00cf 04       		.uleb128 0x4
+ 773 00d0 56030000 		.4byte	.LASF18
+ 774 00d4 03       		.byte	0x3
+ 775 00d5 98       		.byte	0x98
+ 776 00d6 AE000000 		.4byte	0xae
+ 777 00da 07       		.uleb128 0x7
+ 778 00db 0C       		.byte	0xc
+ 779 00dc 03       		.byte	0x3
+ 780 00dd 9A       		.byte	0x9a
+ 781 00de 07010000 		.4byte	0x107
+ 782 00e2 08       		.uleb128 0x8
+ 783 00e3 8A000000 		.4byte	.LASF19
+ 784 00e7 03       		.byte	0x3
+ 785 00e8 9C       		.byte	0x9c
+ 786 00e9 76000000 		.4byte	0x76
+ 787 00ed 00       		.byte	0
+ 788 00ee 08       		.uleb128 0x8
+ 789 00ef C5000000 		.4byte	.LASF20
+ 790 00f3 03       		.byte	0x3
+ 791 00f4 9D       		.byte	0x9d
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 23
+
+
+ 792 00f5 07010000 		.4byte	0x107
+ 793 00f9 04       		.byte	0x4
+ 794 00fa 08       		.uleb128 0x8
+ 795 00fb 16000000 		.4byte	.LASF21
+ 796 00ff 03       		.byte	0x3
+ 797 0100 9E       		.byte	0x9e
+ 798 0101 0D010000 		.4byte	0x10d
+ 799 0105 08       		.byte	0x8
+ 800 0106 00       		.byte	0
+ 801 0107 09       		.uleb128 0x9
+ 802 0108 04       		.byte	0x4
+ 803 0109 A2000000 		.4byte	0xa2
+ 804 010d 09       		.uleb128 0x9
+ 805 010e 04       		.byte	0x4
+ 806 010f CF000000 		.4byte	0xcf
+ 807 0113 04       		.uleb128 0x4
+ 808 0114 2F020000 		.4byte	.LASF22
+ 809 0118 03       		.byte	0x3
+ 810 0119 9F       		.byte	0x9f
+ 811 011a DA000000 		.4byte	0xda
+ 812 011e 07       		.uleb128 0x7
+ 813 011f 08       		.byte	0x8
+ 814 0120 03       		.byte	0x3
+ 815 0121 A2       		.byte	0xa2
+ 816 0122 3D010000 		.4byte	0x13d
+ 817 0126 0A       		.uleb128 0xa
+ 818 0127 6300     		.ascii	"c\000"
+ 819 0129 03       		.byte	0x3
+ 820 012a A4       		.byte	0xa4
+ 821 012b 6B000000 		.4byte	0x6b
+ 822 012f 00       		.byte	0
+ 823 0130 08       		.uleb128 0x8
+ 824 0131 28020000 		.4byte	.LASF23
+ 825 0135 03       		.byte	0x3
+ 826 0136 A5       		.byte	0xa5
+ 827 0137 3D010000 		.4byte	0x13d
+ 828 013b 04       		.byte	0x4
+ 829 013c 00       		.byte	0
+ 830 013d 09       		.uleb128 0x9
+ 831 013e 04       		.byte	0x4
+ 832 013f 43010000 		.4byte	0x143
+ 833 0143 0B       		.uleb128 0xb
+ 834 0144 04       		.uleb128 0x4
+ 835 0145 A3000000 		.4byte	.LASF24
+ 836 0149 03       		.byte	0x3
+ 837 014a A6       		.byte	0xa6
+ 838 014b 1E010000 		.4byte	0x11e
+ 839 014f 0C       		.uleb128 0xc
+ 840 0150 3D030000 		.4byte	.LASF25
+ 841 0154 01       		.byte	0x1
+ 842 0155 40       		.byte	0x40
+ 843 0156 6B000000 		.4byte	0x6b
+ 844 015a 00000000 		.4byte	.LFB0
+ 845 015e 3C000000 		.4byte	.LFE0-.LFB0
+ 846 0162 01       		.uleb128 0x1
+ 847 0163 9C       		.byte	0x9c
+ 848 0164 87010000 		.4byte	0x187
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 24
+
+
+ 849 0168 0D       		.uleb128 0xd
+ 850 0169 94030000 		.4byte	.LASF27
+ 851 016d 01       		.byte	0x1
+ 852 016e 40       		.byte	0x40
+ 853 016f 6B000000 		.4byte	0x6b
+ 854 0173 00000000 		.4byte	.LLST0
+ 855 0177 0E       		.uleb128 0xe
+ 856 0178 51000000 		.4byte	.LASF28
+ 857 017c 01       		.byte	0x1
+ 858 017d 42       		.byte	0x42
+ 859 017e 6B000000 		.4byte	0x6b
+ 860 0182 53000000 		.4byte	.LLST1
+ 861 0186 00       		.byte	0
+ 862 0187 0C       		.uleb128 0xc
+ 863 0188 D5020000 		.4byte	.LASF26
+ 864 018c 01       		.byte	0x1
+ 865 018d 64       		.byte	0x64
+ 866 018e 6B000000 		.4byte	0x6b
+ 867 0192 00000000 		.4byte	.LFB1
+ 868 0196 0C000000 		.4byte	.LFE1-.LFB1
+ 869 019a 01       		.uleb128 0x1
+ 870 019b 9C       		.byte	0x9c
+ 871 019c B0010000 		.4byte	0x1b0
+ 872 01a0 0D       		.uleb128 0xd
+ 873 01a1 94030000 		.4byte	.LASF27
+ 874 01a5 01       		.byte	0x1
+ 875 01a6 64       		.byte	0x64
+ 876 01a7 6B000000 		.4byte	0x6b
+ 877 01ab A2000000 		.4byte	.LLST2
+ 878 01af 00       		.byte	0
+ 879 01b0 0F       		.uleb128 0xf
+ 880 01b1 72010000 		.4byte	.LASF32
+ 881 01b5 01       		.byte	0x1
+ 882 01b6 1501     		.2byte	0x115
+ 883 01b8 00000000 		.4byte	.LFB3
+ 884 01bc 40000000 		.4byte	.LFE3-.LFB3
+ 885 01c0 01       		.uleb128 0x1
+ 886 01c1 9C       		.byte	0x9c
+ 887 01c2 FE010000 		.4byte	0x1fe
+ 888 01c6 10       		.uleb128 0x10
+ 889 01c7 38030000 		.4byte	.LASF29
+ 890 01cb 01       		.byte	0x1
+ 891 01cc 1701     		.2byte	0x117
+ 892 01ce FE010000 		.4byte	0x1fe
+ 893 01d2 C3000000 		.4byte	.LLST3
+ 894 01d6 11       		.uleb128 0x11
+ 895 01d7 E3010000 		.4byte	.LASF30
+ 896 01db 01       		.byte	0x1
+ 897 01dc 1801     		.2byte	0x118
+ 898 01de 07010000 		.4byte	0x107
+ 899 01e2 01       		.uleb128 0x1
+ 900 01e3 51       		.byte	0x51
+ 901 01e4 10       		.uleb128 0x10
+ 902 01e5 B3000000 		.4byte	.LASF31
+ 903 01e9 01       		.byte	0x1
+ 904 01ea 1901     		.2byte	0x119
+ 905 01ec 6B000000 		.4byte	0x6b
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 25
+
+
+ 906 01f0 F9000000 		.4byte	.LLST4
+ 907 01f4 12       		.uleb128 0x12
+ 908 01f5 0E000000 		.4byte	.LVL10
+ 909 01f9 E1030000 		.4byte	0x3e1
+ 910 01fd 00       		.byte	0
+ 911 01fe 09       		.uleb128 0x9
+ 912 01ff 04       		.byte	0x4
+ 913 0200 04020000 		.4byte	0x204
+ 914 0204 13       		.uleb128 0x13
+ 915 0205 44010000 		.4byte	0x144
+ 916 0209 0F       		.uleb128 0xf
+ 917 020a CC030000 		.4byte	.LASF33
+ 918 020e 01       		.byte	0x1
+ 919 020f 4301     		.2byte	0x143
+ 920 0211 00000000 		.4byte	.LFB4
+ 921 0215 48000000 		.4byte	.LFE4-.LFB4
+ 922 0219 01       		.uleb128 0x1
+ 923 021a 9C       		.byte	0x9c
+ 924 021b 59020000 		.4byte	0x259
+ 925 021f 10       		.uleb128 0x10
+ 926 0220 38030000 		.4byte	.LASF29
+ 927 0224 01       		.byte	0x1
+ 928 0225 4501     		.2byte	0x145
+ 929 0227 FE010000 		.4byte	0x1fe
+ 930 022b 0C010000 		.4byte	.LLST5
+ 931 022f 10       		.uleb128 0x10
+ 932 0230 E3010000 		.4byte	.LASF30
+ 933 0234 01       		.byte	0x1
+ 934 0235 4601     		.2byte	0x146
+ 935 0237 07010000 		.4byte	0x107
+ 936 023b 42010000 		.4byte	.LLST6
+ 937 023f 10       		.uleb128 0x10
+ 938 0240 B3000000 		.4byte	.LASF31
+ 939 0244 01       		.byte	0x1
+ 940 0245 4701     		.2byte	0x147
+ 941 0247 6B000000 		.4byte	0x6b
+ 942 024b 72010000 		.4byte	.LLST7
+ 943 024f 12       		.uleb128 0x12
+ 944 0250 0E000000 		.4byte	.LVL19
+ 945 0254 E1030000 		.4byte	0x3e1
+ 946 0258 00       		.byte	0
+ 947 0259 0F       		.uleb128 0xf
+ 948 025a 56000000 		.4byte	.LASF34
+ 949 025e 01       		.byte	0x1
+ 950 025f 7101     		.2byte	0x171
+ 951 0261 00000000 		.4byte	.LFB5
+ 952 0265 88000000 		.4byte	.LFE5-.LFB5
+ 953 0269 01       		.uleb128 0x1
+ 954 026a 9C       		.byte	0x9c
+ 955 026b B9020000 		.4byte	0x2b9
+ 956 026f 10       		.uleb128 0x10
+ 957 0270 38030000 		.4byte	.LASF29
+ 958 0274 01       		.byte	0x1
+ 959 0275 7301     		.2byte	0x173
+ 960 0277 FE010000 		.4byte	0x1fe
+ 961 027b 85010000 		.4byte	.LLST8
+ 962 027f 14       		.uleb128 0x14
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 26
+
+
+ 963 0280 70544400 		.ascii	"pTD\000"
+ 964 0284 01       		.byte	0x1
+ 965 0285 7401     		.2byte	0x174
+ 966 0287 B9020000 		.4byte	0x2b9
+ 967 028b AE010000 		.4byte	.LLST9
+ 968 028f 10       		.uleb128 0x10
+ 969 0290 B3000000 		.4byte	.LASF31
+ 970 0294 01       		.byte	0x1
+ 971 0295 7501     		.2byte	0x175
+ 972 0297 6B000000 		.4byte	0x6b
+ 973 029b CC010000 		.4byte	.LLST10
+ 974 029f 10       		.uleb128 0x10
+ 975 02a0 E0000000 		.4byte	.LASF35
+ 976 02a4 01       		.byte	0x1
+ 977 02a5 7601     		.2byte	0x176
+ 978 02a7 6B000000 		.4byte	0x6b
+ 979 02ab DF010000 		.4byte	.LLST11
+ 980 02af 12       		.uleb128 0x12
+ 981 02b0 14000000 		.4byte	.LVL29
+ 982 02b4 E1030000 		.4byte	0x3e1
+ 983 02b8 00       		.byte	0
+ 984 02b9 09       		.uleb128 0x9
+ 985 02ba 04       		.byte	0x4
+ 986 02bb 13010000 		.4byte	0x113
+ 987 02bf 0C       		.uleb128 0xc
+ 988 02c0 6B000000 		.4byte	.LASF36
+ 989 02c4 01       		.byte	0x1
+ 990 02c5 7B       		.byte	0x7b
+ 991 02c6 6B000000 		.4byte	0x6b
+ 992 02ca 00000000 		.4byte	.LFB2
+ 993 02ce A4010000 		.4byte	.LFE2-.LFB2
+ 994 02d2 01       		.uleb128 0x1
+ 995 02d3 9C       		.byte	0x9c
+ 996 02d4 63030000 		.4byte	0x363
+ 997 02d8 0E       		.uleb128 0xe
+ 998 02d9 CB000000 		.4byte	.LASF37
+ 999 02dd 01       		.byte	0x1
+ 1000 02de 7D       		.byte	0x7d
+ 1001 02df 6B000000 		.4byte	0x6b
+ 1002 02e3 0E020000 		.4byte	.LLST12
+ 1003 02e7 0E       		.uleb128 0xe
+ 1004 02e8 32010000 		.4byte	.LASF38
+ 1005 02ec 01       		.byte	0x1
+ 1006 02ed 7E       		.byte	0x7e
+ 1007 02ee 6B000000 		.4byte	0x6b
+ 1008 02f2 E5020000 		.4byte	.LLST13
+ 1009 02f6 12       		.uleb128 0x12
+ 1010 02f7 36000000 		.4byte	.LVL46
+ 1011 02fb B0010000 		.4byte	0x1b0
+ 1012 02ff 12       		.uleb128 0x12
+ 1013 0300 46000000 		.4byte	.LVL47
+ 1014 0304 F6030000 		.4byte	0x3f6
+ 1015 0308 12       		.uleb128 0x12
+ 1016 0309 56000000 		.4byte	.LVL49
+ 1017 030d 09020000 		.4byte	0x209
+ 1018 0311 12       		.uleb128 0x12
+ 1019 0312 64000000 		.4byte	.LVL50
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 27
+
+
+ 1020 0316 F6030000 		.4byte	0x3f6
+ 1021 031a 12       		.uleb128 0x12
+ 1022 031b 6A000000 		.4byte	.LVL52
+ 1023 031f 59020000 		.4byte	0x259
+ 1024 0323 12       		.uleb128 0x12
+ 1025 0324 78000000 		.4byte	.LVL53
+ 1026 0328 F6030000 		.4byte	0x3f6
+ 1027 032c 12       		.uleb128 0x12
+ 1028 032d 98000000 		.4byte	.LVL55
+ 1029 0331 F6030000 		.4byte	0x3f6
+ 1030 0335 12       		.uleb128 0x12
+ 1031 0336 AE000000 		.4byte	.LVL57
+ 1032 033a F6030000 		.4byte	0x3f6
+ 1033 033e 12       		.uleb128 0x12
+ 1034 033f D0000000 		.4byte	.LVL59
+ 1035 0343 59020000 		.4byte	0x259
+ 1036 0347 12       		.uleb128 0x12
+ 1037 0348 DE000000 		.4byte	.LVL60
+ 1038 034c 01040000 		.4byte	0x401
+ 1039 0350 12       		.uleb128 0x12
+ 1040 0351 24010000 		.4byte	.LVL62
+ 1041 0355 0C040000 		.4byte	0x40c
+ 1042 0359 12       		.uleb128 0x12
+ 1043 035a 42010000 		.4byte	.LVL64
+ 1044 035e 0C040000 		.4byte	0x40c
+ 1045 0362 00       		.byte	0
+ 1046 0363 15       		.uleb128 0x15
+ 1047 0364 B4010000 		.4byte	.LASF39
+ 1048 0368 03       		.byte	0x3
+ 1049 0369 5102     		.2byte	0x251
+ 1050 036b A2000000 		.4byte	0xa2
+ 1051 036f 16       		.uleb128 0x16
+ 1052 0370 6B000000 		.4byte	0x6b
+ 1053 0374 7F030000 		.4byte	0x37f
+ 1054 0378 17       		.uleb128 0x17
+ 1055 0379 A7000000 		.4byte	0xa7
+ 1056 037d 01       		.byte	0x1
+ 1057 037e 00       		.byte	0
+ 1058 037f 18       		.uleb128 0x18
+ 1059 0380 7E030000 		.4byte	.LASF40
+ 1060 0384 01       		.byte	0x1
+ 1061 0385 21       		.byte	0x21
+ 1062 0386 90030000 		.4byte	0x390
+ 1063 038a 05       		.uleb128 0x5
+ 1064 038b 03       		.byte	0x3
+ 1065 038c 00000000 		.4byte	USBUART_1_hidProtocol
+ 1066 0390 06       		.uleb128 0x6
+ 1067 0391 6F030000 		.4byte	0x36f
+ 1068 0395 18       		.uleb128 0x18
+ 1069 0396 00000000 		.4byte	.LASF41
+ 1070 039a 01       		.byte	0x1
+ 1071 039b 22       		.byte	0x22
+ 1072 039c A6030000 		.4byte	0x3a6
+ 1073 03a0 05       		.uleb128 0x5
+ 1074 03a1 03       		.byte	0x3
+ 1075 03a2 00000000 		.4byte	USBUART_1_hidIdleRate
+ 1076 03a6 06       		.uleb128 0x6
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 28
+
+
+ 1077 03a7 6F030000 		.4byte	0x36f
+ 1078 03ab 18       		.uleb128 0x18
+ 1079 03ac CC010000 		.4byte	.LASF42
+ 1080 03b0 01       		.byte	0x1
+ 1081 03b1 23       		.byte	0x23
+ 1082 03b2 BC030000 		.4byte	0x3bc
+ 1083 03b6 05       		.uleb128 0x5
+ 1084 03b7 03       		.byte	0x3
+ 1085 03b8 00000000 		.4byte	USBUART_1_hidIdleTimer
+ 1086 03bc 06       		.uleb128 0x6
+ 1087 03bd 6F030000 		.4byte	0x36f
+ 1088 03c1 19       		.uleb128 0x19
+ 1089 03c2 1D030000 		.4byte	.LASF43
+ 1090 03c6 04       		.byte	0x4
+ 1091 03c7 2F       		.byte	0x2f
+ 1092 03c8 CC030000 		.4byte	0x3cc
+ 1093 03cc 06       		.uleb128 0x6
+ 1094 03cd 6F030000 		.4byte	0x36f
+ 1095 03d1 19       		.uleb128 0x19
+ 1096 03d2 AC030000 		.4byte	.LASF44
+ 1097 03d6 04       		.byte	0x4
+ 1098 03d7 36       		.byte	0x36
+ 1099 03d8 DC030000 		.4byte	0x3dc
+ 1100 03dc 06       		.uleb128 0x6
+ 1101 03dd 13010000 		.4byte	0x113
+ 1102 03e1 1A       		.uleb128 0x1a
+ 1103 03e2 F9000000 		.4byte	.LASF51
+ 1104 03e6 04       		.byte	0x4
+ 1105 03e7 6A       		.byte	0x6a
+ 1106 03e8 FE010000 		.4byte	0x1fe
+ 1107 03ec F6030000 		.4byte	0x3f6
+ 1108 03f0 1B       		.uleb128 0x1b
+ 1109 03f1 6B000000 		.4byte	0x6b
+ 1110 03f5 00       		.byte	0
+ 1111 03f6 1C       		.uleb128 0x1c
+ 1112 03f7 F7010000 		.4byte	.LASF45
+ 1113 03fb 04       		.byte	0x4
+ 1114 03fc 53       		.byte	0x53
+ 1115 03fd 6B000000 		.4byte	0x6b
+ 1116 0401 1C       		.uleb128 0x1c
+ 1117 0402 92010000 		.4byte	.LASF46
+ 1118 0406 04       		.byte	0x4
+ 1119 0407 59       		.byte	0x59
+ 1120 0408 6B000000 		.4byte	0x6b
+ 1121 040c 1C       		.uleb128 0x1c
+ 1122 040d F9020000 		.4byte	.LASF47
+ 1123 0411 04       		.byte	0x4
+ 1124 0412 60       		.byte	0x60
+ 1125 0413 6B000000 		.4byte	0x6b
+ 1126 0417 00       		.byte	0
+ 1127              		.section	.debug_abbrev,"",%progbits
+ 1128              	.Ldebug_abbrev0:
+ 1129 0000 01       		.uleb128 0x1
+ 1130 0001 11       		.uleb128 0x11
+ 1131 0002 01       		.byte	0x1
+ 1132 0003 25       		.uleb128 0x25
+ 1133 0004 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 29
+
+
+ 1134 0005 13       		.uleb128 0x13
+ 1135 0006 0B       		.uleb128 0xb
+ 1136 0007 03       		.uleb128 0x3
+ 1137 0008 0E       		.uleb128 0xe
+ 1138 0009 1B       		.uleb128 0x1b
+ 1139 000a 0E       		.uleb128 0xe
+ 1140 000b 55       		.uleb128 0x55
+ 1141 000c 17       		.uleb128 0x17
+ 1142 000d 11       		.uleb128 0x11
+ 1143 000e 01       		.uleb128 0x1
+ 1144 000f 10       		.uleb128 0x10
+ 1145 0010 17       		.uleb128 0x17
+ 1146 0011 00       		.byte	0
+ 1147 0012 00       		.byte	0
+ 1148 0013 02       		.uleb128 0x2
+ 1149 0014 24       		.uleb128 0x24
+ 1150 0015 00       		.byte	0
+ 1151 0016 0B       		.uleb128 0xb
+ 1152 0017 0B       		.uleb128 0xb
+ 1153 0018 3E       		.uleb128 0x3e
+ 1154 0019 0B       		.uleb128 0xb
+ 1155 001a 03       		.uleb128 0x3
+ 1156 001b 0E       		.uleb128 0xe
+ 1157 001c 00       		.byte	0
+ 1158 001d 00       		.byte	0
+ 1159 001e 03       		.uleb128 0x3
+ 1160 001f 24       		.uleb128 0x24
+ 1161 0020 00       		.byte	0
+ 1162 0021 0B       		.uleb128 0xb
+ 1163 0022 0B       		.uleb128 0xb
+ 1164 0023 3E       		.uleb128 0x3e
+ 1165 0024 0B       		.uleb128 0xb
+ 1166 0025 03       		.uleb128 0x3
+ 1167 0026 08       		.uleb128 0x8
+ 1168 0027 00       		.byte	0
+ 1169 0028 00       		.byte	0
+ 1170 0029 04       		.uleb128 0x4
+ 1171 002a 16       		.uleb128 0x16
+ 1172 002b 00       		.byte	0
+ 1173 002c 03       		.uleb128 0x3
+ 1174 002d 0E       		.uleb128 0xe
+ 1175 002e 3A       		.uleb128 0x3a
+ 1176 002f 0B       		.uleb128 0xb
+ 1177 0030 3B       		.uleb128 0x3b
+ 1178 0031 0B       		.uleb128 0xb
+ 1179 0032 49       		.uleb128 0x49
+ 1180 0033 13       		.uleb128 0x13
+ 1181 0034 00       		.byte	0
+ 1182 0035 00       		.byte	0
+ 1183 0036 05       		.uleb128 0x5
+ 1184 0037 16       		.uleb128 0x16
+ 1185 0038 00       		.byte	0
+ 1186 0039 03       		.uleb128 0x3
+ 1187 003a 0E       		.uleb128 0xe
+ 1188 003b 3A       		.uleb128 0x3a
+ 1189 003c 0B       		.uleb128 0xb
+ 1190 003d 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 30
+
+
+ 1191 003e 05       		.uleb128 0x5
+ 1192 003f 49       		.uleb128 0x49
+ 1193 0040 13       		.uleb128 0x13
+ 1194 0041 00       		.byte	0
+ 1195 0042 00       		.byte	0
+ 1196 0043 06       		.uleb128 0x6
+ 1197 0044 35       		.uleb128 0x35
+ 1198 0045 00       		.byte	0
+ 1199 0046 49       		.uleb128 0x49
+ 1200 0047 13       		.uleb128 0x13
+ 1201 0048 00       		.byte	0
+ 1202 0049 00       		.byte	0
+ 1203 004a 07       		.uleb128 0x7
+ 1204 004b 13       		.uleb128 0x13
+ 1205 004c 01       		.byte	0x1
+ 1206 004d 0B       		.uleb128 0xb
+ 1207 004e 0B       		.uleb128 0xb
+ 1208 004f 3A       		.uleb128 0x3a
+ 1209 0050 0B       		.uleb128 0xb
+ 1210 0051 3B       		.uleb128 0x3b
+ 1211 0052 0B       		.uleb128 0xb
+ 1212 0053 01       		.uleb128 0x1
+ 1213 0054 13       		.uleb128 0x13
+ 1214 0055 00       		.byte	0
+ 1215 0056 00       		.byte	0
+ 1216 0057 08       		.uleb128 0x8
+ 1217 0058 0D       		.uleb128 0xd
+ 1218 0059 00       		.byte	0
+ 1219 005a 03       		.uleb128 0x3
+ 1220 005b 0E       		.uleb128 0xe
+ 1221 005c 3A       		.uleb128 0x3a
+ 1222 005d 0B       		.uleb128 0xb
+ 1223 005e 3B       		.uleb128 0x3b
+ 1224 005f 0B       		.uleb128 0xb
+ 1225 0060 49       		.uleb128 0x49
+ 1226 0061 13       		.uleb128 0x13
+ 1227 0062 38       		.uleb128 0x38
+ 1228 0063 0B       		.uleb128 0xb
+ 1229 0064 00       		.byte	0
+ 1230 0065 00       		.byte	0
+ 1231 0066 09       		.uleb128 0x9
+ 1232 0067 0F       		.uleb128 0xf
+ 1233 0068 00       		.byte	0
+ 1234 0069 0B       		.uleb128 0xb
+ 1235 006a 0B       		.uleb128 0xb
+ 1236 006b 49       		.uleb128 0x49
+ 1237 006c 13       		.uleb128 0x13
+ 1238 006d 00       		.byte	0
+ 1239 006e 00       		.byte	0
+ 1240 006f 0A       		.uleb128 0xa
+ 1241 0070 0D       		.uleb128 0xd
+ 1242 0071 00       		.byte	0
+ 1243 0072 03       		.uleb128 0x3
+ 1244 0073 08       		.uleb128 0x8
+ 1245 0074 3A       		.uleb128 0x3a
+ 1246 0075 0B       		.uleb128 0xb
+ 1247 0076 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 31
+
+
+ 1248 0077 0B       		.uleb128 0xb
+ 1249 0078 49       		.uleb128 0x49
+ 1250 0079 13       		.uleb128 0x13
+ 1251 007a 38       		.uleb128 0x38
+ 1252 007b 0B       		.uleb128 0xb
+ 1253 007c 00       		.byte	0
+ 1254 007d 00       		.byte	0
+ 1255 007e 0B       		.uleb128 0xb
+ 1256 007f 26       		.uleb128 0x26
+ 1257 0080 00       		.byte	0
+ 1258 0081 00       		.byte	0
+ 1259 0082 00       		.byte	0
+ 1260 0083 0C       		.uleb128 0xc
+ 1261 0084 2E       		.uleb128 0x2e
+ 1262 0085 01       		.byte	0x1
+ 1263 0086 3F       		.uleb128 0x3f
+ 1264 0087 19       		.uleb128 0x19
+ 1265 0088 03       		.uleb128 0x3
+ 1266 0089 0E       		.uleb128 0xe
+ 1267 008a 3A       		.uleb128 0x3a
+ 1268 008b 0B       		.uleb128 0xb
+ 1269 008c 3B       		.uleb128 0x3b
+ 1270 008d 0B       		.uleb128 0xb
+ 1271 008e 27       		.uleb128 0x27
+ 1272 008f 19       		.uleb128 0x19
+ 1273 0090 49       		.uleb128 0x49
+ 1274 0091 13       		.uleb128 0x13
+ 1275 0092 11       		.uleb128 0x11
+ 1276 0093 01       		.uleb128 0x1
+ 1277 0094 12       		.uleb128 0x12
+ 1278 0095 06       		.uleb128 0x6
+ 1279 0096 40       		.uleb128 0x40
+ 1280 0097 18       		.uleb128 0x18
+ 1281 0098 9742     		.uleb128 0x2117
+ 1282 009a 19       		.uleb128 0x19
+ 1283 009b 01       		.uleb128 0x1
+ 1284 009c 13       		.uleb128 0x13
+ 1285 009d 00       		.byte	0
+ 1286 009e 00       		.byte	0
+ 1287 009f 0D       		.uleb128 0xd
+ 1288 00a0 05       		.uleb128 0x5
+ 1289 00a1 00       		.byte	0
+ 1290 00a2 03       		.uleb128 0x3
+ 1291 00a3 0E       		.uleb128 0xe
+ 1292 00a4 3A       		.uleb128 0x3a
+ 1293 00a5 0B       		.uleb128 0xb
+ 1294 00a6 3B       		.uleb128 0x3b
+ 1295 00a7 0B       		.uleb128 0xb
+ 1296 00a8 49       		.uleb128 0x49
+ 1297 00a9 13       		.uleb128 0x13
+ 1298 00aa 02       		.uleb128 0x2
+ 1299 00ab 17       		.uleb128 0x17
+ 1300 00ac 00       		.byte	0
+ 1301 00ad 00       		.byte	0
+ 1302 00ae 0E       		.uleb128 0xe
+ 1303 00af 34       		.uleb128 0x34
+ 1304 00b0 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 32
+
+
+ 1305 00b1 03       		.uleb128 0x3
+ 1306 00b2 0E       		.uleb128 0xe
+ 1307 00b3 3A       		.uleb128 0x3a
+ 1308 00b4 0B       		.uleb128 0xb
+ 1309 00b5 3B       		.uleb128 0x3b
+ 1310 00b6 0B       		.uleb128 0xb
+ 1311 00b7 49       		.uleb128 0x49
+ 1312 00b8 13       		.uleb128 0x13
+ 1313 00b9 02       		.uleb128 0x2
+ 1314 00ba 17       		.uleb128 0x17
+ 1315 00bb 00       		.byte	0
+ 1316 00bc 00       		.byte	0
+ 1317 00bd 0F       		.uleb128 0xf
+ 1318 00be 2E       		.uleb128 0x2e
+ 1319 00bf 01       		.byte	0x1
+ 1320 00c0 3F       		.uleb128 0x3f
+ 1321 00c1 19       		.uleb128 0x19
+ 1322 00c2 03       		.uleb128 0x3
+ 1323 00c3 0E       		.uleb128 0xe
+ 1324 00c4 3A       		.uleb128 0x3a
+ 1325 00c5 0B       		.uleb128 0xb
+ 1326 00c6 3B       		.uleb128 0x3b
+ 1327 00c7 05       		.uleb128 0x5
+ 1328 00c8 27       		.uleb128 0x27
+ 1329 00c9 19       		.uleb128 0x19
+ 1330 00ca 11       		.uleb128 0x11
+ 1331 00cb 01       		.uleb128 0x1
+ 1332 00cc 12       		.uleb128 0x12
+ 1333 00cd 06       		.uleb128 0x6
+ 1334 00ce 40       		.uleb128 0x40
+ 1335 00cf 18       		.uleb128 0x18
+ 1336 00d0 9742     		.uleb128 0x2117
+ 1337 00d2 19       		.uleb128 0x19
+ 1338 00d3 01       		.uleb128 0x1
+ 1339 00d4 13       		.uleb128 0x13
+ 1340 00d5 00       		.byte	0
+ 1341 00d6 00       		.byte	0
+ 1342 00d7 10       		.uleb128 0x10
+ 1343 00d8 34       		.uleb128 0x34
+ 1344 00d9 00       		.byte	0
+ 1345 00da 03       		.uleb128 0x3
+ 1346 00db 0E       		.uleb128 0xe
+ 1347 00dc 3A       		.uleb128 0x3a
+ 1348 00dd 0B       		.uleb128 0xb
+ 1349 00de 3B       		.uleb128 0x3b
+ 1350 00df 05       		.uleb128 0x5
+ 1351 00e0 49       		.uleb128 0x49
+ 1352 00e1 13       		.uleb128 0x13
+ 1353 00e2 02       		.uleb128 0x2
+ 1354 00e3 17       		.uleb128 0x17
+ 1355 00e4 00       		.byte	0
+ 1356 00e5 00       		.byte	0
+ 1357 00e6 11       		.uleb128 0x11
+ 1358 00e7 34       		.uleb128 0x34
+ 1359 00e8 00       		.byte	0
+ 1360 00e9 03       		.uleb128 0x3
+ 1361 00ea 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 33
+
+
+ 1362 00eb 3A       		.uleb128 0x3a
+ 1363 00ec 0B       		.uleb128 0xb
+ 1364 00ed 3B       		.uleb128 0x3b
+ 1365 00ee 05       		.uleb128 0x5
+ 1366 00ef 49       		.uleb128 0x49
+ 1367 00f0 13       		.uleb128 0x13
+ 1368 00f1 02       		.uleb128 0x2
+ 1369 00f2 18       		.uleb128 0x18
+ 1370 00f3 00       		.byte	0
+ 1371 00f4 00       		.byte	0
+ 1372 00f5 12       		.uleb128 0x12
+ 1373 00f6 898201   		.uleb128 0x4109
+ 1374 00f9 00       		.byte	0
+ 1375 00fa 11       		.uleb128 0x11
+ 1376 00fb 01       		.uleb128 0x1
+ 1377 00fc 31       		.uleb128 0x31
+ 1378 00fd 13       		.uleb128 0x13
+ 1379 00fe 00       		.byte	0
+ 1380 00ff 00       		.byte	0
+ 1381 0100 13       		.uleb128 0x13
+ 1382 0101 26       		.uleb128 0x26
+ 1383 0102 00       		.byte	0
+ 1384 0103 49       		.uleb128 0x49
+ 1385 0104 13       		.uleb128 0x13
+ 1386 0105 00       		.byte	0
+ 1387 0106 00       		.byte	0
+ 1388 0107 14       		.uleb128 0x14
+ 1389 0108 34       		.uleb128 0x34
+ 1390 0109 00       		.byte	0
+ 1391 010a 03       		.uleb128 0x3
+ 1392 010b 08       		.uleb128 0x8
+ 1393 010c 3A       		.uleb128 0x3a
+ 1394 010d 0B       		.uleb128 0xb
+ 1395 010e 3B       		.uleb128 0x3b
+ 1396 010f 05       		.uleb128 0x5
+ 1397 0110 49       		.uleb128 0x49
+ 1398 0111 13       		.uleb128 0x13
+ 1399 0112 02       		.uleb128 0x2
+ 1400 0113 17       		.uleb128 0x17
+ 1401 0114 00       		.byte	0
+ 1402 0115 00       		.byte	0
+ 1403 0116 15       		.uleb128 0x15
+ 1404 0117 34       		.uleb128 0x34
+ 1405 0118 00       		.byte	0
+ 1406 0119 03       		.uleb128 0x3
+ 1407 011a 0E       		.uleb128 0xe
+ 1408 011b 3A       		.uleb128 0x3a
+ 1409 011c 0B       		.uleb128 0xb
+ 1410 011d 3B       		.uleb128 0x3b
+ 1411 011e 05       		.uleb128 0x5
+ 1412 011f 49       		.uleb128 0x49
+ 1413 0120 13       		.uleb128 0x13
+ 1414 0121 3F       		.uleb128 0x3f
+ 1415 0122 19       		.uleb128 0x19
+ 1416 0123 3C       		.uleb128 0x3c
+ 1417 0124 19       		.uleb128 0x19
+ 1418 0125 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 34
+
+
+ 1419 0126 00       		.byte	0
+ 1420 0127 16       		.uleb128 0x16
+ 1421 0128 01       		.uleb128 0x1
+ 1422 0129 01       		.byte	0x1
+ 1423 012a 49       		.uleb128 0x49
+ 1424 012b 13       		.uleb128 0x13
+ 1425 012c 01       		.uleb128 0x1
+ 1426 012d 13       		.uleb128 0x13
+ 1427 012e 00       		.byte	0
+ 1428 012f 00       		.byte	0
+ 1429 0130 17       		.uleb128 0x17
+ 1430 0131 21       		.uleb128 0x21
+ 1431 0132 00       		.byte	0
+ 1432 0133 49       		.uleb128 0x49
+ 1433 0134 13       		.uleb128 0x13
+ 1434 0135 2F       		.uleb128 0x2f
+ 1435 0136 0B       		.uleb128 0xb
+ 1436 0137 00       		.byte	0
+ 1437 0138 00       		.byte	0
+ 1438 0139 18       		.uleb128 0x18
+ 1439 013a 34       		.uleb128 0x34
+ 1440 013b 00       		.byte	0
+ 1441 013c 03       		.uleb128 0x3
+ 1442 013d 0E       		.uleb128 0xe
+ 1443 013e 3A       		.uleb128 0x3a
+ 1444 013f 0B       		.uleb128 0xb
+ 1445 0140 3B       		.uleb128 0x3b
+ 1446 0141 0B       		.uleb128 0xb
+ 1447 0142 49       		.uleb128 0x49
+ 1448 0143 13       		.uleb128 0x13
+ 1449 0144 3F       		.uleb128 0x3f
+ 1450 0145 19       		.uleb128 0x19
+ 1451 0146 02       		.uleb128 0x2
+ 1452 0147 18       		.uleb128 0x18
+ 1453 0148 00       		.byte	0
+ 1454 0149 00       		.byte	0
+ 1455 014a 19       		.uleb128 0x19
+ 1456 014b 34       		.uleb128 0x34
+ 1457 014c 00       		.byte	0
+ 1458 014d 03       		.uleb128 0x3
+ 1459 014e 0E       		.uleb128 0xe
+ 1460 014f 3A       		.uleb128 0x3a
+ 1461 0150 0B       		.uleb128 0xb
+ 1462 0151 3B       		.uleb128 0x3b
+ 1463 0152 0B       		.uleb128 0xb
+ 1464 0153 49       		.uleb128 0x49
+ 1465 0154 13       		.uleb128 0x13
+ 1466 0155 3F       		.uleb128 0x3f
+ 1467 0156 19       		.uleb128 0x19
+ 1468 0157 3C       		.uleb128 0x3c
+ 1469 0158 19       		.uleb128 0x19
+ 1470 0159 00       		.byte	0
+ 1471 015a 00       		.byte	0
+ 1472 015b 1A       		.uleb128 0x1a
+ 1473 015c 2E       		.uleb128 0x2e
+ 1474 015d 01       		.byte	0x1
+ 1475 015e 3F       		.uleb128 0x3f
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 35
+
+
+ 1476 015f 19       		.uleb128 0x19
+ 1477 0160 03       		.uleb128 0x3
+ 1478 0161 0E       		.uleb128 0xe
+ 1479 0162 3A       		.uleb128 0x3a
+ 1480 0163 0B       		.uleb128 0xb
+ 1481 0164 3B       		.uleb128 0x3b
+ 1482 0165 0B       		.uleb128 0xb
+ 1483 0166 27       		.uleb128 0x27
+ 1484 0167 19       		.uleb128 0x19
+ 1485 0168 49       		.uleb128 0x49
+ 1486 0169 13       		.uleb128 0x13
+ 1487 016a 3C       		.uleb128 0x3c
+ 1488 016b 19       		.uleb128 0x19
+ 1489 016c 01       		.uleb128 0x1
+ 1490 016d 13       		.uleb128 0x13
+ 1491 016e 00       		.byte	0
+ 1492 016f 00       		.byte	0
+ 1493 0170 1B       		.uleb128 0x1b
+ 1494 0171 05       		.uleb128 0x5
+ 1495 0172 00       		.byte	0
+ 1496 0173 49       		.uleb128 0x49
+ 1497 0174 13       		.uleb128 0x13
+ 1498 0175 00       		.byte	0
+ 1499 0176 00       		.byte	0
+ 1500 0177 1C       		.uleb128 0x1c
+ 1501 0178 2E       		.uleb128 0x2e
+ 1502 0179 00       		.byte	0
+ 1503 017a 3F       		.uleb128 0x3f
+ 1504 017b 19       		.uleb128 0x19
+ 1505 017c 03       		.uleb128 0x3
+ 1506 017d 0E       		.uleb128 0xe
+ 1507 017e 3A       		.uleb128 0x3a
+ 1508 017f 0B       		.uleb128 0xb
+ 1509 0180 3B       		.uleb128 0x3b
+ 1510 0181 0B       		.uleb128 0xb
+ 1511 0182 27       		.uleb128 0x27
+ 1512 0183 19       		.uleb128 0x19
+ 1513 0184 49       		.uleb128 0x49
+ 1514 0185 13       		.uleb128 0x13
+ 1515 0186 3C       		.uleb128 0x3c
+ 1516 0187 19       		.uleb128 0x19
+ 1517 0188 00       		.byte	0
+ 1518 0189 00       		.byte	0
+ 1519 018a 00       		.byte	0
+ 1520              		.section	.debug_loc,"",%progbits
+ 1521              	.Ldebug_loc0:
+ 1522              	.LLST0:
+ 1523 0000 00000000 		.4byte	.LVL0
+ 1524 0004 20000000 		.4byte	.LVL2
+ 1525 0008 0100     		.2byte	0x1
+ 1526 000a 50       		.byte	0x50
+ 1527 000b 20000000 		.4byte	.LVL2
+ 1528 000f 22000000 		.4byte	.LVL3
+ 1529 0013 0400     		.2byte	0x4
+ 1530 0015 F3       		.byte	0xf3
+ 1531 0016 01       		.uleb128 0x1
+ 1532 0017 50       		.byte	0x50
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 36
+
+
+ 1533 0018 9F       		.byte	0x9f
+ 1534 0019 22000000 		.4byte	.LVL3
+ 1535 001d 2E000000 		.4byte	.LVL5
+ 1536 0021 0100     		.2byte	0x1
+ 1537 0023 50       		.byte	0x50
+ 1538 0024 2E000000 		.4byte	.LVL5
+ 1539 0028 30000000 		.4byte	.LVL6
+ 1540 002c 0400     		.2byte	0x4
+ 1541 002e F3       		.byte	0xf3
+ 1542 002f 01       		.uleb128 0x1
+ 1543 0030 50       		.byte	0x50
+ 1544 0031 9F       		.byte	0x9f
+ 1545 0032 30000000 		.4byte	.LVL6
+ 1546 0036 32000000 		.4byte	.LVL7
+ 1547 003a 0100     		.2byte	0x1
+ 1548 003c 50       		.byte	0x50
+ 1549 003d 32000000 		.4byte	.LVL7
+ 1550 0041 3C000000 		.4byte	.LFE0
+ 1551 0045 0400     		.2byte	0x4
+ 1552 0047 F3       		.byte	0xf3
+ 1553 0048 01       		.uleb128 0x1
+ 1554 0049 50       		.byte	0x50
+ 1555 004a 9F       		.byte	0x9f
+ 1556 004b 00000000 		.4byte	0
+ 1557 004f 00000000 		.4byte	0
+ 1558              	.LLST1:
+ 1559 0053 00000000 		.4byte	.LVL0
+ 1560 0057 1E000000 		.4byte	.LVL1
+ 1561 005b 0200     		.2byte	0x2
+ 1562 005d 30       		.byte	0x30
+ 1563 005e 9F       		.byte	0x9f
+ 1564 005f 1E000000 		.4byte	.LVL1
+ 1565 0063 22000000 		.4byte	.LVL3
+ 1566 0067 0200     		.2byte	0x2
+ 1567 0069 32       		.byte	0x32
+ 1568 006a 9F       		.byte	0x9f
+ 1569 006b 22000000 		.4byte	.LVL3
+ 1570 006f 2C000000 		.4byte	.LVL4
+ 1571 0073 0200     		.2byte	0x2
+ 1572 0075 30       		.byte	0x30
+ 1573 0076 9F       		.byte	0x9f
+ 1574 0077 2C000000 		.4byte	.LVL4
+ 1575 007b 30000000 		.4byte	.LVL6
+ 1576 007f 0200     		.2byte	0x2
+ 1577 0081 31       		.byte	0x31
+ 1578 0082 9F       		.byte	0x9f
+ 1579 0083 30000000 		.4byte	.LVL6
+ 1580 0087 32000000 		.4byte	.LVL7
+ 1581 008b 0200     		.2byte	0x2
+ 1582 008d 30       		.byte	0x30
+ 1583 008e 9F       		.byte	0x9f
+ 1584 008f 32000000 		.4byte	.LVL7
+ 1585 0093 3C000000 		.4byte	.LFE0
+ 1586 0097 0100     		.2byte	0x1
+ 1587 0099 50       		.byte	0x50
+ 1588 009a 00000000 		.4byte	0
+ 1589 009e 00000000 		.4byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 37
+
+
+ 1590              	.LLST2:
+ 1591 00a2 00000000 		.4byte	.LVL8
+ 1592 00a6 04000000 		.4byte	.LVL9
+ 1593 00aa 0100     		.2byte	0x1
+ 1594 00ac 50       		.byte	0x50
+ 1595 00ad 04000000 		.4byte	.LVL9
+ 1596 00b1 0C000000 		.4byte	.LFE1
+ 1597 00b5 0400     		.2byte	0x4
+ 1598 00b7 F3       		.byte	0xf3
+ 1599 00b8 01       		.uleb128 0x1
+ 1600 00b9 50       		.byte	0x50
+ 1601 00ba 9F       		.byte	0x9f
+ 1602 00bb 00000000 		.4byte	0
+ 1603 00bf 00000000 		.4byte	0
+ 1604              	.LLST3:
+ 1605 00c3 0E000000 		.4byte	.LVL10
+ 1606 00c7 18000000 		.4byte	.LVL12
+ 1607 00cb 0100     		.2byte	0x1
+ 1608 00cd 50       		.byte	0x50
+ 1609 00ce 1A000000 		.4byte	.LVL13
+ 1610 00d2 22000000 		.4byte	.LVL15
+ 1611 00d6 0100     		.2byte	0x1
+ 1612 00d8 52       		.byte	0x52
+ 1613 00d9 22000000 		.4byte	.LVL15
+ 1614 00dd 24000000 		.4byte	.LVL16
+ 1615 00e1 0100     		.2byte	0x1
+ 1616 00e3 53       		.byte	0x53
+ 1617 00e4 24000000 		.4byte	.LVL16
+ 1618 00e8 28000000 		.4byte	.LVL18
+ 1619 00ec 0300     		.2byte	0x3
+ 1620 00ee 73       		.byte	0x73
+ 1621 00ef 20       		.sleb128 32
+ 1622 00f0 9F       		.byte	0x9f
+ 1623 00f1 00000000 		.4byte	0
+ 1624 00f5 00000000 		.4byte	0
+ 1625              	.LLST4:
+ 1626 00f9 14000000 		.4byte	.LVL11
+ 1627 00fd 1E000000 		.4byte	.LVL14
+ 1628 0101 0100     		.2byte	0x1
+ 1629 0103 53       		.byte	0x53
+ 1630 0104 00000000 		.4byte	0
+ 1631 0108 00000000 		.4byte	0
+ 1632              	.LLST5:
+ 1633 010c 0E000000 		.4byte	.LVL19
+ 1634 0110 18000000 		.4byte	.LVL21
+ 1635 0114 0100     		.2byte	0x1
+ 1636 0116 50       		.byte	0x50
+ 1637 0117 1A000000 		.4byte	.LVL22
+ 1638 011b 22000000 		.4byte	.LVL24
+ 1639 011f 0100     		.2byte	0x1
+ 1640 0121 52       		.byte	0x52
+ 1641 0122 22000000 		.4byte	.LVL24
+ 1642 0126 24000000 		.4byte	.LVL25
+ 1643 012a 0100     		.2byte	0x1
+ 1644 012c 53       		.byte	0x53
+ 1645 012d 24000000 		.4byte	.LVL25
+ 1646 0131 26000000 		.4byte	.LVL26
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 38
+
+
+ 1647 0135 0300     		.2byte	0x3
+ 1648 0137 73       		.byte	0x73
+ 1649 0138 18       		.sleb128 24
+ 1650 0139 9F       		.byte	0x9f
+ 1651 013a 00000000 		.4byte	0
+ 1652 013e 00000000 		.4byte	0
+ 1653              	.LLST6:
+ 1654 0142 26000000 		.4byte	.LVL26
+ 1655 0146 2C000000 		.4byte	.LVL27
+ 1656 014a 0100     		.2byte	0x1
+ 1657 014c 53       		.byte	0x53
+ 1658 014d 2C000000 		.4byte	.LVL27
+ 1659 0151 38000000 		.4byte	.LVL28
+ 1660 0155 0300     		.2byte	0x3
+ 1661 0157 73       		.byte	0x73
+ 1662 0158 7E       		.sleb128 -2
+ 1663 0159 9F       		.byte	0x9f
+ 1664 015a 38000000 		.4byte	.LVL28
+ 1665 015e 48000000 		.4byte	.LFE4
+ 1666 0162 0600     		.2byte	0x6
+ 1667 0164 71       		.byte	0x71
+ 1668 0165 04       		.sleb128 4
+ 1669 0166 06       		.byte	0x6
+ 1670 0167 32       		.byte	0x32
+ 1671 0168 1C       		.byte	0x1c
+ 1672 0169 9F       		.byte	0x9f
+ 1673 016a 00000000 		.4byte	0
+ 1674 016e 00000000 		.4byte	0
+ 1675              	.LLST7:
+ 1676 0172 14000000 		.4byte	.LVL20
+ 1677 0176 1E000000 		.4byte	.LVL23
+ 1678 017a 0100     		.2byte	0x1
+ 1679 017c 53       		.byte	0x53
+ 1680 017d 00000000 		.4byte	0
+ 1681 0181 00000000 		.4byte	0
+ 1682              	.LLST8:
+ 1683 0185 14000000 		.4byte	.LVL29
+ 1684 0189 24000000 		.4byte	.LVL32
+ 1685 018d 0100     		.2byte	0x1
+ 1686 018f 50       		.byte	0x50
+ 1687 0190 26000000 		.4byte	.LVL33
+ 1688 0194 46000000 		.4byte	.LVL37
+ 1689 0198 0100     		.2byte	0x1
+ 1690 019a 51       		.byte	0x51
+ 1691 019b 46000000 		.4byte	.LVL37
+ 1692 019f 56000000 		.4byte	.LVL40
+ 1693 01a3 0100     		.2byte	0x1
+ 1694 01a5 50       		.byte	0x50
+ 1695 01a6 00000000 		.4byte	0
+ 1696 01aa 00000000 		.4byte	0
+ 1697              	.LLST9:
+ 1698 01ae 56000000 		.4byte	.LVL40
+ 1699 01b2 5E000000 		.4byte	.LVL42
+ 1700 01b6 0100     		.2byte	0x1
+ 1701 01b8 50       		.byte	0x50
+ 1702 01b9 5E000000 		.4byte	.LVL42
+ 1703 01bd 6C000000 		.4byte	.LVL43
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 39
+
+
+ 1704 01c1 0100     		.2byte	0x1
+ 1705 01c3 51       		.byte	0x51
+ 1706 01c4 00000000 		.4byte	0
+ 1707 01c8 00000000 		.4byte	0
+ 1708              	.LLST10:
+ 1709 01cc 20000000 		.4byte	.LVL31
+ 1710 01d0 2E000000 		.4byte	.LVL34
+ 1711 01d4 0100     		.2byte	0x1
+ 1712 01d6 53       		.byte	0x53
+ 1713 01d7 00000000 		.4byte	0
+ 1714 01db 00000000 		.4byte	0
+ 1715              	.LLST11:
+ 1716 01df 1A000000 		.4byte	.LVL30
+ 1717 01e3 48000000 		.4byte	.LVL38
+ 1718 01e7 0100     		.2byte	0x1
+ 1719 01e9 52       		.byte	0x52
+ 1720 01ea 48000000 		.4byte	.LVL38
+ 1721 01ee 4C000000 		.4byte	.LVL39
+ 1722 01f2 0700     		.2byte	0x7
+ 1723 01f4 73       		.byte	0x73
+ 1724 01f5 81808080 		.sleb128 -536870911
+ 1724      7E
+ 1725 01fa 9F       		.byte	0x9f
+ 1726 01fb 4C000000 		.4byte	.LVL39
+ 1727 01ff 5A000000 		.4byte	.LVL41
+ 1728 0203 0100     		.2byte	0x1
+ 1729 0205 52       		.byte	0x52
+ 1730 0206 00000000 		.4byte	0
+ 1731 020a 00000000 		.4byte	0
+ 1732              	.LLST12:
+ 1733 020e 02000000 		.4byte	.LVL44
+ 1734 0212 46000000 		.4byte	.LVL47
+ 1735 0216 0200     		.2byte	0x2
+ 1736 0218 30       		.byte	0x30
+ 1737 0219 9F       		.byte	0x9f
+ 1738 021a 46000000 		.4byte	.LVL47
+ 1739 021e 48000000 		.4byte	.LVL48
+ 1740 0222 0100     		.2byte	0x1
+ 1741 0224 50       		.byte	0x50
+ 1742 0225 48000000 		.4byte	.LVL48
+ 1743 0229 64000000 		.4byte	.LVL50
+ 1744 022d 0200     		.2byte	0x2
+ 1745 022f 30       		.byte	0x30
+ 1746 0230 9F       		.byte	0x9f
+ 1747 0231 64000000 		.4byte	.LVL50
+ 1748 0235 66000000 		.4byte	.LVL51
+ 1749 0239 0100     		.2byte	0x1
+ 1750 023b 50       		.byte	0x50
+ 1751 023c 66000000 		.4byte	.LVL51
+ 1752 0240 78000000 		.4byte	.LVL53
+ 1753 0244 0200     		.2byte	0x2
+ 1754 0246 30       		.byte	0x30
+ 1755 0247 9F       		.byte	0x9f
+ 1756 0248 78000000 		.4byte	.LVL53
+ 1757 024c 7A000000 		.4byte	.LVL54
+ 1758 0250 0100     		.2byte	0x1
+ 1759 0252 50       		.byte	0x50
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 40
+
+
+ 1760 0253 7A000000 		.4byte	.LVL54
+ 1761 0257 98000000 		.4byte	.LVL55
+ 1762 025b 0200     		.2byte	0x2
+ 1763 025d 30       		.byte	0x30
+ 1764 025e 9F       		.byte	0x9f
+ 1765 025f 98000000 		.4byte	.LVL55
+ 1766 0263 9A000000 		.4byte	.LVL56
+ 1767 0267 0100     		.2byte	0x1
+ 1768 0269 50       		.byte	0x50
+ 1769 026a 9A000000 		.4byte	.LVL56
+ 1770 026e AE000000 		.4byte	.LVL57
+ 1771 0272 0200     		.2byte	0x2
+ 1772 0274 30       		.byte	0x30
+ 1773 0275 9F       		.byte	0x9f
+ 1774 0276 AE000000 		.4byte	.LVL57
+ 1775 027a B0000000 		.4byte	.LVL58
+ 1776 027e 0100     		.2byte	0x1
+ 1777 0280 50       		.byte	0x50
+ 1778 0281 B0000000 		.4byte	.LVL58
+ 1779 0285 DE000000 		.4byte	.LVL60
+ 1780 0289 0200     		.2byte	0x2
+ 1781 028b 30       		.byte	0x30
+ 1782 028c 9F       		.byte	0x9f
+ 1783 028d DE000000 		.4byte	.LVL60
+ 1784 0291 E0000000 		.4byte	.LVL61
+ 1785 0295 0100     		.2byte	0x1
+ 1786 0297 50       		.byte	0x50
+ 1787 0298 E0000000 		.4byte	.LVL61
+ 1788 029c 24010000 		.4byte	.LVL62
+ 1789 02a0 0200     		.2byte	0x2
+ 1790 02a2 30       		.byte	0x30
+ 1791 02a3 9F       		.byte	0x9f
+ 1792 02a4 24010000 		.4byte	.LVL62
+ 1793 02a8 26010000 		.4byte	.LVL63
+ 1794 02ac 0100     		.2byte	0x1
+ 1795 02ae 50       		.byte	0x50
+ 1796 02af 26010000 		.4byte	.LVL63
+ 1797 02b3 42010000 		.4byte	.LVL64
+ 1798 02b7 0200     		.2byte	0x2
+ 1799 02b9 30       		.byte	0x30
+ 1800 02ba 9F       		.byte	0x9f
+ 1801 02bb 42010000 		.4byte	.LVL64
+ 1802 02bf 44010000 		.4byte	.LVL65
+ 1803 02c3 0100     		.2byte	0x1
+ 1804 02c5 50       		.byte	0x50
+ 1805 02c6 44010000 		.4byte	.LVL65
+ 1806 02ca 7E010000 		.4byte	.LVL72
+ 1807 02ce 0200     		.2byte	0x2
+ 1808 02d0 30       		.byte	0x30
+ 1809 02d1 9F       		.byte	0x9f
+ 1810 02d2 7E010000 		.4byte	.LVL72
+ 1811 02d6 A4010000 		.4byte	.LFE2
+ 1812 02da 0100     		.2byte	0x1
+ 1813 02dc 50       		.byte	0x50
+ 1814 02dd 00000000 		.4byte	0
+ 1815 02e1 00000000 		.4byte	0
+ 1816              	.LLST13:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 41
+
+
+ 1817 02e5 08000000 		.4byte	.LVL45
+ 1818 02e9 35000000 		.4byte	.LVL46-1
+ 1819 02ed 0100     		.2byte	0x1
+ 1820 02ef 52       		.byte	0x52
+ 1821 02f0 48000000 		.4byte	.LVL48
+ 1822 02f4 55000000 		.4byte	.LVL49-1
+ 1823 02f8 0100     		.2byte	0x1
+ 1824 02fa 52       		.byte	0x52
+ 1825 02fb 66000000 		.4byte	.LVL51
+ 1826 02ff 69000000 		.4byte	.LVL52-1
+ 1827 0303 0100     		.2byte	0x1
+ 1828 0305 52       		.byte	0x52
+ 1829 0306 7A000000 		.4byte	.LVL54
+ 1830 030a 97000000 		.4byte	.LVL55-1
+ 1831 030e 0100     		.2byte	0x1
+ 1832 0310 52       		.byte	0x52
+ 1833 0311 9A000000 		.4byte	.LVL56
+ 1834 0315 AD000000 		.4byte	.LVL57-1
+ 1835 0319 0100     		.2byte	0x1
+ 1836 031b 52       		.byte	0x52
+ 1837 031c B0000000 		.4byte	.LVL58
+ 1838 0320 CF000000 		.4byte	.LVL59-1
+ 1839 0324 0100     		.2byte	0x1
+ 1840 0326 52       		.byte	0x52
+ 1841 0327 E0000000 		.4byte	.LVL61
+ 1842 032b 23010000 		.4byte	.LVL62-1
+ 1843 032f 0100     		.2byte	0x1
+ 1844 0331 52       		.byte	0x52
+ 1845 0332 26010000 		.4byte	.LVL63
+ 1846 0336 41010000 		.4byte	.LVL64-1
+ 1847 033a 0100     		.2byte	0x1
+ 1848 033c 52       		.byte	0x52
+ 1849 033d 44010000 		.4byte	.LVL65
+ 1850 0341 48010000 		.4byte	.LVL66
+ 1851 0345 0100     		.2byte	0x1
+ 1852 0347 52       		.byte	0x52
+ 1853 0348 4C010000 		.4byte	.LVL67
+ 1854 034c 50010000 		.4byte	.LVL68
+ 1855 0350 0100     		.2byte	0x1
+ 1856 0352 52       		.byte	0x52
+ 1857 0353 58010000 		.4byte	.LVL69
+ 1858 0357 6C010000 		.4byte	.LVL70
+ 1859 035b 0100     		.2byte	0x1
+ 1860 035d 52       		.byte	0x52
+ 1861 035e 70010000 		.4byte	.LVL71
+ 1862 0362 A4010000 		.4byte	.LFE2
+ 1863 0366 0100     		.2byte	0x1
+ 1864 0368 52       		.byte	0x52
+ 1865 0369 00000000 		.4byte	0
+ 1866 036d 00000000 		.4byte	0
+ 1867              		.section	.debug_aranges,"",%progbits
+ 1868 0000 44000000 		.4byte	0x44
+ 1869 0004 0200     		.2byte	0x2
+ 1870 0006 00000000 		.4byte	.Ldebug_info0
+ 1871 000a 04       		.byte	0x4
+ 1872 000b 00       		.byte	0
+ 1873 000c 0000     		.2byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 42
+
+
+ 1874 000e 0000     		.2byte	0
+ 1875 0010 00000000 		.4byte	.LFB0
+ 1876 0014 3C000000 		.4byte	.LFE0-.LFB0
+ 1877 0018 00000000 		.4byte	.LFB1
+ 1878 001c 0C000000 		.4byte	.LFE1-.LFB1
+ 1879 0020 00000000 		.4byte	.LFB3
+ 1880 0024 40000000 		.4byte	.LFE3-.LFB3
+ 1881 0028 00000000 		.4byte	.LFB4
+ 1882 002c 48000000 		.4byte	.LFE4-.LFB4
+ 1883 0030 00000000 		.4byte	.LFB5
+ 1884 0034 88000000 		.4byte	.LFE5-.LFB5
+ 1885 0038 00000000 		.4byte	.LFB2
+ 1886 003c A4010000 		.4byte	.LFE2-.LFB2
+ 1887 0040 00000000 		.4byte	0
+ 1888 0044 00000000 		.4byte	0
+ 1889              		.section	.debug_ranges,"",%progbits
+ 1890              	.Ldebug_ranges0:
+ 1891 0000 00000000 		.4byte	.LFB0
+ 1892 0004 3C000000 		.4byte	.LFE0
+ 1893 0008 00000000 		.4byte	.LFB1
+ 1894 000c 0C000000 		.4byte	.LFE1
+ 1895 0010 00000000 		.4byte	.LFB3
+ 1896 0014 40000000 		.4byte	.LFE3
+ 1897 0018 00000000 		.4byte	.LFB4
+ 1898 001c 48000000 		.4byte	.LFE4
+ 1899 0020 00000000 		.4byte	.LFB5
+ 1900 0024 88000000 		.4byte	.LFE5
+ 1901 0028 00000000 		.4byte	.LFB2
+ 1902 002c A4010000 		.4byte	.LFE2
+ 1903 0030 00000000 		.4byte	0
+ 1904 0034 00000000 		.4byte	0
+ 1905              		.section	.debug_line,"",%progbits
+ 1906              	.Ldebug_line0:
+ 1907 0000 59010000 		.section	.debug_str,"MS",%progbits,1
+ 1907      02006E00 
+ 1907      00000201 
+ 1907      FB0E0D00 
+ 1907      01010101 
+ 1908              	.LASF41:
+ 1909 0000 55534255 		.ascii	"USBUART_1_hidIdleRate\000"
+ 1909      4152545F 
+ 1909      315F6869 
+ 1909      6449646C 
+ 1909      65526174 
+ 1910              	.LASF21:
+ 1911 0016 70537461 		.ascii	"pStatusBlock\000"
+ 1911      74757342 
+ 1911      6C6F636B 
+ 1911      00
+ 1912              	.LASF50:
+ 1913 0023 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 1913      6C657853 
+ 1913      45415F61 
+ 1913      6C783837 
+ 1913      6772645C 
+ 1914              	.LASF28:
+ 1915 0051 73746174 		.ascii	"stat\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 43
+
+
+ 1915      00
+ 1916              	.LASF34:
+ 1917 0056 55534255 		.ascii	"USBUART_1_FindReport\000"
+ 1917      4152545F 
+ 1917      315F4669 
+ 1917      6E645265 
+ 1917      706F7274 
+ 1918              	.LASF36:
+ 1919 006b 55534255 		.ascii	"USBUART_1_DispatchHIDClassRqst\000"
+ 1919      4152545F 
+ 1919      315F4469 
+ 1919      73706174 
+ 1919      63684849 
+ 1920              	.LASF19:
+ 1921 008a 636F756E 		.ascii	"count\000"
+ 1921      7400
+ 1922              	.LASF3:
+ 1923 0090 73686F72 		.ascii	"short unsigned int\000"
+ 1923      7420756E 
+ 1923      7369676E 
+ 1923      65642069 
+ 1923      6E7400
+ 1924              	.LASF24:
+ 1925 00a3 545F5553 		.ascii	"T_USBUART_1_LUT\000"
+ 1925      42554152 
+ 1925      545F315F 
+ 1925      4C555400 
+ 1926              	.LASF31:
+ 1927 00b3 696E7465 		.ascii	"interfaceN\000"
+ 1927      72666163 
+ 1927      654E00
+ 1928              	.LASF16:
+ 1929 00be 73746174 		.ascii	"status\000"
+ 1929      757300
+ 1930              	.LASF20:
+ 1931 00c5 70446174 		.ascii	"pData\000"
+ 1931      6100
+ 1932              	.LASF37:
+ 1933 00cb 72657175 		.ascii	"requestHandled\000"
+ 1933      65737448 
+ 1933      616E646C 
+ 1933      656400
+ 1934              	.LASF11:
+ 1935 00da 666C6F61 		.ascii	"float\000"
+ 1935      7400
+ 1936              	.LASF35:
+ 1937 00e0 7265706F 		.ascii	"reportType\000"
+ 1937      72745479 
+ 1937      706500
+ 1938              	.LASF1:
+ 1939 00eb 756E7369 		.ascii	"unsigned char\000"
+ 1939      676E6564 
+ 1939      20636861 
+ 1939      7200
+ 1940              	.LASF51:
+ 1941 00f9 55534255 		.ascii	"USBUART_1_GetConfigTablePtr\000"
+ 1941      4152545F 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 44
+
+
+ 1941      315F4765 
+ 1941      74436F6E 
+ 1941      66696754 
+ 1942              	.LASF14:
+ 1943 0115 72656738 		.ascii	"reg8\000"
+ 1943      00
+ 1944              	.LASF5:
+ 1945 011a 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1945      20756E73 
+ 1945      69676E65 
+ 1945      6420696E 
+ 1945      7400
+ 1946              	.LASF9:
+ 1947 012c 75696E74 		.ascii	"uint8\000"
+ 1947      3800
+ 1948              	.LASF38:
+ 1949 0132 696E7465 		.ascii	"interfaceNumber\000"
+ 1949      72666163 
+ 1949      654E756D 
+ 1949      62657200 
+ 1950              	.LASF12:
+ 1951 0142 646F7562 		.ascii	"double\000"
+ 1951      6C6500
+ 1952              	.LASF49:
+ 1953 0149 2E5C4765 		.ascii	".\\Generated_Source\\PSoC5\\USBUART_1_hid.c\000"
+ 1953      6E657261 
+ 1953      7465645F 
+ 1953      536F7572 
+ 1953      63655C50 
+ 1954              	.LASF32:
+ 1955 0172 55534255 		.ascii	"USBUART_1_FindHidClassDecriptor\000"
+ 1955      4152545F 
+ 1955      315F4669 
+ 1955      6E644869 
+ 1955      64436C61 
+ 1956              	.LASF46:
+ 1957 0192 55534255 		.ascii	"USBUART_1_InitControlWrite\000"
+ 1957      4152545F 
+ 1957      315F496E 
+ 1957      6974436F 
+ 1957      6E74726F 
+ 1958              	.LASF10:
+ 1959 01ad 75696E74 		.ascii	"uint16\000"
+ 1959      313600
+ 1960              	.LASF39:
+ 1961 01b4 55534255 		.ascii	"USBUART_1_configuration\000"
+ 1961      4152545F 
+ 1961      315F636F 
+ 1961      6E666967 
+ 1961      75726174 
+ 1962              	.LASF42:
+ 1963 01cc 55534255 		.ascii	"USBUART_1_hidIdleTimer\000"
+ 1963      4152545F 
+ 1963      315F6869 
+ 1963      6449646C 
+ 1963      6554696D 
+ 1964              	.LASF30:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 45
+
+
+ 1965 01e3 70446573 		.ascii	"pDescr\000"
+ 1965      637200
+ 1966              	.LASF8:
+ 1967 01ea 756E7369 		.ascii	"unsigned int\000"
+ 1967      676E6564 
+ 1967      20696E74 
+ 1967      00
+ 1968              	.LASF45:
+ 1969 01f7 55534255 		.ascii	"USBUART_1_InitControlRead\000"
+ 1969      4152545F 
+ 1969      315F496E 
+ 1969      6974436F 
+ 1969      6E74726F 
+ 1970              	.LASF7:
+ 1971 0211 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1971      206C6F6E 
+ 1971      6720756E 
+ 1971      7369676E 
+ 1971      65642069 
+ 1972              	.LASF23:
+ 1973 0228 705F6C69 		.ascii	"p_list\000"
+ 1973      737400
+ 1974              	.LASF22:
+ 1975 022f 545F5553 		.ascii	"T_USBUART_1_TD\000"
+ 1975      42554152 
+ 1975      545F315F 
+ 1975      544400
+ 1976              	.LASF15:
+ 1977 023e 73697A65 		.ascii	"sizetype\000"
+ 1977      74797065 
+ 1977      00
+ 1978              	.LASF48:
+ 1979 0247 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 1979      4320342E 
+ 1979      392E3320 
+ 1979      32303135 
+ 1979      30333033 
+ 1980 027a 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 1980      20726576 
+ 1980      6973696F 
+ 1980      6E203232 
+ 1980      31323230 
+ 1981 02ad 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1981      66756E63 
+ 1981      74696F6E 
+ 1981      2D736563 
+ 1981      74696F6E 
+ 1982              	.LASF26:
+ 1983 02d5 55534255 		.ascii	"USBUART_1_GetProtocol\000"
+ 1983      4152545F 
+ 1983      315F4765 
+ 1983      7450726F 
+ 1983      746F636F 
+ 1984              	.LASF6:
+ 1985 02eb 6C6F6E67 		.ascii	"long long int\000"
+ 1985      206C6F6E 
+ 1985      6720696E 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 46
+
+
+ 1985      7400
+ 1986              	.LASF47:
+ 1987 02f9 55534255 		.ascii	"USBUART_1_InitNoDataControlTransfer\000"
+ 1987      4152545F 
+ 1987      315F496E 
+ 1987      69744E6F 
+ 1987      44617461 
+ 1988              	.LASF43:
+ 1989 031d 55534255 		.ascii	"USBUART_1_interfaceSetting\000"
+ 1989      4152545F 
+ 1989      315F696E 
+ 1989      74657266 
+ 1989      61636553 
+ 1990              	.LASF29:
+ 1991 0338 70546D70 		.ascii	"pTmp\000"
+ 1991      00
+ 1992              	.LASF25:
+ 1993 033d 55534255 		.ascii	"USBUART_1_UpdateHIDTimer\000"
+ 1993      4152545F 
+ 1993      315F5570 
+ 1993      64617465 
+ 1993      48494454 
+ 1994              	.LASF18:
+ 1995 0356 545F5553 		.ascii	"T_USBUART_1_XFER_STATUS_BLOCK\000"
+ 1995      42554152 
+ 1995      545F315F 
+ 1995      58464552 
+ 1995      5F535441 
+ 1996              	.LASF2:
+ 1997 0374 73686F72 		.ascii	"short int\000"
+ 1997      7420696E 
+ 1997      7400
+ 1998              	.LASF40:
+ 1999 037e 55534255 		.ascii	"USBUART_1_hidProtocol\000"
+ 1999      4152545F 
+ 1999      315F6869 
+ 1999      6450726F 
+ 1999      746F636F 
+ 2000              	.LASF27:
+ 2001 0394 696E7465 		.ascii	"interface\000"
+ 2001      72666163 
+ 2001      6500
+ 2002              	.LASF4:
+ 2003 039e 6C6F6E67 		.ascii	"long int\000"
+ 2003      20696E74 
+ 2003      00
+ 2004              	.LASF13:
+ 2005 03a7 63686172 		.ascii	"char\000"
+ 2005      00
+ 2006              	.LASF44:
+ 2007 03ac 55534255 		.ascii	"USBUART_1_currentTD\000"
+ 2007      4152545F 
+ 2007      315F6375 
+ 2007      7272656E 
+ 2007      74544400 
+ 2008              	.LASF0:
+ 2009 03c0 7369676E 		.ascii	"signed char\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccVwSJcI.s 			page 47
+
+
+ 2009      65642063 
+ 2009      68617200 
+ 2010              	.LASF33:
+ 2011 03cc 55534255 		.ascii	"USBUART_1_FindReportDescriptor\000"
+ 2011      4152545F 
+ 2011      315F4669 
+ 2011      6E645265 
+ 2011      706F7274 
+ 2012              	.LASF17:
+ 2013 03eb 6C656E67 		.ascii	"length\000"
+ 2013      746800
+ 2014              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

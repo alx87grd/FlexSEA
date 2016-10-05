@@ -1,0 +1,2444 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"trapez.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.global	__aeabi_ldivmod
+  19              		.section	.text.trapez_compute_params,"ax",%progbits
+  20              		.align	2
+  21              		.thumb
+  22              		.thumb_func
+  23              		.type	trapez_compute_params, %function
+  24              	trapez_compute_params:
+  25              	.LFB2:
+  26              		.file 1 "..\\src\\trapez.c"
+   1:..\src/trapez.c **** //****************************************************************************
+   2:..\src/trapez.c **** // MIT Media Lab - Biomechatronics
+   3:..\src/trapez.c **** // Jean-Francois (Jeff) Duval
+   4:..\src/trapez.c **** // jfduval@mit.edu
+   5:..\src/trapez.c **** // 05/2015
+   6:..\src/trapez.c **** //****************************************************************************
+   7:..\src/trapez.c **** // trapez: trapezoidal trajectory generation
+   8:..\src/trapez.c **** //****************************************************************************
+   9:..\src/trapez.c **** 
+  10:..\src/trapez.c **** //Work based on trapez_gen_x.m, translated in C
+  11:..\src/trapez.c **** //JFDuval 06/17/2014
+  12:..\src/trapez.c **** 
+  13:..\src/trapez.c **** //****************************************************************************
+  14:..\src/trapez.c **** // Include(s)
+  15:..\src/trapez.c **** //****************************************************************************
+  16:..\src/trapez.c **** 
+  17:..\src/trapez.c **** //Comment the next line to use in your application:
+  18:..\src/trapez.c **** //#define DEBUGGING_OUTPUT
+  19:..\src/trapez.c **** 
+  20:..\src/trapez.c **** #include <stdio.h>
+  21:..\src/trapez.c **** #include <stdint.h>
+  22:..\src/trapez.c **** #include <stdlib.h>
+  23:..\src/trapez.c **** #include <math.h>
+  24:..\src/trapez.c **** #include "trapez.h"
+  25:..\src/trapez.c **** //#include "main.h"
+  26:..\src/trapez.c **** 
+  27:..\src/trapez.c **** 
+  28:..\src/trapez.c **** //****************************************************************************
+  29:..\src/trapez.c **** // Local variable(s)
+  30:..\src/trapez.c **** //****************************************************************************
+  31:..\src/trapez.c **** 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 2
+
+
+  32:..\src/trapez.c **** //Common variables - careful, do not change "manually"!
+  33:..\src/trapez.c **** long long d_pos = 0, d_spd = 0, a_t = 0, a_t_discrete = 0, spd_inc = 0, acc_pos = 0, acc = 0;
+  34:..\src/trapez.c **** long long init_pos = 0, cte_spd_pos = 0, cte_spd_pos_discrete = 0;
+  35:..\src/trapez.c **** long long skip_sspeed = 0;
+  36:..\src/trapez.c **** long long pos_step = 0;
+  37:..\src/trapez.c **** long long trapez_transitions[3] = {0,0,0};
+  38:..\src/trapez.c **** long long sign = 0;
+  39:..\src/trapez.c **** 
+  40:..\src/trapez.c **** //****************************************************************************
+  41:..\src/trapez.c **** // Private Function Prototype(s):
+  42:..\src/trapez.c **** //****************************************************************************
+  43:..\src/trapez.c **** 
+  44:..\src/trapez.c **** static long long trapez_compute_params(long long pos_i, long long pos_f, long long spd_max, long lo
+  45:..\src/trapez.c **** 
+  46:..\src/trapez.c **** //****************************************************************************
+  47:..\src/trapez.c **** // Public Function(s)
+  48:..\src/trapez.c **** //****************************************************************************
+  49:..\src/trapez.c **** 
+  50:..\src/trapez.c **** //Based on trapez_motion_2.m
+  51:..\src/trapez.c **** //Assumes 0 initial speed
+  52:..\src/trapez.c **** long long trapez_gen_motion_1(long long pos_i, long long pos_f, long long spd_max, long long a)
+  53:..\src/trapez.c **** {
+  54:..\src/trapez.c **** 	long long abs_d_pos = 0, abs_acc_pos = 0, dual_abs_acc_pos = 0;
+  55:..\src/trapez.c **** 
+  56:..\src/trapez.c ****     //spd_max & a have to be positive
+  57:..\src/trapez.c ****     spd_max = llabs(spd_max);
+  58:..\src/trapez.c ****     a = llabs(a);
+  59:..\src/trapez.c **** 
+  60:..\src/trapez.c ****     //Compute parameters (in global variables)
+  61:..\src/trapez.c ****     trapez_compute_params(pos_i, pos_f, spd_max, a);
+  62:..\src/trapez.c **** 
+  63:..\src/trapez.c ****     //Absolute values
+  64:..\src/trapez.c ****     abs_d_pos = llabs(d_pos);
+  65:..\src/trapez.c ****     abs_acc_pos = llabs(acc_pos);
+  66:..\src/trapez.c ****     dual_abs_acc_pos = 2*abs_acc_pos;
+  67:..\src/trapez.c **** 
+  68:..\src/trapez.c ****     #ifdef DEBUGGING_OUTPUT
+  69:..\src/trapez.c ****     printf("d_pos = %lld, abs_d_pos = %lld.\n", d_pos, abs_d_pos);
+  70:..\src/trapez.c ****     printf("1) acc_pos = %lld, abs_acc_pos = %lld.\n", acc_pos, abs_acc_pos);
+  71:..\src/trapez.c ****     #endif
+  72:..\src/trapez.c **** 
+  73:..\src/trapez.c ****     //It's possible to overshoot position if the acceleration is too low.
+  74:..\src/trapez.c ****     //In that case we should sacrifice the top speed
+  75:..\src/trapez.c ****     if(dual_abs_acc_pos > abs_d_pos)
+  76:..\src/trapez.c ****     {
+  77:..\src/trapez.c ****         #ifdef DEBUGGING_OUTPUT
+  78:..\src/trapez.c ****         printf("Position overshoot.\n");
+  79:..\src/trapez.c ****         #endif
+  80:..\src/trapez.c **** 
+  81:..\src/trapez.c ****         //New top speed:
+  82:..\src/trapez.c ****         spd_max = sqrt(a*abs_d_pos);
+  83:..\src/trapez.c ****         #ifdef DEBUGGING_OUTPUT
+  84:..\src/trapez.c ****         printf("New spd_max: %lld.\n", spd_max);
+  85:..\src/trapez.c ****         #endif
+  86:..\src/trapez.c **** 
+  87:..\src/trapez.c ****         //Redo the initial math:
+  88:..\src/trapez.c ****         //Compute parameters (in global variables)
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 3
+
+
+  89:..\src/trapez.c ****         trapez_compute_params(pos_i, pos_f, spd_max, a);
+  90:..\src/trapez.c **** 
+  91:..\src/trapez.c ****         //Absolute values (they probably changed)
+  92:..\src/trapez.c ****         abs_d_pos = abs(d_pos);
+  93:..\src/trapez.c ****         abs_acc_pos = abs(acc_pos);
+  94:..\src/trapez.c ****         dual_abs_acc_pos = 2*abs_acc_pos;
+  95:..\src/trapez.c ****     }
+  96:..\src/trapez.c **** 
+  97:..\src/trapez.c ****     //Plateau - constant speed
+  98:..\src/trapez.c ****     #ifdef DEBUGGING_OUTPUT
+  99:..\src/trapez.c ****     printf("d_pos = %lld, abs_d_pos = %lld.\n", d_pos, abs_d_pos);
+ 100:..\src/trapez.c ****     printf("2) acc_pos = %lld, abs_acc_pos = %lld.\n", acc_pos, abs_acc_pos);
+ 101:..\src/trapez.c ****     #endif
+ 102:..\src/trapez.c **** 
+ 103:..\src/trapez.c ****     cte_spd_pos = abs_d_pos - (2*abs_acc_pos);
+ 104:..\src/trapez.c ****     cte_spd_pos_discrete = (SPD_FACTOR*cte_spd_pos/spd_max)*TRAPEZ_ONE_OVER_DT;
+ 105:..\src/trapez.c ****     cte_spd_pos_discrete = cte_spd_pos_discrete / SPD_FACTOR;
+ 106:..\src/trapez.c ****     #ifdef DEBUGGING_OUTPUT
+ 107:..\src/trapez.c ****     printf("cte_spd_pos = %lld, cte_spd_pos_discrete = %lld.\n", cte_spd_pos, cte_spd_pos_discrete)
+ 108:..\src/trapez.c ****     #endif
+ 109:..\src/trapez.c ****     if(cte_spd_pos_discrete < 0)
+ 110:..\src/trapez.c ****     {
+ 111:..\src/trapez.c ****         cte_spd_pos_discrete = 0;
+ 112:..\src/trapez.c ****         #ifdef DEBUGGING_OUTPUT
+ 113:..\src/trapez.c ****         printf("No steady speed!\n");
+ 114:..\src/trapez.c ****         #endif
+ 115:..\src/trapez.c ****     }
+ 116:..\src/trapez.c **** 
+ 117:..\src/trapez.c ****     //Transitions:
+ 118:..\src/trapez.c ****     trapez_transitions[0] = a_t_discrete;
+ 119:..\src/trapez.c ****     trapez_transitions[1] = a_t_discrete + cte_spd_pos_discrete;
+ 120:..\src/trapez.c ****     trapez_transitions[2] = 2*a_t_discrete + cte_spd_pos_discrete;
+ 121:..\src/trapez.c ****     #ifdef DEBUGGING_OUTPUT
+ 122:..\src/trapez.c ****     printf("tr[0] = %lld, tr[1] = %lld, tr[2] = %lld.\n", trapez_transitions[0], trapez_transitions
+ 123:..\src/trapez.c ****     #endif
+ 124:..\src/trapez.c ****     pos_step = 0;   //Variable used to output the current position command
+ 125:..\src/trapez.c **** 
+ 126:..\src/trapez.c ****     return (2*a_t_discrete + cte_spd_pos_discrete); //Returns the number of steps
+ 127:..\src/trapez.c **** }
+ 128:..\src/trapez.c **** 
+ 129:..\src/trapez.c **** //Runtime function - gives the next position setpoint
+ 130:..\src/trapez.c **** long long trapez_get_pos(long long max_steps)
+ 131:..\src/trapez.c **** {
+ 132:..\src/trapez.c ****     static long long tmp_spd = 0, last_tmp_spd = 0, tmp_pos = 0;
+ 133:..\src/trapez.c ****     long long position = 0;
+ 134:..\src/trapez.c ****     static long long pos_integral = 0;
+ 135:..\src/trapez.c **** 
+ 136:..\src/trapez.c ****     //At this point all the parameters are computed, we can get the 3 plots
+ 137:..\src/trapez.c **** 
+ 138:..\src/trapez.c ****     //First time:
+ 139:..\src/trapez.c ****     if(pos_step == 0)
+ 140:..\src/trapez.c ****     {
+ 141:..\src/trapez.c ****         tmp_spd = 0;
+ 142:..\src/trapez.c ****         last_tmp_spd = 0;
+ 143:..\src/trapez.c ****         tmp_pos = 0;
+ 144:..\src/trapez.c ****         pos_integral = 0;
+ 145:..\src/trapez.c ****         #ifdef DEBUGGING_OUTPUT
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 4
+
+
+ 146:..\src/trapez.c ****         printf("pos_step = 0, pos_integral = %lld.\n", pos_integral);
+ 147:..\src/trapez.c ****         #endif
+ 148:..\src/trapez.c ****     }
+ 149:..\src/trapez.c **** 
+ 150:..\src/trapez.c ****     //Acceleration:
+ 151:..\src/trapez.c ****     if(pos_step <= trapez_transitions[0])
+ 152:..\src/trapez.c ****     {
+ 153:..\src/trapez.c ****         last_tmp_spd = tmp_spd;
+ 154:..\src/trapez.c ****         tmp_spd = last_tmp_spd + spd_inc;
+ 155:..\src/trapez.c ****     }
+ 156:..\src/trapez.c ****     //if(skip_sspeed == 0)    //ToDo useful?
+ 157:..\src/trapez.c ****     {
+ 158:..\src/trapez.c ****         //Constant speed
+ 159:..\src/trapez.c ****         //last_tmp_spd = tmp_spd;
+ 160:..\src/trapez.c ****         if((pos_step >= trapez_transitions[0]) && (pos_step <= trapez_transitions[1]))
+ 161:..\src/trapez.c ****         {
+ 162:..\src/trapez.c ****             tmp_spd = last_tmp_spd;
+ 163:..\src/trapez.c ****         }
+ 164:..\src/trapez.c ****     }
+ 165:..\src/trapez.c ****     //Negative Acceleration:
+ 166:..\src/trapez.c ****     if((pos_step >= trapez_transitions[1]) && (pos_step <= trapez_transitions[2]))
+ 167:..\src/trapez.c ****     {
+ 168:..\src/trapez.c ****         last_tmp_spd = tmp_spd;
+ 169:..\src/trapez.c ****         tmp_spd = last_tmp_spd - spd_inc;
+ 170:..\src/trapez.c ****     }
+ 171:..\src/trapez.c **** 
+ 172:..\src/trapez.c ****     if(pos_step <= max_steps)
+ 173:..\src/trapez.c ****     {
+ 174:..\src/trapez.c ****         //Ready for next one.
+ 175:..\src/trapez.c ****         pos_step++;
+ 176:..\src/trapez.c **** 
+ 177:..\src/trapez.c ****         //Common math:
+ 178:..\src/trapez.c ****         pos_integral += tmp_spd;
+ 179:..\src/trapez.c ****         tmp_pos = pos_integral/(TRAPEZ_ONE_OVER_DT * SPD_FACTOR);
+ 180:..\src/trapez.c ****         position = tmp_pos + init_pos;
+ 181:..\src/trapez.c ****         #ifdef DEBUGGING_OUTPUT
+ 182:..\src/trapez.c ****         if(pos_step < 10)
+ 183:..\src/trapez.c ****         	printf("pos_step = %lld, pos_integral = %lld, position = %lld.\n", pos_step, pos_integral,
+ 184:..\src/trapez.c ****         #endif
+ 185:..\src/trapez.c ****     }
+ 186:..\src/trapez.c ****     else
+ 187:..\src/trapez.c ****     {
+ 188:..\src/trapez.c ****         position = tmp_pos + init_pos;
+ 189:..\src/trapez.c ****     }
+ 190:..\src/trapez.c **** 
+ 191:..\src/trapez.c ****     //New setpoint
+ 192:..\src/trapez.c ****     return position;
+ 193:..\src/trapez.c **** }
+ 194:..\src/trapez.c **** 
+ 195:..\src/trapez.c **** //****************************************************************************
+ 196:..\src/trapez.c **** // Private Function(s)
+ 197:..\src/trapez.c **** //****************************************************************************
+ 198:..\src/trapez.c **** 
+ 199:..\src/trapez.c **** //Computes all the parameters for a new trapezoidal motion trajectory
+ 200:..\src/trapez.c **** //Called by trapez_gen_motion_1()
+ 201:..\src/trapez.c **** static long long trapez_compute_params(long long pos_i, long long pos_f, long long spd_max, long lo
+ 202:..\src/trapez.c **** {
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 5
+
+
+  27              		.loc 1 202 0
+  28              		.cfi_startproc
+  29              		@ args = 16, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              	.LVL0:
+  32 0000 2DE9F84F 		push	{r3, r4, r5, r6, r7, r8, r9, r10, fp, lr}
+  33              		.cfi_def_cfa_offset 40
+  34              		.cfi_offset 3, -40
+  35              		.cfi_offset 4, -36
+  36              		.cfi_offset 5, -32
+  37              		.cfi_offset 6, -28
+  38              		.cfi_offset 7, -24
+  39              		.cfi_offset 8, -20
+  40              		.cfi_offset 9, -16
+  41              		.cfi_offset 10, -12
+  42              		.cfi_offset 11, -8
+  43              		.cfi_offset 14, -4
+  44 0004 DDE90A67 		ldrd	r6, [sp, #40]
+  45 0008 DDE90C45 		ldrd	r4, [sp, #48]
+  46              	.LVL1:
+ 203:..\src/trapez.c ****     long long tmp = 0, i = 0;
+ 204:..\src/trapez.c **** 
+ 205:..\src/trapez.c ****     //Sign
+ 206:..\src/trapez.c ****     if(pos_f < pos_i)
+  47              		.loc 1 206 0
+  48 000c 8242     		cmp	r2, r0
+  49 000e 73EB010E 		sbcs	lr, r3, r1
+  50 0012 08DA     		bge	.L2
+ 207:..\src/trapez.c ****         sign = -1;
+  51              		.loc 1 207 0
+  52 0014 4FF0FF38 		mov	r8, #-1
+  53 0018 4FF0FF39 		mov	r9, #-1
+  54 001c DFF85CE1 		ldr	lr, .L7
+  55 0020 CEE90089 		strd	r8, [lr]
+  56 0024 07E0     		b	.L3
+  57              	.L2:
+ 208:..\src/trapez.c ****     else
+ 209:..\src/trapez.c ****         sign = 1;
+  58              		.loc 1 209 0
+  59 0026 4FF00108 		mov	r8, #1
+  60 002a 4FF00009 		mov	r9, #0
+  61 002e DFF84CE1 		ldr	lr, .L7
+  62 0032 CEE90089 		strd	r8, [lr]
+  63              	.L3:
+ 210:..\src/trapez.c **** 
+ 211:..\src/trapez.c ****     acc = a;
+  64              		.loc 1 211 0
+  65 0036 DFF84481 		ldr	r8, .L7
+  66 003a C8E90245 		strd	r4, [r8, #8]
+ 212:..\src/trapez.c ****     init_pos = pos_i;
+  67              		.loc 1 212 0
+  68 003e C8E90401 		strd	r0, [r8, #16]
+ 213:..\src/trapez.c ****     d_pos = pos_f - pos_i;                                  //Difference in position
+  69              		.loc 1 213 0
+  70 0042 101A     		subs	r0, r2, r0
+  71              	.LVL2:
+  72 0044 63EB0101 		sbc	r1, r3, r1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 6
+
+
+  73 0048 C8E90601 		strd	r0, [r8, #24]
+ 214:..\src/trapez.c ****     d_spd = spd_max ;                                       //Difference in speed
+  74              		.loc 1 214 0
+  75 004c C8E90867 		strd	r6, [r8, #32]
+ 215:..\src/trapez.c ****     a_t = (ACC_FACTOR*d_spd) / a;                                        //How long do we accelerat
+  76              		.loc 1 215 0
+  77 0050 BB00     		lsls	r3, r7, #2
+  78 0052 B000     		lsls	r0, r6, #2
+  79 0054 43EA9671 		orr	r1, r3, r6, lsr #30
+  80 0058 4B01     		lsls	r3, r1, #5
+  81 005a 43EAD063 		orr	r3, r3, r0, lsr #27
+  82 005e 4201     		lsls	r2, r0, #5
+  83              	.LVL3:
+  84 0060 101A     		subs	r0, r2, r0
+  85 0062 63EB0101 		sbc	r1, r3, r1
+  86 0066 8019     		adds	r0, r0, r6
+  87 0068 7941     		adcs	r1, r1, r7
+  88 006a 8B00     		lsls	r3, r1, #2
+  89 006c 43EA9073 		orr	r3, r3, r0, lsr #30
+  90 0070 8200     		lsls	r2, r0, #2
+  91 0072 8018     		adds	r0, r0, r2
+  92 0074 5941     		adcs	r1, r1, r3
+  93 0076 0B01     		lsls	r3, r1, #4
+  94 0078 43EA1073 		orr	r3, r3, r0, lsr #28
+  95 007c 0201     		lsls	r2, r0, #4
+  96 007e 1046     		mov	r0, r2
+  97 0080 1946     		mov	r1, r3
+  98 0082 2246     		mov	r2, r4
+  99 0084 2B46     		mov	r3, r5
+ 100 0086 FFF7FEFF 		bl	__aeabi_ldivmod
+ 101              	.LVL4:
+ 102 008a C8E90A01 		strd	r0, [r8, #40]
+ 216:..\src/trapez.c ****     a_t_discrete = a_t * TRAPEZ_ONE_OVER_DT / ACC_FACTOR;                //   (in ticks)
+ 103              		.loc 1 216 0
+ 104 008e 8B00     		lsls	r3, r1, #2
+ 105 0090 8400     		lsls	r4, r0, #2
+ 106 0092 43EA9075 		orr	r5, r3, r0, lsr #30
+ 107 0096 6B01     		lsls	r3, r5, #5
+ 108 0098 43EAD463 		orr	r3, r3, r4, lsr #27
+ 109 009c 6201     		lsls	r2, r4, #5
+ 110 009e 121B     		subs	r2, r2, r4
+ 111 00a0 63EB0503 		sbc	r3, r3, r5
+ 112 00a4 8018     		adds	r0, r0, r2
+ 113 00a6 5941     		adcs	r1, r1, r3
+ 114 00a8 CB00     		lsls	r3, r1, #3
+ 115 00aa 43EA5073 		orr	r3, r3, r0, lsr #29
+ 116 00ae C200     		lsls	r2, r0, #3
+ 117 00b0 1046     		mov	r0, r2
+ 118 00b2 1946     		mov	r1, r3
+ 119 00b4 42F21072 		movw	r2, #10000
+ 120 00b8 0023     		movs	r3, #0
+ 121 00ba FFF7FEFF 		bl	__aeabi_ldivmod
+ 122              	.LVL5:
+ 123 00be 0446     		mov	r4, r0
+ 124 00c0 0D46     		mov	r5, r1
+ 125 00c2 C8E90C45 		strd	r4, [r8, #48]
+ 217:..\src/trapez.c ****     //a_t_discrete = a_t; //Simplification of *100/100
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 7
+
+
+ 218:..\src/trapez.c ****     spd_inc = (sign*SPD_FACTOR*d_spd) / a_t_discrete;       //Every tick, increase spd by
+ 126              		.loc 1 218 0
+ 127 00c6 D8E900AB 		ldrd	r10, [r8]
+ 128 00ca 4FEA8B03 		lsl	r3, fp, #2
+ 129 00ce 4FEA8A00 		lsl	r0, r10, #2
+ 130 00d2 43EA9A71 		orr	r1, r3, r10, lsr #30
+ 131 00d6 4B01     		lsls	r3, r1, #5
+ 132 00d8 43EAD063 		orr	r3, r3, r0, lsr #27
+ 133 00dc 4201     		lsls	r2, r0, #5
+ 134 00de 101A     		subs	r0, r2, r0
+ 135 00e0 63EB0101 		sbc	r1, r3, r1
+ 136 00e4 1AEB000A 		adds	r10, r10, r0
+ 137 00e8 4BEB010B 		adc	fp, fp, r1
+ 138 00ec 4FEA8B01 		lsl	r1, fp, #2
+ 139 00f0 41EA9A71 		orr	r1, r1, r10, lsr #30
+ 140 00f4 4FEA8A00 		lsl	r0, r10, #2
+ 141 00f8 10EB0A00 		adds	r0, r0, r10
+ 142 00fc 41EB0B01 		adc	r1, r1, fp
+ 143 0100 0B01     		lsls	r3, r1, #4
+ 144 0102 43EA1073 		orr	r3, r3, r0, lsr #28
+ 145 0106 0201     		lsls	r2, r0, #4
+ 146 0108 06FB03F3 		mul	r3, r6, r3
+ 147 010c 02FB0733 		mla	r3, r2, r7, r3
+ 148 0110 A6FB0201 		umull	r0, r1, r6, r2
+ 149 0114 1944     		add	r1, r1, r3
+ 150 0116 2246     		mov	r2, r4
+ 151 0118 2B46     		mov	r3, r5
+ 152 011a FFF7FEFF 		bl	__aeabi_ldivmod
+ 153              	.LVL6:
+ 154 011e C8E90E01 		strd	r0, [r8, #56]
+ 219:..\src/trapez.c ****     #ifdef DEBUGGING_OUTPUT
+ 220:..\src/trapez.c ****     printf("d_spd = %lld, a_t_discrete = %lld, spd_inc = %lld, d_pos = %lld.\n", d_spd, a_t_discret
+ 221:..\src/trapez.c ****     #endif
+ 222:..\src/trapez.c **** 
+ 223:..\src/trapez.c ****     acc_pos = 0;
+ 155              		.loc 1 223 0
+ 156 0122 0022     		movs	r2, #0
+ 157 0124 C8F84020 		str	r2, [r8, #64]
+ 158 0128 C8F84420 		str	r2, [r8, #68]
+ 224:..\src/trapez.c ****     for(i = 0; i < a_t_discrete; i++)
+ 159              		.loc 1 224 0
+ 160 012c 1646     		mov	r6, r2
+ 161 012e 1746     		mov	r7, r2
+ 203:..\src/trapez.c **** 
+ 162              		.loc 1 203 0
+ 163 0130 9046     		mov	r8, r2
+ 164 0132 9146     		mov	r9, r2
+ 165              		.loc 1 224 0
+ 166 0134 10E0     		b	.L4
+ 167              	.LVL7:
+ 168              	.L5:
+ 225:..\src/trapez.c ****     {
+ 226:..\src/trapez.c ****         tmp += spd_inc; //tmp = i*spd_inc;
+ 169              		.loc 1 226 0 discriminator 3
+ 170 0136 18EB0008 		adds	r8, r8, r0
+ 171              	.LVL8:
+ 172 013a 49EB0109 		adc	r9, r9, r1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 8
+
+
+ 173              	.LVL9:
+ 227:..\src/trapez.c ****         acc_pos = acc_pos + tmp;
+ 174              		.loc 1 227 0 discriminator 3
+ 175 013e DFF83CE0 		ldr	lr, .L7
+ 176 0142 DEE91023 		ldrd	r2, [lr, #64]
+ 177 0146 12EB0802 		adds	r2, r2, r8
+ 178 014a 43EB0903 		adc	r3, r3, r9
+ 179 014e CEE91023 		strd	r2, [lr, #64]
+ 224:..\src/trapez.c ****     {
+ 180              		.loc 1 224 0 discriminator 3
+ 181 0152 0136     		adds	r6, r6, #1
+ 182              	.LVL10:
+ 183 0154 47F10007 		adc	r7, r7, #0
+ 184              	.LVL11:
+ 185              	.L4:
+ 224:..\src/trapez.c ****     {
+ 186              		.loc 1 224 0 is_stmt 0 discriminator 1
+ 187 0158 A642     		cmp	r6, r4
+ 188 015a 77EB0503 		sbcs	r3, r7, r5
+ 189 015e EADB     		blt	.L5
+ 228:..\src/trapez.c ****     }
+ 229:..\src/trapez.c ****     acc_pos = acc_pos / (SPD_FACTOR * TRAPEZ_ONE_OVER_DT); //Combine terms
+ 190              		.loc 1 229 0 is_stmt 1
+ 191 0160 064C     		ldr	r4, .L7
+ 192 0162 D4E91001 		ldrd	r0, [r4, #64]
+ 193 0166 064A     		ldr	r2, .L7+4
+ 194 0168 0023     		movs	r3, #0
+ 195 016a FFF7FEFF 		bl	__aeabi_ldivmod
+ 196              	.LVL12:
+ 197 016e C4E91001 		strd	r0, [r4, #64]
+ 230:..\src/trapez.c ****     #ifdef DEBUGGING_OUTPUT
+ 231:..\src/trapez.c ****     printf("acc_pos = %lld (2x = %lld), %f%% of d_pos.\n", acc_pos, (2*acc_pos), (float)(2*acc_pos*
+ 232:..\src/trapez.c ****     #endif
+ 233:..\src/trapez.c **** 
+ 234:..\src/trapez.c ****     return 0;
+ 235:..\src/trapez.c **** }
+ 198              		.loc 1 235 0
+ 199 0172 0020     		movs	r0, #0
+ 200 0174 0021     		movs	r1, #0
+ 201 0176 BDE8F88F 		pop	{r3, r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 202              	.LVL13:
+ 203              	.L8:
+ 204 017a 00BF     		.align	2
+ 205              	.L7:
+ 206 017c 00000000 		.word	.LANCHOR0
+ 207 0180 80969800 		.word	10000000
+ 208              		.cfi_endproc
+ 209              	.LFE2:
+ 210              		.size	trapez_compute_params, .-trapez_compute_params
+ 211              		.global	__aeabi_l2d
+ 212              		.global	__aeabi_d2lz
+ 213              		.section	.text.trapez_gen_motion_1,"ax",%progbits
+ 214              		.align	2
+ 215              		.global	trapez_gen_motion_1
+ 216              		.thumb
+ 217              		.thumb_func
+ 218              		.type	trapez_gen_motion_1, %function
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 9
+
+
+ 219              	trapez_gen_motion_1:
+ 220              	.LFB0:
+  53:..\src/trapez.c **** 	long long abs_d_pos = 0, abs_acc_pos = 0, dual_abs_acc_pos = 0;
+ 221              		.loc 1 53 0
+ 222              		.cfi_startproc
+ 223              		@ args = 16, pretend = 0, frame = 8
+ 224              		@ frame_needed = 0, uses_anonymous_args = 0
+ 225              	.LVL14:
+ 226 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 227              		.cfi_def_cfa_offset 36
+ 228              		.cfi_offset 4, -36
+ 229              		.cfi_offset 5, -32
+ 230              		.cfi_offset 6, -28
+ 231              		.cfi_offset 7, -24
+ 232              		.cfi_offset 8, -20
+ 233              		.cfi_offset 9, -16
+ 234              		.cfi_offset 10, -12
+ 235              		.cfi_offset 11, -8
+ 236              		.cfi_offset 14, -4
+ 237 0004 87B0     		sub	sp, sp, #28
+ 238              		.cfi_def_cfa_offset 64
+ 239 0006 8246     		mov	r10, r0
+ 240 0008 8B46     		mov	fp, r1
+ 241 000a CDE90423 		strd	r2, [sp, #16]
+ 242 000e DDE91023 		ldrd	r2, [sp, #64]
+ 243              	.LVL15:
+ 244 0012 DDE91267 		ldrd	r6, [sp, #72]
+ 245              	.LVL16:
+  57:..\src/trapez.c ****     a = llabs(a);
+ 246              		.loc 1 57 0
+ 247 0016 1046     		mov	r0, r2
+ 248              	.LVL17:
+ 249 0018 1946     		mov	r1, r3
+ 250 001a 002A     		cmp	r2, #0
+ 251 001c 73F10004 		sbcs	r4, r3, #0
+ 252 0020 02DA     		bge	.L10
+ 253 0022 5042     		rsbs	r0, r2, #0
+ 254 0024 63EB4301 		sbc	r1, r3, r3, lsl #1
+ 255              	.L10:
+ 256 0028 0546     		mov	r5, r0
+ 257 002a 0C46     		mov	r4, r1
+ 258              	.LVL18:
+  58:..\src/trapez.c **** 
+ 259              		.loc 1 58 0
+ 260 002c 3246     		mov	r2, r6
+ 261 002e 3B46     		mov	r3, r7
+ 262 0030 002E     		cmp	r6, #0
+ 263 0032 77F10001 		sbcs	r1, r7, #0
+ 264 0036 02DA     		bge	.L11
+ 265 0038 7242     		rsbs	r2, r6, #0
+ 266 003a 67EB4703 		sbc	r3, r7, r7, lsl #1
+ 267              	.L11:
+ 268 003e 1646     		mov	r6, r2
+ 269 0040 1F46     		mov	r7, r3
+ 270              	.LVL19:
+  61:..\src/trapez.c **** 
+ 271              		.loc 1 61 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 10
+
+
+ 272 0042 0095     		str	r5, [sp]
+ 273 0044 0194     		str	r4, [sp, #4]
+ 274 0046 0292     		str	r2, [sp, #8]
+ 275 0048 0393     		str	r3, [sp, #12]
+ 276 004a 5046     		mov	r0, r10
+ 277              	.LVL20:
+ 278 004c 5946     		mov	r1, fp
+ 279 004e DDE90423 		ldrd	r2, [sp, #16]
+ 280              	.LVL21:
+ 281 0052 FFF7FEFF 		bl	trapez_compute_params
+ 282              	.LVL22:
+  64:..\src/trapez.c ****     abs_acc_pos = llabs(acc_pos);
+ 283              		.loc 1 64 0
+ 284 0056 574B     		ldr	r3, .L17
+ 285 0058 D3E90601 		ldrd	r0, [r3, #24]
+ 286 005c 0028     		cmp	r0, #0
+ 287 005e 71F10003 		sbcs	r3, r1, #0
+ 288 0062 02DA     		bge	.L12
+ 289 0064 4042     		rsbs	r0, r0, #0
+ 290 0066 61EB4101 		sbc	r1, r1, r1, lsl #1
+ 291              	.L12:
+ 292              	.LVL23:
+  65:..\src/trapez.c ****     dual_abs_acc_pos = 2*abs_acc_pos;
+ 293              		.loc 1 65 0
+ 294 006a 524B     		ldr	r3, .L17
+ 295 006c D3E91023 		ldrd	r2, [r3, #64]
+ 296 0070 002A     		cmp	r2, #0
+ 297 0072 73F1000E 		sbcs	lr, r3, #0
+ 298 0076 02DA     		bge	.L13
+ 299 0078 5242     		rsbs	r2, r2, #0
+ 300 007a 63EB4303 		sbc	r3, r3, r3, lsl #1
+ 301              	.L13:
+ 302 007e 9046     		mov	r8, r2
+ 303 0080 9946     		mov	r9, r3
+ 304              	.LVL24:
+  66:..\src/trapez.c **** 
+ 305              		.loc 1 66 0
+ 306 0082 9218     		adds	r2, r2, r2
+ 307              	.LVL25:
+ 308 0084 5B41     		adcs	r3, r3, r3
+ 309              	.LVL26:
+  75:..\src/trapez.c ****     {
+ 310              		.loc 1 75 0
+ 311 0086 9042     		cmp	r0, r2
+ 312 0088 71EB0303 		sbcs	r3, r1, r3
+ 313 008c 27DA     		bge	.L14
+  82:..\src/trapez.c ****         #ifdef DEBUGGING_OUTPUT
+ 314              		.loc 1 82 0
+ 315 008e 06FB01F3 		mul	r3, r6, r1
+ 316 0092 07FB0033 		mla	r3, r7, r0, r3
+ 317 0096 A6FB0045 		umull	r4, r5, r6, r0
+ 318 009a 1D44     		add	r5, r5, r3
+ 319 009c 2046     		mov	r0, r4
+ 320              	.LVL27:
+ 321 009e 2946     		mov	r1, r5
+ 322 00a0 FFF7FEFF 		bl	__aeabi_l2d
+ 323              	.LVL28:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 11
+
+
+ 324 00a4 FFF7FEFF 		bl	sqrt
+ 325              	.LVL29:
+ 326 00a8 FFF7FEFF 		bl	__aeabi_d2lz
+ 327              	.LVL30:
+ 328 00ac 0546     		mov	r5, r0
+ 329 00ae 0C46     		mov	r4, r1
+ 330              	.LVL31:
+  89:..\src/trapez.c **** 
+ 331              		.loc 1 89 0
+ 332 00b0 0090     		str	r0, [sp]
+ 333 00b2 0191     		str	r1, [sp, #4]
+ 334 00b4 0296     		str	r6, [sp, #8]
+ 335 00b6 0397     		str	r7, [sp, #12]
+ 336 00b8 5046     		mov	r0, r10
+ 337              	.LVL32:
+ 338 00ba 5946     		mov	r1, fp
+ 339              	.LVL33:
+ 340 00bc DDE90423 		ldrd	r2, [sp, #16]
+ 341 00c0 FFF7FEFF 		bl	trapez_compute_params
+ 342              	.LVL34:
+  92:..\src/trapez.c ****         abs_acc_pos = abs(acc_pos);
+ 343              		.loc 1 92 0
+ 344 00c4 3B4B     		ldr	r3, .L17
+ 345 00c6 9869     		ldr	r0, [r3, #24]
+ 346 00c8 0028     		cmp	r0, #0
+ 347 00ca B8BF     		it	lt
+ 348 00cc 4042     		rsblt	r0, r0, #0
+ 349 00ce C117     		asrs	r1, r0, #31
+ 350              	.LVL35:
+  93:..\src/trapez.c ****         dual_abs_acc_pos = 2*abs_acc_pos;
+ 351              		.loc 1 93 0
+ 352 00d0 1B6C     		ldr	r3, [r3, #64]
+ 353 00d2 83EAE378 		eor	r8, r3, r3, asr #31
+ 354 00d6 A8EBE378 		sub	r8, r8, r3, asr #31
+ 355 00da 4FEAE879 		asr	r9, r8, #31
+ 356              	.LVL36:
+ 357              	.L14:
+ 103:..\src/trapez.c ****     cte_spd_pos_discrete = (SPD_FACTOR*cte_spd_pos/spd_max)*TRAPEZ_ONE_OVER_DT;
+ 358              		.loc 1 103 0
+ 359 00de B0EB0800 		subs	r0, r0, r8
+ 360              	.LVL37:
+ 361 00e2 61EB0901 		sbc	r1, r1, r9
+ 362 00e6 B0EB0808 		subs	r8, r0, r8
+ 363              	.LVL38:
+ 364 00ea 61EB0909 		sbc	r9, r1, r9
+ 365 00ee 314E     		ldr	r6, .L17
+ 366              	.LVL39:
+ 367 00f0 C6E91289 		strd	r8, [r6, #72]
+ 104:..\src/trapez.c ****     cte_spd_pos_discrete = cte_spd_pos_discrete / SPD_FACTOR;
+ 368              		.loc 1 104 0
+ 369 00f4 4FEA8903 		lsl	r3, r9, #2
+ 370 00f8 4FEA8800 		lsl	r0, r8, #2
+ 371 00fc 43EA9871 		orr	r1, r3, r8, lsr #30
+ 372 0100 4B01     		lsls	r3, r1, #5
+ 373 0102 43EAD063 		orr	r3, r3, r0, lsr #27
+ 374 0106 4201     		lsls	r2, r0, #5
+ 375 0108 101A     		subs	r0, r2, r0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 12
+
+
+ 376 010a 63EB0101 		sbc	r1, r3, r1
+ 377 010e 18EB0008 		adds	r8, r8, r0
+ 378 0112 49EB0109 		adc	r9, r9, r1
+ 379 0116 4FEA8903 		lsl	r3, r9, #2
+ 380 011a 43EA9873 		orr	r3, r3, r8, lsr #30
+ 381 011e 4FEA8802 		lsl	r2, r8, #2
+ 382 0122 18EB0200 		adds	r0, r8, r2
+ 383 0126 49EB0301 		adc	r1, r9, r3
+ 384 012a 0B01     		lsls	r3, r1, #4
+ 385 012c 43EA1073 		orr	r3, r3, r0, lsr #28
+ 386 0130 0201     		lsls	r2, r0, #4
+ 387 0132 1046     		mov	r0, r2
+ 388 0134 1946     		mov	r1, r3
+ 389 0136 2A46     		mov	r2, r5
+ 390 0138 2346     		mov	r3, r4
+ 391 013a FFF7FEFF 		bl	__aeabi_ldivmod
+ 392              	.LVL40:
+ 393 013e 8B00     		lsls	r3, r1, #2
+ 394 0140 8400     		lsls	r4, r0, #2
+ 395              	.LVL41:
+ 396 0142 43EA9075 		orr	r5, r3, r0, lsr #30
+ 397 0146 6B01     		lsls	r3, r5, #5
+ 398 0148 43EAD463 		orr	r3, r3, r4, lsr #27
+ 399 014c 6201     		lsls	r2, r4, #5
+ 400 014e 121B     		subs	r2, r2, r4
+ 401 0150 63EB0503 		sbc	r3, r3, r5
+ 402 0154 8018     		adds	r0, r0, r2
+ 403 0156 5941     		adcs	r1, r1, r3
+ 404 0158 CB00     		lsls	r3, r1, #3
+ 405 015a 43EA5073 		orr	r3, r3, r0, lsr #29
+ 406 015e C200     		lsls	r2, r0, #3
+ 407 0160 1046     		mov	r0, r2
+ 408 0162 1946     		mov	r1, r3
+ 105:..\src/trapez.c ****     #ifdef DEBUGGING_OUTPUT
+ 409              		.loc 1 105 0
+ 410 0164 42F21072 		movw	r2, #10000
+ 411 0168 0023     		movs	r3, #0
+ 412 016a FFF7FEFF 		bl	__aeabi_ldivmod
+ 413              	.LVL42:
+ 414 016e C6E91401 		strd	r0, [r6, #80]
+ 109:..\src/trapez.c ****     {
+ 415              		.loc 1 109 0
+ 416 0172 0028     		cmp	r0, #0
+ 417 0174 71F10003 		sbcs	r3, r1, #0
+ 418 0178 03DA     		bge	.L15
+ 111:..\src/trapez.c ****         #ifdef DEBUGGING_OUTPUT
+ 419              		.loc 1 111 0
+ 420 017a 0020     		movs	r0, #0
+ 421 017c 0021     		movs	r1, #0
+ 422 017e C6E91401 		strd	r0, [r6, #80]
+ 423              	.L15:
+ 118:..\src/trapez.c ****     trapez_transitions[1] = a_t_discrete + cte_spd_pos_discrete;
+ 424              		.loc 1 118 0
+ 425 0182 0C4C     		ldr	r4, .L17
+ 426 0184 D4E90C23 		ldrd	r2, [r4, #48]
+ 427 0188 C4E91623 		strd	r2, [r4, #88]
+ 119:..\src/trapez.c ****     trapez_transitions[2] = 2*a_t_discrete + cte_spd_pos_discrete;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 13
+
+
+ 428              		.loc 1 119 0
+ 429 018c D4E91401 		ldrd	r0, [r4, #80]
+ 430 0190 1618     		adds	r6, r2, r0
+ 431 0192 43EB0107 		adc	r7, r3, r1
+ 432 0196 C4E91867 		strd	r6, [r4, #96]
+ 120:..\src/trapez.c ****     #ifdef DEBUGGING_OUTPUT
+ 433              		.loc 1 120 0
+ 434 019a 9218     		adds	r2, r2, r2
+ 435 019c 5B41     		adcs	r3, r3, r3
+ 436 019e 8018     		adds	r0, r0, r2
+ 437 01a0 5941     		adcs	r1, r1, r3
+ 438 01a2 C4E91A01 		strd	r0, [r4, #104]
+ 124:..\src/trapez.c **** 
+ 439              		.loc 1 124 0
+ 440 01a6 0022     		movs	r2, #0
+ 441 01a8 0023     		movs	r3, #0
+ 442 01aa C4E91C23 		strd	r2, [r4, #112]
+ 127:..\src/trapez.c **** 
+ 443              		.loc 1 127 0
+ 444 01ae 07B0     		add	sp, sp, #28
+ 445              		.cfi_def_cfa_offset 36
+ 446              		@ sp needed
+ 447 01b0 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 448              	.LVL43:
+ 449              	.L18:
+ 450              		.align	2
+ 451              	.L17:
+ 452 01b4 00000000 		.word	.LANCHOR0
+ 453              		.cfi_endproc
+ 454              	.LFE0:
+ 455              		.size	trapez_gen_motion_1, .-trapez_gen_motion_1
+ 456              		.section	.text.trapez_get_pos,"ax",%progbits
+ 457              		.align	2
+ 458              		.global	trapez_get_pos
+ 459              		.thumb
+ 460              		.thumb_func
+ 461              		.type	trapez_get_pos, %function
+ 462              	trapez_get_pos:
+ 463              	.LFB1:
+ 131:..\src/trapez.c ****     static long long tmp_spd = 0, last_tmp_spd = 0, tmp_pos = 0;
+ 464              		.loc 1 131 0
+ 465              		.cfi_startproc
+ 466              		@ args = 0, pretend = 0, frame = 0
+ 467              		@ frame_needed = 0, uses_anonymous_args = 0
+ 468              	.LVL44:
+ 469 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 470              		.cfi_def_cfa_offset 32
+ 471              		.cfi_offset 3, -32
+ 472              		.cfi_offset 4, -28
+ 473              		.cfi_offset 5, -24
+ 474              		.cfi_offset 6, -20
+ 475              		.cfi_offset 7, -16
+ 476              		.cfi_offset 8, -12
+ 477              		.cfi_offset 9, -8
+ 478              		.cfi_offset 14, -4
+ 479              	.LVL45:
+ 139:..\src/trapez.c ****     {
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 14
+
+
+ 480              		.loc 1 139 0
+ 481 0004 3F4B     		ldr	r3, .L27
+ 482 0006 D3E91C23 		ldrd	r2, [r3, #112]
+ 483 000a 52EA0304 		orrs	r4, r2, r3
+ 484 000e 0AD1     		bne	.L20
+ 141:..\src/trapez.c ****         last_tmp_spd = 0;
+ 485              		.loc 1 141 0
+ 486 0010 3C4C     		ldr	r4, .L27
+ 487 0012 0026     		movs	r6, #0
+ 488 0014 0027     		movs	r7, #0
+ 489 0016 C4E91E67 		strd	r6, [r4, #120]
+ 142:..\src/trapez.c ****         tmp_pos = 0;
+ 490              		.loc 1 142 0
+ 491 001a C4E92067 		strd	r6, [r4, #128]
+ 143:..\src/trapez.c ****         pos_integral = 0;
+ 492              		.loc 1 143 0
+ 493 001e C4E92267 		strd	r6, [r4, #136]
+ 144:..\src/trapez.c ****         #ifdef DEBUGGING_OUTPUT
+ 494              		.loc 1 144 0
+ 495 0022 C4E92467 		strd	r6, [r4, #144]
+ 496              	.L20:
+ 151:..\src/trapez.c ****     {
+ 497              		.loc 1 151 0
+ 498 0026 374C     		ldr	r4, .L27
+ 499 0028 04F15805 		add	r5, r4, #88
+ 500 002c D5E90045 		ldrd	r4, [r5]
+ 501 0030 9442     		cmp	r4, r2
+ 502 0032 75EB0306 		sbcs	r6, r5, r3
+ 503 0036 0DDB     		blt	.L21
+ 153:..\src/trapez.c ****         tmp_spd = last_tmp_spd + spd_inc;
+ 504              		.loc 1 153 0
+ 505 0038 DFF8C8E0 		ldr	lr, .L27
+ 506 003c DEE91E89 		ldrd	r8, [lr, #120]
+ 507 0040 CEE92089 		strd	r8, [lr, #128]
+ 154:..\src/trapez.c ****     }
+ 508              		.loc 1 154 0
+ 509 0044 DEE90E67 		ldrd	r6, [lr, #56]
+ 510 0048 16EB0806 		adds	r6, r6, r8
+ 511 004c 47EB0907 		adc	r7, r7, r9
+ 512 0050 CEE91E67 		strd	r6, [lr, #120]
+ 513              	.L21:
+ 160:..\src/trapez.c ****         {
+ 514              		.loc 1 160 0
+ 515 0054 A242     		cmp	r2, r4
+ 516 0056 73EB0504 		sbcs	r4, r3, r5
+ 517 005a 0DDB     		blt	.L22
+ 160:..\src/trapez.c ****         {
+ 518              		.loc 1 160 0 is_stmt 0 discriminator 1
+ 519 005c 294C     		ldr	r4, .L27
+ 520 005e 04F16005 		add	r5, r4, #96
+ 521 0062 D5E90045 		ldrd	r4, [r5]
+ 522 0066 9442     		cmp	r4, r2
+ 523 0068 75EB0304 		sbcs	r4, r5, r3
+ 524 006c 04DB     		blt	.L22
+ 162:..\src/trapez.c ****         }
+ 525              		.loc 1 162 0 is_stmt 1
+ 526 006e 254E     		ldr	r6, .L27
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 15
+
+
+ 527 0070 D6E92045 		ldrd	r4, [r6, #128]
+ 528 0074 C6E91E45 		strd	r4, [r6, #120]
+ 529              	.L22:
+ 166:..\src/trapez.c ****     {
+ 530              		.loc 1 166 0
+ 531 0078 224C     		ldr	r4, .L27
+ 532 007a 04F16005 		add	r5, r4, #96
+ 533 007e D5E90045 		ldrd	r4, [r5]
+ 534 0082 A242     		cmp	r2, r4
+ 535 0084 73EB0504 		sbcs	r4, r3, r5
+ 536 0088 15DB     		blt	.L23
+ 166:..\src/trapez.c ****     {
+ 537              		.loc 1 166 0 is_stmt 0 discriminator 1
+ 538 008a 1E4C     		ldr	r4, .L27
+ 539 008c 04F16805 		add	r5, r4, #104
+ 540 0090 D5E90045 		ldrd	r4, [r5]
+ 541 0094 9442     		cmp	r4, r2
+ 542 0096 75EB0304 		sbcs	r4, r5, r3
+ 543 009a 0CDB     		blt	.L23
+ 168:..\src/trapez.c ****         tmp_spd = last_tmp_spd - spd_inc;
+ 544              		.loc 1 168 0 is_stmt 1
+ 545 009c 194E     		ldr	r6, .L27
+ 546 009e D6E91E89 		ldrd	r8, [r6, #120]
+ 547 00a2 C6E92089 		strd	r8, [r6, #128]
+ 169:..\src/trapez.c ****     }
+ 548              		.loc 1 169 0
+ 549 00a6 D6E90E45 		ldrd	r4, [r6, #56]
+ 550 00aa B8EB0404 		subs	r4, r8, r4
+ 551 00ae 69EB0505 		sbc	r5, r9, r5
+ 552 00b2 C6E91E45 		strd	r4, [r6, #120]
+ 553              	.L23:
+ 172:..\src/trapez.c ****     {
+ 554              		.loc 1 172 0
+ 555 00b6 9042     		cmp	r0, r2
+ 556 00b8 9941     		sbcs	r1, r1, r3
+ 557 00ba 19DB     		blt	.L24
+ 175:..\src/trapez.c **** 
+ 558              		.loc 1 175 0
+ 559 00bc 114C     		ldr	r4, .L27
+ 560 00be 0132     		adds	r2, r2, #1
+ 561 00c0 43F10003 		adc	r3, r3, #0
+ 562 00c4 C4E91C23 		strd	r2, [r4, #112]
+ 178:..\src/trapez.c ****         tmp_pos = pos_integral/(TRAPEZ_ONE_OVER_DT * SPD_FACTOR);
+ 563              		.loc 1 178 0
+ 564 00c8 D4E92401 		ldrd	r0, [r4, #144]
+ 565              	.LVL46:
+ 566 00cc D4E91E23 		ldrd	r2, [r4, #120]
+ 567 00d0 8018     		adds	r0, r0, r2
+ 568 00d2 5941     		adcs	r1, r1, r3
+ 569 00d4 C4E92401 		strd	r0, [r4, #144]
+ 179:..\src/trapez.c ****         position = tmp_pos + init_pos;
+ 570              		.loc 1 179 0
+ 571 00d8 0B4A     		ldr	r2, .L27+4
+ 572 00da 0023     		movs	r3, #0
+ 573 00dc FFF7FEFF 		bl	__aeabi_ldivmod
+ 574              	.LVL47:
+ 575 00e0 C4E92201 		strd	r0, [r4, #136]
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 16
+
+
+ 180:..\src/trapez.c ****         #ifdef DEBUGGING_OUTPUT
+ 576              		.loc 1 180 0
+ 577 00e4 D4E90423 		ldrd	r2, [r4, #16]
+ 578 00e8 8018     		adds	r0, r0, r2
+ 579 00ea 5941     		adcs	r1, r1, r3
+ 580              	.LVL48:
+ 581 00ec BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 582              	.LVL49:
+ 583              	.L24:
+ 188:..\src/trapez.c ****     }
+ 584              		.loc 1 188 0
+ 585 00f0 044B     		ldr	r3, .L27
+ 586 00f2 D3E92201 		ldrd	r0, [r3, #136]
+ 587              	.LVL50:
+ 588 00f6 D3E90423 		ldrd	r2, [r3, #16]
+ 589 00fa 8018     		adds	r0, r0, r2
+ 590 00fc 5941     		adcs	r1, r1, r3
+ 591              	.LVL51:
+ 193:..\src/trapez.c **** 
+ 592              		.loc 1 193 0
+ 593 00fe BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 594              	.L28:
+ 595 0102 00BF     		.align	2
+ 596              	.L27:
+ 597 0104 00000000 		.word	.LANCHOR0
+ 598 0108 80969800 		.word	10000000
+ 599              		.cfi_endproc
+ 600              	.LFE1:
+ 601              		.size	trapez_get_pos, .-trapez_get_pos
+ 602              		.global	sign
+ 603              		.global	trapez_transitions
+ 604              		.global	pos_step
+ 605              		.global	skip_sspeed
+ 606              		.global	cte_spd_pos_discrete
+ 607              		.global	cte_spd_pos
+ 608              		.global	init_pos
+ 609              		.global	acc
+ 610              		.global	acc_pos
+ 611              		.global	spd_inc
+ 612              		.global	a_t_discrete
+ 613              		.global	a_t
+ 614              		.global	d_spd
+ 615              		.global	d_pos
+ 616              		.bss
+ 617              		.align	3
+ 618              		.set	.LANCHOR0,. + 0
+ 619              		.type	sign, %object
+ 620              		.size	sign, 8
+ 621              	sign:
+ 622 0000 00000000 		.space	8
+ 622      00000000 
+ 623              		.type	acc, %object
+ 624              		.size	acc, 8
+ 625              	acc:
+ 626 0008 00000000 		.space	8
+ 626      00000000 
+ 627              		.type	init_pos, %object
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 17
+
+
+ 628              		.size	init_pos, 8
+ 629              	init_pos:
+ 630 0010 00000000 		.space	8
+ 630      00000000 
+ 631              		.type	d_pos, %object
+ 632              		.size	d_pos, 8
+ 633              	d_pos:
+ 634 0018 00000000 		.space	8
+ 634      00000000 
+ 635              		.type	d_spd, %object
+ 636              		.size	d_spd, 8
+ 637              	d_spd:
+ 638 0020 00000000 		.space	8
+ 638      00000000 
+ 639              		.type	a_t, %object
+ 640              		.size	a_t, 8
+ 641              	a_t:
+ 642 0028 00000000 		.space	8
+ 642      00000000 
+ 643              		.type	a_t_discrete, %object
+ 644              		.size	a_t_discrete, 8
+ 645              	a_t_discrete:
+ 646 0030 00000000 		.space	8
+ 646      00000000 
+ 647              		.type	spd_inc, %object
+ 648              		.size	spd_inc, 8
+ 649              	spd_inc:
+ 650 0038 00000000 		.space	8
+ 650      00000000 
+ 651              		.type	acc_pos, %object
+ 652              		.size	acc_pos, 8
+ 653              	acc_pos:
+ 654 0040 00000000 		.space	8
+ 654      00000000 
+ 655              		.type	cte_spd_pos, %object
+ 656              		.size	cte_spd_pos, 8
+ 657              	cte_spd_pos:
+ 658 0048 00000000 		.space	8
+ 658      00000000 
+ 659              		.type	cte_spd_pos_discrete, %object
+ 660              		.size	cte_spd_pos_discrete, 8
+ 661              	cte_spd_pos_discrete:
+ 662 0050 00000000 		.space	8
+ 662      00000000 
+ 663              		.type	trapez_transitions, %object
+ 664              		.size	trapez_transitions, 24
+ 665              	trapez_transitions:
+ 666 0058 00000000 		.space	24
+ 666      00000000 
+ 666      00000000 
+ 666      00000000 
+ 666      00000000 
+ 667              		.type	pos_step, %object
+ 668              		.size	pos_step, 8
+ 669              	pos_step:
+ 670 0070 00000000 		.space	8
+ 670      00000000 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 18
+
+
+ 671              		.type	tmp_spd.6038, %object
+ 672              		.size	tmp_spd.6038, 8
+ 673              	tmp_spd.6038:
+ 674 0078 00000000 		.space	8
+ 674      00000000 
+ 675              		.type	last_tmp_spd.6039, %object
+ 676              		.size	last_tmp_spd.6039, 8
+ 677              	last_tmp_spd.6039:
+ 678 0080 00000000 		.space	8
+ 678      00000000 
+ 679              		.type	tmp_pos.6040, %object
+ 680              		.size	tmp_pos.6040, 8
+ 681              	tmp_pos.6040:
+ 682 0088 00000000 		.space	8
+ 682      00000000 
+ 683              		.type	pos_integral.6042, %object
+ 684              		.size	pos_integral.6042, 8
+ 685              	pos_integral.6042:
+ 686 0090 00000000 		.space	8
+ 686      00000000 
+ 687              		.type	skip_sspeed, %object
+ 688              		.size	skip_sspeed, 8
+ 689              	skip_sspeed:
+ 690 0098 00000000 		.space	8
+ 690      00000000 
+ 691              		.text
+ 692              	.Letext0:
+ 693              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 694              		.section	.debug_info,"",%progbits
+ 695              	.Ldebug_info0:
+ 696 0000 44030000 		.4byte	0x344
+ 697 0004 0400     		.2byte	0x4
+ 698 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 699 000a 04       		.byte	0x4
+ 700 000b 01       		.uleb128 0x1
+ 701 000c 2A010000 		.4byte	.LASF40
+ 702 0010 01       		.byte	0x1
+ 703 0011 9D000000 		.4byte	.LASF41
+ 704 0015 0D000000 		.4byte	.LASF42
+ 705 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 706 001d 00000000 		.4byte	0
+ 707 0021 00000000 		.4byte	.Ldebug_line0
+ 708 0025 02       		.uleb128 0x2
+ 709 0026 08       		.byte	0x8
+ 710 0027 07       		.byte	0x7
+ 711 0028 DE010000 		.4byte	.LASF0
+ 712 002c 02       		.uleb128 0x2
+ 713 002d 01       		.byte	0x1
+ 714 002e 06       		.byte	0x6
+ 715 002f 88020000 		.4byte	.LASF1
+ 716 0033 02       		.uleb128 0x2
+ 717 0034 01       		.byte	0x1
+ 718 0035 08       		.byte	0x8
+ 719 0036 B6000000 		.4byte	.LASF2
+ 720 003a 02       		.uleb128 0x2
+ 721 003b 02       		.byte	0x2
+ 722 003c 05       		.byte	0x5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 19
+
+
+ 723 003d 37020000 		.4byte	.LASF3
+ 724 0041 02       		.uleb128 0x2
+ 725 0042 02       		.byte	0x2
+ 726 0043 07       		.byte	0x7
+ 727 0044 53000000 		.4byte	.LASF4
+ 728 0048 02       		.uleb128 0x2
+ 729 0049 04       		.byte	0x4
+ 730 004a 05       		.byte	0x5
+ 731 004b 6E020000 		.4byte	.LASF5
+ 732 004f 02       		.uleb128 0x2
+ 733 0050 04       		.byte	0x4
+ 734 0051 07       		.byte	0x7
+ 735 0052 C4000000 		.4byte	.LASF6
+ 736 0056 02       		.uleb128 0x2
+ 737 0057 08       		.byte	0x8
+ 738 0058 05       		.byte	0x5
+ 739 0059 23020000 		.4byte	.LASF7
+ 740 005d 03       		.uleb128 0x3
+ 741 005e 04       		.byte	0x4
+ 742 005f 05       		.byte	0x5
+ 743 0060 696E7400 		.ascii	"int\000"
+ 744 0064 02       		.uleb128 0x2
+ 745 0065 04       		.byte	0x4
+ 746 0066 07       		.byte	0x7
+ 747 0067 CB010000 		.4byte	.LASF8
+ 748 006b 02       		.uleb128 0x2
+ 749 006c 04       		.byte	0x4
+ 750 006d 07       		.byte	0x7
+ 751 006e 0D020000 		.4byte	.LASF9
+ 752 0072 02       		.uleb128 0x2
+ 753 0073 01       		.byte	0x1
+ 754 0074 08       		.byte	0x8
+ 755 0075 77020000 		.4byte	.LASF10
+ 756 0079 02       		.uleb128 0x2
+ 757 007a 08       		.byte	0x8
+ 758 007b 04       		.byte	0x4
+ 759 007c 0D010000 		.4byte	.LASF11
+ 760 0080 02       		.uleb128 0x2
+ 761 0081 04       		.byte	0x4
+ 762 0082 04       		.byte	0x4
+ 763 0083 83000000 		.4byte	.LASF12
+ 764 0087 02       		.uleb128 0x2
+ 765 0088 08       		.byte	0x8
+ 766 0089 04       		.byte	0x4
+ 767 008a 7C020000 		.4byte	.LASF13
+ 768 008e 04       		.uleb128 0x4
+ 769 008f E3000000 		.4byte	.LASF43
+ 770 0093 01       		.byte	0x1
+ 771 0094 C9       		.byte	0xc9
+ 772 0095 56000000 		.4byte	0x56
+ 773 0099 00000000 		.4byte	.LFB2
+ 774 009d 84010000 		.4byte	.LFE2-.LFB2
+ 775 00a1 01       		.uleb128 0x1
+ 776 00a2 9C       		.byte	0x9c
+ 777 00a3 FE000000 		.4byte	0xfe
+ 778 00a7 05       		.uleb128 0x5
+ 779 00a8 D8010000 		.4byte	.LASF14
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 20
+
+
+ 780 00ac 01       		.byte	0x1
+ 781 00ad C9       		.byte	0xc9
+ 782 00ae 56000000 		.4byte	0x56
+ 783 00b2 00000000 		.4byte	.LLST0
+ 784 00b6 05       		.uleb128 0x5
+ 785 00b7 5E020000 		.4byte	.LASF15
+ 786 00bb 01       		.byte	0x1
+ 787 00bc C9       		.byte	0xc9
+ 788 00bd 56000000 		.4byte	0x56
+ 789 00c1 37000000 		.4byte	.LLST1
+ 790 00c5 05       		.uleb128 0x5
+ 791 00c6 66000000 		.4byte	.LASF16
+ 792 00ca 01       		.byte	0x1
+ 793 00cb C9       		.byte	0xc9
+ 794 00cc 56000000 		.4byte	0x56
+ 795 00d0 5F000000 		.4byte	.LLST2
+ 796 00d4 06       		.uleb128 0x6
+ 797 00d5 6100     		.ascii	"a\000"
+ 798 00d7 01       		.byte	0x1
+ 799 00d8 C9       		.byte	0xc9
+ 800 00d9 56000000 		.4byte	0x56
+ 801 00dd 7F000000 		.4byte	.LLST3
+ 802 00e1 07       		.uleb128 0x7
+ 803 00e2 746D7000 		.ascii	"tmp\000"
+ 804 00e6 01       		.byte	0x1
+ 805 00e7 CB       		.byte	0xcb
+ 806 00e8 56000000 		.4byte	0x56
+ 807 00ec 9F000000 		.4byte	.LLST4
+ 808 00f0 07       		.uleb128 0x7
+ 809 00f1 6900     		.ascii	"i\000"
+ 810 00f3 01       		.byte	0x1
+ 811 00f4 CB       		.byte	0xcb
+ 812 00f5 56000000 		.4byte	0x56
+ 813 00f9 DB000000 		.4byte	.LLST5
+ 814 00fd 00       		.byte	0
+ 815 00fe 08       		.uleb128 0x8
+ 816 00ff 89000000 		.4byte	.LASF20
+ 817 0103 01       		.byte	0x1
+ 818 0104 34       		.byte	0x34
+ 819 0105 56000000 		.4byte	0x56
+ 820 0109 00000000 		.4byte	.LFB0
+ 821 010d B8010000 		.4byte	.LFE0-.LFB0
+ 822 0111 01       		.uleb128 0x1
+ 823 0112 9C       		.byte	0x9c
+ 824 0113 BC010000 		.4byte	0x1bc
+ 825 0117 05       		.uleb128 0x5
+ 826 0118 D8010000 		.4byte	.LASF14
+ 827 011c 01       		.byte	0x1
+ 828 011d 34       		.byte	0x34
+ 829 011e 56000000 		.4byte	0x56
+ 830 0122 17010000 		.4byte	.LLST6
+ 831 0126 05       		.uleb128 0x5
+ 832 0127 5E020000 		.4byte	.LASF15
+ 833 012b 01       		.byte	0x1
+ 834 012c 34       		.byte	0x34
+ 835 012d 56000000 		.4byte	0x56
+ 836 0131 3F010000 		.4byte	.LLST7
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 21
+
+
+ 837 0135 05       		.uleb128 0x5
+ 838 0136 66000000 		.4byte	.LASF16
+ 839 013a 01       		.byte	0x1
+ 840 013b 34       		.byte	0x34
+ 841 013c 56000000 		.4byte	0x56
+ 842 0140 6F010000 		.4byte	.LLST8
+ 843 0144 06       		.uleb128 0x6
+ 844 0145 6100     		.ascii	"a\000"
+ 845 0147 01       		.byte	0x1
+ 846 0148 34       		.byte	0x34
+ 847 0149 56000000 		.4byte	0x56
+ 848 014d C3010000 		.4byte	.LLST9
+ 849 0151 09       		.uleb128 0x9
+ 850 0152 64020000 		.4byte	.LASF17
+ 851 0156 01       		.byte	0x1
+ 852 0157 36       		.byte	0x36
+ 853 0158 56000000 		.4byte	0x56
+ 854 015c 07020000 		.4byte	.LLST10
+ 855 0160 09       		.uleb128 0x9
+ 856 0161 52020000 		.4byte	.LASF18
+ 857 0165 01       		.byte	0x1
+ 858 0166 36       		.byte	0x36
+ 859 0167 56000000 		.4byte	0x56
+ 860 016b 43020000 		.4byte	.LLST11
+ 861 016f 09       		.uleb128 0x9
+ 862 0170 41020000 		.4byte	.LASF19
+ 863 0174 01       		.byte	0x1
+ 864 0175 36       		.byte	0x36
+ 865 0176 56000000 		.4byte	0x56
+ 866 017a 7F020000 		.4byte	.LLST12
+ 867 017e 0A       		.uleb128 0xa
+ 868 017f 56000000 		.4byte	.LVL22
+ 869 0183 8E000000 		.4byte	0x8e
+ 870 0187 9A010000 		.4byte	0x19a
+ 871 018b 0B       		.uleb128 0xb
+ 872 018c 06       		.uleb128 0x6
+ 873 018d 52       		.byte	0x52
+ 874 018e 93       		.byte	0x93
+ 875 018f 04       		.uleb128 0x4
+ 876 0190 53       		.byte	0x53
+ 877 0191 93       		.byte	0x93
+ 878 0192 04       		.uleb128 0x4
+ 879 0193 05       		.uleb128 0x5
+ 880 0194 91       		.byte	0x91
+ 881 0195 50       		.sleb128 -48
+ 882 0196 F6       		.byte	0xf6
+ 883 0197 08       		.byte	0x8
+ 884 0198 25       		.uleb128 0x25
+ 885 0199 00       		.byte	0
+ 886 019a 0C       		.uleb128 0xc
+ 887 019b A8000000 		.4byte	.LVL29
+ 888 019f 36030000 		.4byte	0x336
+ 889 01a3 0D       		.uleb128 0xd
+ 890 01a4 C4000000 		.4byte	.LVL34
+ 891 01a8 8E000000 		.4byte	0x8e
+ 892 01ac 0B       		.uleb128 0xb
+ 893 01ad 06       		.uleb128 0x6
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 22
+
+
+ 894 01ae 52       		.byte	0x52
+ 895 01af 93       		.byte	0x93
+ 896 01b0 04       		.uleb128 0x4
+ 897 01b1 53       		.byte	0x53
+ 898 01b2 93       		.byte	0x93
+ 899 01b3 04       		.uleb128 0x4
+ 900 01b4 05       		.uleb128 0x5
+ 901 01b5 91       		.byte	0x91
+ 902 01b6 50       		.sleb128 -48
+ 903 01b7 F6       		.byte	0xf6
+ 904 01b8 08       		.byte	0x8
+ 905 01b9 25       		.uleb128 0x25
+ 906 01ba 00       		.byte	0
+ 907 01bb 00       		.byte	0
+ 908 01bc 08       		.uleb128 0x8
+ 909 01bd 94020000 		.4byte	.LASF21
+ 910 01c1 01       		.byte	0x1
+ 911 01c2 82       		.byte	0x82
+ 912 01c3 56000000 		.4byte	0x56
+ 913 01c7 00000000 		.4byte	.LFB1
+ 914 01cb 0C010000 		.4byte	.LFE1-.LFB1
+ 915 01cf 01       		.uleb128 0x1
+ 916 01d0 9C       		.byte	0x9c
+ 917 01d1 38020000 		.4byte	0x238
+ 918 01d5 05       		.uleb128 0x5
+ 919 01d6 A3020000 		.4byte	.LASF22
+ 920 01da 01       		.byte	0x1
+ 921 01db 82       		.byte	0x82
+ 922 01dc 56000000 		.4byte	0x56
+ 923 01e0 AB020000 		.4byte	.LLST13
+ 924 01e4 0E       		.uleb128 0xe
+ 925 01e5 F5010000 		.4byte	.LASF23
+ 926 01e9 01       		.byte	0x1
+ 927 01ea 84       		.byte	0x84
+ 928 01eb 56000000 		.4byte	0x56
+ 929 01ef 05       		.uleb128 0x5
+ 930 01f0 03       		.byte	0x3
+ 931 01f1 78000000 		.4byte	tmp_spd.6038
+ 932 01f5 0E       		.uleb128 0xe
+ 933 01f6 00000000 		.4byte	.LASF24
+ 934 01fa 01       		.byte	0x1
+ 935 01fb 84       		.byte	0x84
+ 936 01fc 56000000 		.4byte	0x56
+ 937 0200 05       		.uleb128 0x5
+ 938 0201 03       		.byte	0x3
+ 939 0202 80000000 		.4byte	last_tmp_spd.6039
+ 940 0206 0E       		.uleb128 0xe
+ 941 0207 05020000 		.4byte	.LASF25
+ 942 020b 01       		.byte	0x1
+ 943 020c 84       		.byte	0x84
+ 944 020d 56000000 		.4byte	0x56
+ 945 0211 05       		.uleb128 0x5
+ 946 0212 03       		.byte	0x3
+ 947 0213 88000000 		.4byte	tmp_pos.6040
+ 948 0217 09       		.uleb128 0x9
+ 949 0218 21010000 		.4byte	.LASF26
+ 950 021c 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 23
+
+
+ 951 021d 85       		.byte	0x85
+ 952 021e 56000000 		.4byte	0x56
+ 953 0222 F3020000 		.4byte	.LLST14
+ 954 0226 0E       		.uleb128 0xe
+ 955 0227 D6000000 		.4byte	.LASF27
+ 956 022b 01       		.byte	0x1
+ 957 022c 86       		.byte	0x86
+ 958 022d 56000000 		.4byte	0x56
+ 959 0231 05       		.uleb128 0x5
+ 960 0232 03       		.byte	0x3
+ 961 0233 90000000 		.4byte	pos_integral.6042
+ 962 0237 00       		.byte	0
+ 963 0238 0F       		.uleb128 0xf
+ 964 0239 31020000 		.4byte	.LASF28
+ 965 023d 01       		.byte	0x1
+ 966 023e 21       		.byte	0x21
+ 967 023f 56000000 		.4byte	0x56
+ 968 0243 05       		.uleb128 0x5
+ 969 0244 03       		.byte	0x3
+ 970 0245 00000000 		.4byte	d_pos
+ 971 0249 0F       		.uleb128 0xf
+ 972 024a F9000000 		.4byte	.LASF29
+ 973 024e 01       		.byte	0x1
+ 974 024f 21       		.byte	0x21
+ 975 0250 56000000 		.4byte	0x56
+ 976 0254 05       		.uleb128 0x5
+ 977 0255 03       		.byte	0x3
+ 978 0256 00000000 		.4byte	d_spd
+ 979 025a 10       		.uleb128 0x10
+ 980 025b 615F7400 		.ascii	"a_t\000"
+ 981 025f 01       		.byte	0x1
+ 982 0260 21       		.byte	0x21
+ 983 0261 56000000 		.4byte	0x56
+ 984 0265 05       		.uleb128 0x5
+ 985 0266 03       		.byte	0x3
+ 986 0267 00000000 		.4byte	a_t
+ 987 026b 0F       		.uleb128 0xf
+ 988 026c 16020000 		.4byte	.LASF30
+ 989 0270 01       		.byte	0x1
+ 990 0271 21       		.byte	0x21
+ 991 0272 56000000 		.4byte	0x56
+ 992 0276 05       		.uleb128 0x5
+ 993 0277 03       		.byte	0x3
+ 994 0278 00000000 		.4byte	a_t_discrete
+ 995 027c 0F       		.uleb128 0xf
+ 996 027d 14010000 		.4byte	.LASF31
+ 997 0281 01       		.byte	0x1
+ 998 0282 21       		.byte	0x21
+ 999 0283 56000000 		.4byte	0x56
+ 1000 0287 05       		.uleb128 0x5
+ 1001 0288 03       		.byte	0x3
+ 1002 0289 00000000 		.4byte	spd_inc
+ 1003 028d 0F       		.uleb128 0xf
+ 1004 028e FD010000 		.4byte	.LASF32
+ 1005 0292 01       		.byte	0x1
+ 1006 0293 21       		.byte	0x21
+ 1007 0294 56000000 		.4byte	0x56
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 24
+
+
+ 1008 0298 05       		.uleb128 0x5
+ 1009 0299 03       		.byte	0x3
+ 1010 029a 00000000 		.4byte	acc_pos
+ 1011 029e 10       		.uleb128 0x10
+ 1012 029f 61636300 		.ascii	"acc\000"
+ 1013 02a3 01       		.byte	0x1
+ 1014 02a4 21       		.byte	0x21
+ 1015 02a5 56000000 		.4byte	0x56
+ 1016 02a9 05       		.uleb128 0x5
+ 1017 02aa 03       		.byte	0x3
+ 1018 02ab 00000000 		.4byte	acc
+ 1019 02af 0F       		.uleb128 0xf
+ 1020 02b0 AD000000 		.4byte	.LASF33
+ 1021 02b4 01       		.byte	0x1
+ 1022 02b5 22       		.byte	0x22
+ 1023 02b6 56000000 		.4byte	0x56
+ 1024 02ba 05       		.uleb128 0x5
+ 1025 02bb 03       		.byte	0x3
+ 1026 02bc 00000000 		.4byte	init_pos
+ 1027 02c0 0F       		.uleb128 0xf
+ 1028 02c1 3B000000 		.4byte	.LASF34
+ 1029 02c5 01       		.byte	0x1
+ 1030 02c6 22       		.byte	0x22
+ 1031 02c7 56000000 		.4byte	0x56
+ 1032 02cb 05       		.uleb128 0x5
+ 1033 02cc 03       		.byte	0x3
+ 1034 02cd 00000000 		.4byte	cte_spd_pos
+ 1035 02d1 0F       		.uleb128 0xf
+ 1036 02d2 6E000000 		.4byte	.LASF35
+ 1037 02d6 01       		.byte	0x1
+ 1038 02d7 22       		.byte	0x22
+ 1039 02d8 56000000 		.4byte	0x56
+ 1040 02dc 05       		.uleb128 0x5
+ 1041 02dd 03       		.byte	0x3
+ 1042 02de 00000000 		.4byte	cte_spd_pos_discrete
+ 1043 02e2 0F       		.uleb128 0xf
+ 1044 02e3 47000000 		.4byte	.LASF36
+ 1045 02e7 01       		.byte	0x1
+ 1046 02e8 23       		.byte	0x23
+ 1047 02e9 56000000 		.4byte	0x56
+ 1048 02ed 05       		.uleb128 0x5
+ 1049 02ee 03       		.byte	0x3
+ 1050 02ef 00000000 		.4byte	skip_sspeed
+ 1051 02f3 0F       		.uleb128 0xf
+ 1052 02f4 04010000 		.4byte	.LASF37
+ 1053 02f8 01       		.byte	0x1
+ 1054 02f9 24       		.byte	0x24
+ 1055 02fa 56000000 		.4byte	0x56
+ 1056 02fe 05       		.uleb128 0x5
+ 1057 02ff 03       		.byte	0x3
+ 1058 0300 00000000 		.4byte	pos_step
+ 1059 0304 11       		.uleb128 0x11
+ 1060 0305 56000000 		.4byte	0x56
+ 1061 0309 14030000 		.4byte	0x314
+ 1062 030d 12       		.uleb128 0x12
+ 1063 030e 6B000000 		.4byte	0x6b
+ 1064 0312 02       		.byte	0x2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 25
+
+
+ 1065 0313 00       		.byte	0
+ 1066 0314 0F       		.uleb128 0xf
+ 1067 0315 B8010000 		.4byte	.LASF38
+ 1068 0319 01       		.byte	0x1
+ 1069 031a 25       		.byte	0x25
+ 1070 031b 04030000 		.4byte	0x304
+ 1071 031f 05       		.uleb128 0x5
+ 1072 0320 03       		.byte	0x3
+ 1073 0321 00000000 		.4byte	trapez_transitions
+ 1074 0325 0F       		.uleb128 0xf
+ 1075 0326 FF000000 		.4byte	.LASF39
+ 1076 032a 01       		.byte	0x1
+ 1077 032b 26       		.byte	0x26
+ 1078 032c 56000000 		.4byte	0x56
+ 1079 0330 05       		.uleb128 0x5
+ 1080 0331 03       		.byte	0x3
+ 1081 0332 00000000 		.4byte	sign
+ 1082 0336 13       		.uleb128 0x13
+ 1083 0337 1C010000 		.4byte	.LASF44
+ 1084 033b 02       		.byte	0x2
+ 1085 033c 86       		.byte	0x86
+ 1086 033d 79000000 		.4byte	0x79
+ 1087 0341 14       		.uleb128 0x14
+ 1088 0342 79000000 		.4byte	0x79
+ 1089 0346 00       		.byte	0
+ 1090 0347 00       		.byte	0
+ 1091              		.section	.debug_abbrev,"",%progbits
+ 1092              	.Ldebug_abbrev0:
+ 1093 0000 01       		.uleb128 0x1
+ 1094 0001 11       		.uleb128 0x11
+ 1095 0002 01       		.byte	0x1
+ 1096 0003 25       		.uleb128 0x25
+ 1097 0004 0E       		.uleb128 0xe
+ 1098 0005 13       		.uleb128 0x13
+ 1099 0006 0B       		.uleb128 0xb
+ 1100 0007 03       		.uleb128 0x3
+ 1101 0008 0E       		.uleb128 0xe
+ 1102 0009 1B       		.uleb128 0x1b
+ 1103 000a 0E       		.uleb128 0xe
+ 1104 000b 55       		.uleb128 0x55
+ 1105 000c 17       		.uleb128 0x17
+ 1106 000d 11       		.uleb128 0x11
+ 1107 000e 01       		.uleb128 0x1
+ 1108 000f 10       		.uleb128 0x10
+ 1109 0010 17       		.uleb128 0x17
+ 1110 0011 00       		.byte	0
+ 1111 0012 00       		.byte	0
+ 1112 0013 02       		.uleb128 0x2
+ 1113 0014 24       		.uleb128 0x24
+ 1114 0015 00       		.byte	0
+ 1115 0016 0B       		.uleb128 0xb
+ 1116 0017 0B       		.uleb128 0xb
+ 1117 0018 3E       		.uleb128 0x3e
+ 1118 0019 0B       		.uleb128 0xb
+ 1119 001a 03       		.uleb128 0x3
+ 1120 001b 0E       		.uleb128 0xe
+ 1121 001c 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 26
+
+
+ 1122 001d 00       		.byte	0
+ 1123 001e 03       		.uleb128 0x3
+ 1124 001f 24       		.uleb128 0x24
+ 1125 0020 00       		.byte	0
+ 1126 0021 0B       		.uleb128 0xb
+ 1127 0022 0B       		.uleb128 0xb
+ 1128 0023 3E       		.uleb128 0x3e
+ 1129 0024 0B       		.uleb128 0xb
+ 1130 0025 03       		.uleb128 0x3
+ 1131 0026 08       		.uleb128 0x8
+ 1132 0027 00       		.byte	0
+ 1133 0028 00       		.byte	0
+ 1134 0029 04       		.uleb128 0x4
+ 1135 002a 2E       		.uleb128 0x2e
+ 1136 002b 01       		.byte	0x1
+ 1137 002c 03       		.uleb128 0x3
+ 1138 002d 0E       		.uleb128 0xe
+ 1139 002e 3A       		.uleb128 0x3a
+ 1140 002f 0B       		.uleb128 0xb
+ 1141 0030 3B       		.uleb128 0x3b
+ 1142 0031 0B       		.uleb128 0xb
+ 1143 0032 27       		.uleb128 0x27
+ 1144 0033 19       		.uleb128 0x19
+ 1145 0034 49       		.uleb128 0x49
+ 1146 0035 13       		.uleb128 0x13
+ 1147 0036 11       		.uleb128 0x11
+ 1148 0037 01       		.uleb128 0x1
+ 1149 0038 12       		.uleb128 0x12
+ 1150 0039 06       		.uleb128 0x6
+ 1151 003a 40       		.uleb128 0x40
+ 1152 003b 18       		.uleb128 0x18
+ 1153 003c 9642     		.uleb128 0x2116
+ 1154 003e 19       		.uleb128 0x19
+ 1155 003f 01       		.uleb128 0x1
+ 1156 0040 13       		.uleb128 0x13
+ 1157 0041 00       		.byte	0
+ 1158 0042 00       		.byte	0
+ 1159 0043 05       		.uleb128 0x5
+ 1160 0044 05       		.uleb128 0x5
+ 1161 0045 00       		.byte	0
+ 1162 0046 03       		.uleb128 0x3
+ 1163 0047 0E       		.uleb128 0xe
+ 1164 0048 3A       		.uleb128 0x3a
+ 1165 0049 0B       		.uleb128 0xb
+ 1166 004a 3B       		.uleb128 0x3b
+ 1167 004b 0B       		.uleb128 0xb
+ 1168 004c 49       		.uleb128 0x49
+ 1169 004d 13       		.uleb128 0x13
+ 1170 004e 02       		.uleb128 0x2
+ 1171 004f 17       		.uleb128 0x17
+ 1172 0050 00       		.byte	0
+ 1173 0051 00       		.byte	0
+ 1174 0052 06       		.uleb128 0x6
+ 1175 0053 05       		.uleb128 0x5
+ 1176 0054 00       		.byte	0
+ 1177 0055 03       		.uleb128 0x3
+ 1178 0056 08       		.uleb128 0x8
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 27
+
+
+ 1179 0057 3A       		.uleb128 0x3a
+ 1180 0058 0B       		.uleb128 0xb
+ 1181 0059 3B       		.uleb128 0x3b
+ 1182 005a 0B       		.uleb128 0xb
+ 1183 005b 49       		.uleb128 0x49
+ 1184 005c 13       		.uleb128 0x13
+ 1185 005d 02       		.uleb128 0x2
+ 1186 005e 17       		.uleb128 0x17
+ 1187 005f 00       		.byte	0
+ 1188 0060 00       		.byte	0
+ 1189 0061 07       		.uleb128 0x7
+ 1190 0062 34       		.uleb128 0x34
+ 1191 0063 00       		.byte	0
+ 1192 0064 03       		.uleb128 0x3
+ 1193 0065 08       		.uleb128 0x8
+ 1194 0066 3A       		.uleb128 0x3a
+ 1195 0067 0B       		.uleb128 0xb
+ 1196 0068 3B       		.uleb128 0x3b
+ 1197 0069 0B       		.uleb128 0xb
+ 1198 006a 49       		.uleb128 0x49
+ 1199 006b 13       		.uleb128 0x13
+ 1200 006c 02       		.uleb128 0x2
+ 1201 006d 17       		.uleb128 0x17
+ 1202 006e 00       		.byte	0
+ 1203 006f 00       		.byte	0
+ 1204 0070 08       		.uleb128 0x8
+ 1205 0071 2E       		.uleb128 0x2e
+ 1206 0072 01       		.byte	0x1
+ 1207 0073 3F       		.uleb128 0x3f
+ 1208 0074 19       		.uleb128 0x19
+ 1209 0075 03       		.uleb128 0x3
+ 1210 0076 0E       		.uleb128 0xe
+ 1211 0077 3A       		.uleb128 0x3a
+ 1212 0078 0B       		.uleb128 0xb
+ 1213 0079 3B       		.uleb128 0x3b
+ 1214 007a 0B       		.uleb128 0xb
+ 1215 007b 27       		.uleb128 0x27
+ 1216 007c 19       		.uleb128 0x19
+ 1217 007d 49       		.uleb128 0x49
+ 1218 007e 13       		.uleb128 0x13
+ 1219 007f 11       		.uleb128 0x11
+ 1220 0080 01       		.uleb128 0x1
+ 1221 0081 12       		.uleb128 0x12
+ 1222 0082 06       		.uleb128 0x6
+ 1223 0083 40       		.uleb128 0x40
+ 1224 0084 18       		.uleb128 0x18
+ 1225 0085 9642     		.uleb128 0x2116
+ 1226 0087 19       		.uleb128 0x19
+ 1227 0088 01       		.uleb128 0x1
+ 1228 0089 13       		.uleb128 0x13
+ 1229 008a 00       		.byte	0
+ 1230 008b 00       		.byte	0
+ 1231 008c 09       		.uleb128 0x9
+ 1232 008d 34       		.uleb128 0x34
+ 1233 008e 00       		.byte	0
+ 1234 008f 03       		.uleb128 0x3
+ 1235 0090 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 28
+
+
+ 1236 0091 3A       		.uleb128 0x3a
+ 1237 0092 0B       		.uleb128 0xb
+ 1238 0093 3B       		.uleb128 0x3b
+ 1239 0094 0B       		.uleb128 0xb
+ 1240 0095 49       		.uleb128 0x49
+ 1241 0096 13       		.uleb128 0x13
+ 1242 0097 02       		.uleb128 0x2
+ 1243 0098 17       		.uleb128 0x17
+ 1244 0099 00       		.byte	0
+ 1245 009a 00       		.byte	0
+ 1246 009b 0A       		.uleb128 0xa
+ 1247 009c 898201   		.uleb128 0x4109
+ 1248 009f 01       		.byte	0x1
+ 1249 00a0 11       		.uleb128 0x11
+ 1250 00a1 01       		.uleb128 0x1
+ 1251 00a2 31       		.uleb128 0x31
+ 1252 00a3 13       		.uleb128 0x13
+ 1253 00a4 01       		.uleb128 0x1
+ 1254 00a5 13       		.uleb128 0x13
+ 1255 00a6 00       		.byte	0
+ 1256 00a7 00       		.byte	0
+ 1257 00a8 0B       		.uleb128 0xb
+ 1258 00a9 8A8201   		.uleb128 0x410a
+ 1259 00ac 00       		.byte	0
+ 1260 00ad 02       		.uleb128 0x2
+ 1261 00ae 18       		.uleb128 0x18
+ 1262 00af 9142     		.uleb128 0x2111
+ 1263 00b1 18       		.uleb128 0x18
+ 1264 00b2 00       		.byte	0
+ 1265 00b3 00       		.byte	0
+ 1266 00b4 0C       		.uleb128 0xc
+ 1267 00b5 898201   		.uleb128 0x4109
+ 1268 00b8 00       		.byte	0
+ 1269 00b9 11       		.uleb128 0x11
+ 1270 00ba 01       		.uleb128 0x1
+ 1271 00bb 31       		.uleb128 0x31
+ 1272 00bc 13       		.uleb128 0x13
+ 1273 00bd 00       		.byte	0
+ 1274 00be 00       		.byte	0
+ 1275 00bf 0D       		.uleb128 0xd
+ 1276 00c0 898201   		.uleb128 0x4109
+ 1277 00c3 01       		.byte	0x1
+ 1278 00c4 11       		.uleb128 0x11
+ 1279 00c5 01       		.uleb128 0x1
+ 1280 00c6 31       		.uleb128 0x31
+ 1281 00c7 13       		.uleb128 0x13
+ 1282 00c8 00       		.byte	0
+ 1283 00c9 00       		.byte	0
+ 1284 00ca 0E       		.uleb128 0xe
+ 1285 00cb 34       		.uleb128 0x34
+ 1286 00cc 00       		.byte	0
+ 1287 00cd 03       		.uleb128 0x3
+ 1288 00ce 0E       		.uleb128 0xe
+ 1289 00cf 3A       		.uleb128 0x3a
+ 1290 00d0 0B       		.uleb128 0xb
+ 1291 00d1 3B       		.uleb128 0x3b
+ 1292 00d2 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 29
+
+
+ 1293 00d3 49       		.uleb128 0x49
+ 1294 00d4 13       		.uleb128 0x13
+ 1295 00d5 02       		.uleb128 0x2
+ 1296 00d6 18       		.uleb128 0x18
+ 1297 00d7 00       		.byte	0
+ 1298 00d8 00       		.byte	0
+ 1299 00d9 0F       		.uleb128 0xf
+ 1300 00da 34       		.uleb128 0x34
+ 1301 00db 00       		.byte	0
+ 1302 00dc 03       		.uleb128 0x3
+ 1303 00dd 0E       		.uleb128 0xe
+ 1304 00de 3A       		.uleb128 0x3a
+ 1305 00df 0B       		.uleb128 0xb
+ 1306 00e0 3B       		.uleb128 0x3b
+ 1307 00e1 0B       		.uleb128 0xb
+ 1308 00e2 49       		.uleb128 0x49
+ 1309 00e3 13       		.uleb128 0x13
+ 1310 00e4 3F       		.uleb128 0x3f
+ 1311 00e5 19       		.uleb128 0x19
+ 1312 00e6 02       		.uleb128 0x2
+ 1313 00e7 18       		.uleb128 0x18
+ 1314 00e8 00       		.byte	0
+ 1315 00e9 00       		.byte	0
+ 1316 00ea 10       		.uleb128 0x10
+ 1317 00eb 34       		.uleb128 0x34
+ 1318 00ec 00       		.byte	0
+ 1319 00ed 03       		.uleb128 0x3
+ 1320 00ee 08       		.uleb128 0x8
+ 1321 00ef 3A       		.uleb128 0x3a
+ 1322 00f0 0B       		.uleb128 0xb
+ 1323 00f1 3B       		.uleb128 0x3b
+ 1324 00f2 0B       		.uleb128 0xb
+ 1325 00f3 49       		.uleb128 0x49
+ 1326 00f4 13       		.uleb128 0x13
+ 1327 00f5 3F       		.uleb128 0x3f
+ 1328 00f6 19       		.uleb128 0x19
+ 1329 00f7 02       		.uleb128 0x2
+ 1330 00f8 18       		.uleb128 0x18
+ 1331 00f9 00       		.byte	0
+ 1332 00fa 00       		.byte	0
+ 1333 00fb 11       		.uleb128 0x11
+ 1334 00fc 01       		.uleb128 0x1
+ 1335 00fd 01       		.byte	0x1
+ 1336 00fe 49       		.uleb128 0x49
+ 1337 00ff 13       		.uleb128 0x13
+ 1338 0100 01       		.uleb128 0x1
+ 1339 0101 13       		.uleb128 0x13
+ 1340 0102 00       		.byte	0
+ 1341 0103 00       		.byte	0
+ 1342 0104 12       		.uleb128 0x12
+ 1343 0105 21       		.uleb128 0x21
+ 1344 0106 00       		.byte	0
+ 1345 0107 49       		.uleb128 0x49
+ 1346 0108 13       		.uleb128 0x13
+ 1347 0109 2F       		.uleb128 0x2f
+ 1348 010a 0B       		.uleb128 0xb
+ 1349 010b 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 30
+
+
+ 1350 010c 00       		.byte	0
+ 1351 010d 13       		.uleb128 0x13
+ 1352 010e 2E       		.uleb128 0x2e
+ 1353 010f 01       		.byte	0x1
+ 1354 0110 3F       		.uleb128 0x3f
+ 1355 0111 19       		.uleb128 0x19
+ 1356 0112 03       		.uleb128 0x3
+ 1357 0113 0E       		.uleb128 0xe
+ 1358 0114 3A       		.uleb128 0x3a
+ 1359 0115 0B       		.uleb128 0xb
+ 1360 0116 3B       		.uleb128 0x3b
+ 1361 0117 0B       		.uleb128 0xb
+ 1362 0118 27       		.uleb128 0x27
+ 1363 0119 19       		.uleb128 0x19
+ 1364 011a 49       		.uleb128 0x49
+ 1365 011b 13       		.uleb128 0x13
+ 1366 011c 3C       		.uleb128 0x3c
+ 1367 011d 19       		.uleb128 0x19
+ 1368 011e 00       		.byte	0
+ 1369 011f 00       		.byte	0
+ 1370 0120 14       		.uleb128 0x14
+ 1371 0121 05       		.uleb128 0x5
+ 1372 0122 00       		.byte	0
+ 1373 0123 49       		.uleb128 0x49
+ 1374 0124 13       		.uleb128 0x13
+ 1375 0125 00       		.byte	0
+ 1376 0126 00       		.byte	0
+ 1377 0127 00       		.byte	0
+ 1378              		.section	.debug_loc,"",%progbits
+ 1379              	.Ldebug_loc0:
+ 1380              	.LLST0:
+ 1381 0000 00000000 		.4byte	.LVL0
+ 1382 0004 44000000 		.4byte	.LVL2
+ 1383 0008 0600     		.2byte	0x6
+ 1384 000a 50       		.byte	0x50
+ 1385 000b 93       		.byte	0x93
+ 1386 000c 04       		.uleb128 0x4
+ 1387 000d 51       		.byte	0x51
+ 1388 000e 93       		.byte	0x93
+ 1389 000f 04       		.uleb128 0x4
+ 1390 0010 44000000 		.4byte	.LVL2
+ 1391 0014 89000000 		.4byte	.LVL4-1
+ 1392 0018 0500     		.2byte	0x5
+ 1393 001a 03       		.byte	0x3
+ 1394 001b 00000000 		.4byte	init_pos
+ 1395 001f 89000000 		.4byte	.LVL4-1
+ 1396 0023 84010000 		.4byte	.LFE2
+ 1397 0027 0600     		.2byte	0x6
+ 1398 0029 F3       		.byte	0xf3
+ 1399 002a 03       		.uleb128 0x3
+ 1400 002b F5       		.byte	0xf5
+ 1401 002c 00       		.uleb128 0
+ 1402 002d 25       		.uleb128 0x25
+ 1403 002e 9F       		.byte	0x9f
+ 1404 002f 00000000 		.4byte	0
+ 1405 0033 00000000 		.4byte	0
+ 1406              	.LLST1:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 31
+
+
+ 1407 0037 00000000 		.4byte	.LVL0
+ 1408 003b 60000000 		.4byte	.LVL3
+ 1409 003f 0600     		.2byte	0x6
+ 1410 0041 52       		.byte	0x52
+ 1411 0042 93       		.byte	0x93
+ 1412 0043 04       		.uleb128 0x4
+ 1413 0044 53       		.byte	0x53
+ 1414 0045 93       		.byte	0x93
+ 1415 0046 04       		.uleb128 0x4
+ 1416 0047 60000000 		.4byte	.LVL3
+ 1417 004b 84010000 		.4byte	.LFE2
+ 1418 004f 0600     		.2byte	0x6
+ 1419 0051 F3       		.byte	0xf3
+ 1420 0052 03       		.uleb128 0x3
+ 1421 0053 F5       		.byte	0xf5
+ 1422 0054 02       		.uleb128 0x2
+ 1423 0055 25       		.uleb128 0x25
+ 1424 0056 9F       		.byte	0x9f
+ 1425 0057 00000000 		.4byte	0
+ 1426 005b 00000000 		.4byte	0
+ 1427              	.LLST2:
+ 1428 005f 00000000 		.4byte	.LVL0
+ 1429 0063 7A010000 		.4byte	.LVL13
+ 1430 0067 0200     		.2byte	0x2
+ 1431 0069 91       		.byte	0x91
+ 1432 006a 00       		.sleb128 0
+ 1433 006b 7A010000 		.4byte	.LVL13
+ 1434 006f 84010000 		.4byte	.LFE2
+ 1435 0073 0200     		.2byte	0x2
+ 1436 0075 7D       		.byte	0x7d
+ 1437 0076 00       		.sleb128 0
+ 1438 0077 00000000 		.4byte	0
+ 1439 007b 00000000 		.4byte	0
+ 1440              	.LLST3:
+ 1441 007f 00000000 		.4byte	.LVL0
+ 1442 0083 7A010000 		.4byte	.LVL13
+ 1443 0087 0200     		.2byte	0x2
+ 1444 0089 91       		.byte	0x91
+ 1445 008a 08       		.sleb128 8
+ 1446 008b 7A010000 		.4byte	.LVL13
+ 1447 008f 84010000 		.4byte	.LFE2
+ 1448 0093 0200     		.2byte	0x2
+ 1449 0095 7D       		.byte	0x7d
+ 1450 0096 08       		.sleb128 8
+ 1451 0097 00000000 		.4byte	0
+ 1452 009b 00000000 		.4byte	0
+ 1453              	.LLST4:
+ 1454 009f 0C000000 		.4byte	.LVL1
+ 1455 00a3 36010000 		.4byte	.LVL7
+ 1456 00a7 0A00     		.2byte	0xa
+ 1457 00a9 9E       		.byte	0x9e
+ 1458 00aa 08       		.uleb128 0x8
+ 1459 00ab 00000000 		.8byte	0
+ 1459      00000000 
+ 1460 00b3 36010000 		.4byte	.LVL7
+ 1461 00b7 3A010000 		.4byte	.LVL8
+ 1462 00bb 0600     		.2byte	0x6
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 32
+
+
+ 1463 00bd 58       		.byte	0x58
+ 1464 00be 93       		.byte	0x93
+ 1465 00bf 04       		.uleb128 0x4
+ 1466 00c0 59       		.byte	0x59
+ 1467 00c1 93       		.byte	0x93
+ 1468 00c2 04       		.uleb128 0x4
+ 1469 00c3 3E010000 		.4byte	.LVL9
+ 1470 00c7 7A010000 		.4byte	.LVL13
+ 1471 00cb 0600     		.2byte	0x6
+ 1472 00cd 58       		.byte	0x58
+ 1473 00ce 93       		.byte	0x93
+ 1474 00cf 04       		.uleb128 0x4
+ 1475 00d0 59       		.byte	0x59
+ 1476 00d1 93       		.byte	0x93
+ 1477 00d2 04       		.uleb128 0x4
+ 1478 00d3 00000000 		.4byte	0
+ 1479 00d7 00000000 		.4byte	0
+ 1480              	.LLST5:
+ 1481 00db 0C000000 		.4byte	.LVL1
+ 1482 00df 36010000 		.4byte	.LVL7
+ 1483 00e3 0A00     		.2byte	0xa
+ 1484 00e5 9E       		.byte	0x9e
+ 1485 00e6 08       		.uleb128 0x8
+ 1486 00e7 00000000 		.8byte	0
+ 1486      00000000 
+ 1487 00ef 36010000 		.4byte	.LVL7
+ 1488 00f3 54010000 		.4byte	.LVL10
+ 1489 00f7 0600     		.2byte	0x6
+ 1490 00f9 56       		.byte	0x56
+ 1491 00fa 93       		.byte	0x93
+ 1492 00fb 04       		.uleb128 0x4
+ 1493 00fc 57       		.byte	0x57
+ 1494 00fd 93       		.byte	0x93
+ 1495 00fe 04       		.uleb128 0x4
+ 1496 00ff 58010000 		.4byte	.LVL11
+ 1497 0103 7A010000 		.4byte	.LVL13
+ 1498 0107 0600     		.2byte	0x6
+ 1499 0109 56       		.byte	0x56
+ 1500 010a 93       		.byte	0x93
+ 1501 010b 04       		.uleb128 0x4
+ 1502 010c 57       		.byte	0x57
+ 1503 010d 93       		.byte	0x93
+ 1504 010e 04       		.uleb128 0x4
+ 1505 010f 00000000 		.4byte	0
+ 1506 0113 00000000 		.4byte	0
+ 1507              	.LLST6:
+ 1508 0117 00000000 		.4byte	.LVL14
+ 1509 011b 18000000 		.4byte	.LVL17
+ 1510 011f 0600     		.2byte	0x6
+ 1511 0121 50       		.byte	0x50
+ 1512 0122 93       		.byte	0x93
+ 1513 0123 04       		.uleb128 0x4
+ 1514 0124 51       		.byte	0x51
+ 1515 0125 93       		.byte	0x93
+ 1516 0126 04       		.uleb128 0x4
+ 1517 0127 18000000 		.4byte	.LVL17
+ 1518 012b B8010000 		.4byte	.LFE0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 33
+
+
+ 1519 012f 0600     		.2byte	0x6
+ 1520 0131 F3       		.byte	0xf3
+ 1521 0132 03       		.uleb128 0x3
+ 1522 0133 F5       		.byte	0xf5
+ 1523 0134 00       		.uleb128 0
+ 1524 0135 25       		.uleb128 0x25
+ 1525 0136 9F       		.byte	0x9f
+ 1526 0137 00000000 		.4byte	0
+ 1527 013b 00000000 		.4byte	0
+ 1528              	.LLST7:
+ 1529 013f 00000000 		.4byte	.LVL14
+ 1530 0143 12000000 		.4byte	.LVL15
+ 1531 0147 0600     		.2byte	0x6
+ 1532 0149 52       		.byte	0x52
+ 1533 014a 93       		.byte	0x93
+ 1534 014b 04       		.uleb128 0x4
+ 1535 014c 53       		.byte	0x53
+ 1536 014d 93       		.byte	0x93
+ 1537 014e 04       		.uleb128 0x4
+ 1538 014f 12000000 		.4byte	.LVL15
+ 1539 0153 B4010000 		.4byte	.LVL43
+ 1540 0157 0200     		.2byte	0x2
+ 1541 0159 91       		.byte	0x91
+ 1542 015a 50       		.sleb128 -48
+ 1543 015b B4010000 		.4byte	.LVL43
+ 1544 015f B8010000 		.4byte	.LFE0
+ 1545 0163 0200     		.2byte	0x2
+ 1546 0165 7D       		.byte	0x7d
+ 1547 0166 50       		.sleb128 -48
+ 1548 0167 00000000 		.4byte	0
+ 1549 016b 00000000 		.4byte	0
+ 1550              	.LLST8:
+ 1551 016f 00000000 		.4byte	.LVL14
+ 1552 0173 2C000000 		.4byte	.LVL18
+ 1553 0177 0200     		.2byte	0x2
+ 1554 0179 91       		.byte	0x91
+ 1555 017a 00       		.sleb128 0
+ 1556 017b 2C000000 		.4byte	.LVL18
+ 1557 017f 4C000000 		.4byte	.LVL20
+ 1558 0183 0600     		.2byte	0x6
+ 1559 0185 50       		.byte	0x50
+ 1560 0186 93       		.byte	0x93
+ 1561 0187 04       		.uleb128 0x4
+ 1562 0188 51       		.byte	0x51
+ 1563 0189 93       		.byte	0x93
+ 1564 018a 04       		.uleb128 0x4
+ 1565 018b B0000000 		.4byte	.LVL31
+ 1566 018f BA000000 		.4byte	.LVL32
+ 1567 0193 0600     		.2byte	0x6
+ 1568 0195 50       		.byte	0x50
+ 1569 0196 93       		.byte	0x93
+ 1570 0197 04       		.uleb128 0x4
+ 1571 0198 51       		.byte	0x51
+ 1572 0199 93       		.byte	0x93
+ 1573 019a 04       		.uleb128 0x4
+ 1574 019b BA000000 		.4byte	.LVL32
+ 1575 019f BC000000 		.4byte	.LVL33
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 34
+
+
+ 1576 01a3 0600     		.2byte	0x6
+ 1577 01a5 55       		.byte	0x55
+ 1578 01a6 93       		.byte	0x93
+ 1579 01a7 04       		.uleb128 0x4
+ 1580 01a8 51       		.byte	0x51
+ 1581 01a9 93       		.byte	0x93
+ 1582 01aa 04       		.uleb128 0x4
+ 1583 01ab BC000000 		.4byte	.LVL33
+ 1584 01af 42010000 		.4byte	.LVL41
+ 1585 01b3 0600     		.2byte	0x6
+ 1586 01b5 55       		.byte	0x55
+ 1587 01b6 93       		.byte	0x93
+ 1588 01b7 04       		.uleb128 0x4
+ 1589 01b8 54       		.byte	0x54
+ 1590 01b9 93       		.byte	0x93
+ 1591 01ba 04       		.uleb128 0x4
+ 1592 01bb 00000000 		.4byte	0
+ 1593 01bf 00000000 		.4byte	0
+ 1594              	.LLST9:
+ 1595 01c3 00000000 		.4byte	.LVL14
+ 1596 01c7 42000000 		.4byte	.LVL19
+ 1597 01cb 0200     		.2byte	0x2
+ 1598 01cd 91       		.byte	0x91
+ 1599 01ce 08       		.sleb128 8
+ 1600 01cf 42000000 		.4byte	.LVL19
+ 1601 01d3 52000000 		.4byte	.LVL21
+ 1602 01d7 0600     		.2byte	0x6
+ 1603 01d9 52       		.byte	0x52
+ 1604 01da 93       		.byte	0x93
+ 1605 01db 04       		.uleb128 0x4
+ 1606 01dc 53       		.byte	0x53
+ 1607 01dd 93       		.byte	0x93
+ 1608 01de 04       		.uleb128 0x4
+ 1609 01df 52000000 		.4byte	.LVL21
+ 1610 01e3 55000000 		.4byte	.LVL22-1
+ 1611 01e7 0600     		.2byte	0x6
+ 1612 01e9 56       		.byte	0x56
+ 1613 01ea 93       		.byte	0x93
+ 1614 01eb 04       		.uleb128 0x4
+ 1615 01ec 53       		.byte	0x53
+ 1616 01ed 93       		.byte	0x93
+ 1617 01ee 04       		.uleb128 0x4
+ 1618 01ef 55000000 		.4byte	.LVL22-1
+ 1619 01f3 F0000000 		.4byte	.LVL39
+ 1620 01f7 0600     		.2byte	0x6
+ 1621 01f9 56       		.byte	0x56
+ 1622 01fa 93       		.byte	0x93
+ 1623 01fb 04       		.uleb128 0x4
+ 1624 01fc 57       		.byte	0x57
+ 1625 01fd 93       		.byte	0x93
+ 1626 01fe 04       		.uleb128 0x4
+ 1627 01ff 00000000 		.4byte	0
+ 1628 0203 00000000 		.4byte	0
+ 1629              	.LLST10:
+ 1630 0207 16000000 		.4byte	.LVL16
+ 1631 020b 6A000000 		.4byte	.LVL23
+ 1632 020f 0A00     		.2byte	0xa
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 35
+
+
+ 1633 0211 9E       		.byte	0x9e
+ 1634 0212 08       		.uleb128 0x8
+ 1635 0213 00000000 		.8byte	0
+ 1635      00000000 
+ 1636 021b 6A000000 		.4byte	.LVL23
+ 1637 021f 9E000000 		.4byte	.LVL27
+ 1638 0223 0600     		.2byte	0x6
+ 1639 0225 50       		.byte	0x50
+ 1640 0226 93       		.byte	0x93
+ 1641 0227 04       		.uleb128 0x4
+ 1642 0228 51       		.byte	0x51
+ 1643 0229 93       		.byte	0x93
+ 1644 022a 04       		.uleb128 0x4
+ 1645 022b D0000000 		.4byte	.LVL35
+ 1646 022f E2000000 		.4byte	.LVL37
+ 1647 0233 0600     		.2byte	0x6
+ 1648 0235 50       		.byte	0x50
+ 1649 0236 93       		.byte	0x93
+ 1650 0237 04       		.uleb128 0x4
+ 1651 0238 51       		.byte	0x51
+ 1652 0239 93       		.byte	0x93
+ 1653 023a 04       		.uleb128 0x4
+ 1654 023b 00000000 		.4byte	0
+ 1655 023f 00000000 		.4byte	0
+ 1656              	.LLST11:
+ 1657 0243 16000000 		.4byte	.LVL16
+ 1658 0247 82000000 		.4byte	.LVL24
+ 1659 024b 0A00     		.2byte	0xa
+ 1660 024d 9E       		.byte	0x9e
+ 1661 024e 08       		.uleb128 0x8
+ 1662 024f 00000000 		.8byte	0
+ 1662      00000000 
+ 1663 0257 82000000 		.4byte	.LVL24
+ 1664 025b 84000000 		.4byte	.LVL25
+ 1665 025f 0600     		.2byte	0x6
+ 1666 0261 52       		.byte	0x52
+ 1667 0262 93       		.byte	0x93
+ 1668 0263 04       		.uleb128 0x4
+ 1669 0264 53       		.byte	0x53
+ 1670 0265 93       		.byte	0x93
+ 1671 0266 04       		.uleb128 0x4
+ 1672 0267 DE000000 		.4byte	.LVL36
+ 1673 026b EA000000 		.4byte	.LVL38
+ 1674 026f 0600     		.2byte	0x6
+ 1675 0271 58       		.byte	0x58
+ 1676 0272 93       		.byte	0x93
+ 1677 0273 04       		.uleb128 0x4
+ 1678 0274 59       		.byte	0x59
+ 1679 0275 93       		.byte	0x93
+ 1680 0276 04       		.uleb128 0x4
+ 1681 0277 00000000 		.4byte	0
+ 1682 027b 00000000 		.4byte	0
+ 1683              	.LLST12:
+ 1684 027f 16000000 		.4byte	.LVL16
+ 1685 0283 86000000 		.4byte	.LVL26
+ 1686 0287 0A00     		.2byte	0xa
+ 1687 0289 9E       		.byte	0x9e
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 36
+
+
+ 1688 028a 08       		.uleb128 0x8
+ 1689 028b 00000000 		.8byte	0
+ 1689      00000000 
+ 1690 0293 86000000 		.4byte	.LVL26
+ 1691 0297 A3000000 		.4byte	.LVL28-1
+ 1692 029b 0600     		.2byte	0x6
+ 1693 029d 52       		.byte	0x52
+ 1694 029e 93       		.byte	0x93
+ 1695 029f 04       		.uleb128 0x4
+ 1696 02a0 53       		.byte	0x53
+ 1697 02a1 93       		.byte	0x93
+ 1698 02a2 04       		.uleb128 0x4
+ 1699 02a3 00000000 		.4byte	0
+ 1700 02a7 00000000 		.4byte	0
+ 1701              	.LLST13:
+ 1702 02ab 00000000 		.4byte	.LVL44
+ 1703 02af CC000000 		.4byte	.LVL46
+ 1704 02b3 0600     		.2byte	0x6
+ 1705 02b5 50       		.byte	0x50
+ 1706 02b6 93       		.byte	0x93
+ 1707 02b7 04       		.uleb128 0x4
+ 1708 02b8 51       		.byte	0x51
+ 1709 02b9 93       		.byte	0x93
+ 1710 02ba 04       		.uleb128 0x4
+ 1711 02bb CC000000 		.4byte	.LVL46
+ 1712 02bf F0000000 		.4byte	.LVL49
+ 1713 02c3 0600     		.2byte	0x6
+ 1714 02c5 F3       		.byte	0xf3
+ 1715 02c6 03       		.uleb128 0x3
+ 1716 02c7 F5       		.byte	0xf5
+ 1717 02c8 00       		.uleb128 0
+ 1718 02c9 25       		.uleb128 0x25
+ 1719 02ca 9F       		.byte	0x9f
+ 1720 02cb F0000000 		.4byte	.LVL49
+ 1721 02cf F6000000 		.4byte	.LVL50
+ 1722 02d3 0600     		.2byte	0x6
+ 1723 02d5 50       		.byte	0x50
+ 1724 02d6 93       		.byte	0x93
+ 1725 02d7 04       		.uleb128 0x4
+ 1726 02d8 51       		.byte	0x51
+ 1727 02d9 93       		.byte	0x93
+ 1728 02da 04       		.uleb128 0x4
+ 1729 02db F6000000 		.4byte	.LVL50
+ 1730 02df 0C010000 		.4byte	.LFE1
+ 1731 02e3 0600     		.2byte	0x6
+ 1732 02e5 F3       		.byte	0xf3
+ 1733 02e6 03       		.uleb128 0x3
+ 1734 02e7 F5       		.byte	0xf5
+ 1735 02e8 00       		.uleb128 0
+ 1736 02e9 25       		.uleb128 0x25
+ 1737 02ea 9F       		.byte	0x9f
+ 1738 02eb 00000000 		.4byte	0
+ 1739 02ef 00000000 		.4byte	0
+ 1740              	.LLST14:
+ 1741 02f3 04000000 		.4byte	.LVL45
+ 1742 02f7 EC000000 		.4byte	.LVL48
+ 1743 02fb 0A00     		.2byte	0xa
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 37
+
+
+ 1744 02fd 9E       		.byte	0x9e
+ 1745 02fe 08       		.uleb128 0x8
+ 1746 02ff 00000000 		.8byte	0
+ 1746      00000000 
+ 1747 0307 EC000000 		.4byte	.LVL48
+ 1748 030b F0000000 		.4byte	.LVL49
+ 1749 030f 0600     		.2byte	0x6
+ 1750 0311 50       		.byte	0x50
+ 1751 0312 93       		.byte	0x93
+ 1752 0313 04       		.uleb128 0x4
+ 1753 0314 51       		.byte	0x51
+ 1754 0315 93       		.byte	0x93
+ 1755 0316 04       		.uleb128 0x4
+ 1756 0317 F0000000 		.4byte	.LVL49
+ 1757 031b FE000000 		.4byte	.LVL51
+ 1758 031f 0A00     		.2byte	0xa
+ 1759 0321 9E       		.byte	0x9e
+ 1760 0322 08       		.uleb128 0x8
+ 1761 0323 00000000 		.8byte	0
+ 1761      00000000 
+ 1762 032b FE000000 		.4byte	.LVL51
+ 1763 032f 0C010000 		.4byte	.LFE1
+ 1764 0333 0600     		.2byte	0x6
+ 1765 0335 50       		.byte	0x50
+ 1766 0336 93       		.byte	0x93
+ 1767 0337 04       		.uleb128 0x4
+ 1768 0338 51       		.byte	0x51
+ 1769 0339 93       		.byte	0x93
+ 1770 033a 04       		.uleb128 0x4
+ 1771 033b 00000000 		.4byte	0
+ 1772 033f 00000000 		.4byte	0
+ 1773              		.section	.debug_aranges,"",%progbits
+ 1774 0000 2C000000 		.4byte	0x2c
+ 1775 0004 0200     		.2byte	0x2
+ 1776 0006 00000000 		.4byte	.Ldebug_info0
+ 1777 000a 04       		.byte	0x4
+ 1778 000b 00       		.byte	0
+ 1779 000c 0000     		.2byte	0
+ 1780 000e 0000     		.2byte	0
+ 1781 0010 00000000 		.4byte	.LFB2
+ 1782 0014 84010000 		.4byte	.LFE2-.LFB2
+ 1783 0018 00000000 		.4byte	.LFB0
+ 1784 001c B8010000 		.4byte	.LFE0-.LFB0
+ 1785 0020 00000000 		.4byte	.LFB1
+ 1786 0024 0C010000 		.4byte	.LFE1-.LFB1
+ 1787 0028 00000000 		.4byte	0
+ 1788 002c 00000000 		.4byte	0
+ 1789              		.section	.debug_ranges,"",%progbits
+ 1790              	.Ldebug_ranges0:
+ 1791 0000 00000000 		.4byte	.LFB2
+ 1792 0004 84010000 		.4byte	.LFE2
+ 1793 0008 00000000 		.4byte	.LFB0
+ 1794 000c B8010000 		.4byte	.LFE0
+ 1795 0010 00000000 		.4byte	.LFB1
+ 1796 0014 0C010000 		.4byte	.LFE1
+ 1797 0018 00000000 		.4byte	0
+ 1798 001c 00000000 		.4byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 38
+
+
+ 1799              		.section	.debug_line,"",%progbits
+ 1800              	.Ldebug_line0:
+ 1801 0000 39010000 		.section	.debug_str,"MS",%progbits,1
+ 1801      02009800 
+ 1801      00000201 
+ 1801      FB0E0D00 
+ 1801      01010101 
+ 1802              	.LASF24:
+ 1803 0000 6C617374 		.ascii	"last_tmp_spd\000"
+ 1803      5F746D70 
+ 1803      5F737064 
+ 1803      00
+ 1804              	.LASF42:
+ 1805 000d 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 1805      6C657853 
+ 1805      45415F61 
+ 1805      6C783837 
+ 1805      6772645C 
+ 1806              	.LASF34:
+ 1807 003b 6374655F 		.ascii	"cte_spd_pos\000"
+ 1807      7370645F 
+ 1807      706F7300 
+ 1808              	.LASF36:
+ 1809 0047 736B6970 		.ascii	"skip_sspeed\000"
+ 1809      5F737370 
+ 1809      65656400 
+ 1810              	.LASF4:
+ 1811 0053 73686F72 		.ascii	"short unsigned int\000"
+ 1811      7420756E 
+ 1811      7369676E 
+ 1811      65642069 
+ 1811      6E7400
+ 1812              	.LASF16:
+ 1813 0066 7370645F 		.ascii	"spd_max\000"
+ 1813      6D617800 
+ 1814              	.LASF35:
+ 1815 006e 6374655F 		.ascii	"cte_spd_pos_discrete\000"
+ 1815      7370645F 
+ 1815      706F735F 
+ 1815      64697363 
+ 1815      72657465 
+ 1816              	.LASF12:
+ 1817 0083 666C6F61 		.ascii	"float\000"
+ 1817      7400
+ 1818              	.LASF20:
+ 1819 0089 74726170 		.ascii	"trapez_gen_motion_1\000"
+ 1819      657A5F67 
+ 1819      656E5F6D 
+ 1819      6F74696F 
+ 1819      6E5F3100 
+ 1820              	.LASF41:
+ 1821 009d 2E2E5C73 		.ascii	"..\\src\\trapez.c\000"
+ 1821      72635C74 
+ 1821      72617065 
+ 1821      7A2E6300 
+ 1822              	.LASF33:
+ 1823 00ad 696E6974 		.ascii	"init_pos\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 39
+
+
+ 1823      5F706F73 
+ 1823      00
+ 1824              	.LASF2:
+ 1825 00b6 756E7369 		.ascii	"unsigned char\000"
+ 1825      676E6564 
+ 1825      20636861 
+ 1825      7200
+ 1826              	.LASF6:
+ 1827 00c4 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1827      20756E73 
+ 1827      69676E65 
+ 1827      6420696E 
+ 1827      7400
+ 1828              	.LASF27:
+ 1829 00d6 706F735F 		.ascii	"pos_integral\000"
+ 1829      696E7465 
+ 1829      6772616C 
+ 1829      00
+ 1830              	.LASF43:
+ 1831 00e3 74726170 		.ascii	"trapez_compute_params\000"
+ 1831      657A5F63 
+ 1831      6F6D7075 
+ 1831      74655F70 
+ 1831      6172616D 
+ 1832              	.LASF29:
+ 1833 00f9 645F7370 		.ascii	"d_spd\000"
+ 1833      6400
+ 1834              	.LASF39:
+ 1835 00ff 7369676E 		.ascii	"sign\000"
+ 1835      00
+ 1836              	.LASF37:
+ 1837 0104 706F735F 		.ascii	"pos_step\000"
+ 1837      73746570 
+ 1837      00
+ 1838              	.LASF11:
+ 1839 010d 646F7562 		.ascii	"double\000"
+ 1839      6C6500
+ 1840              	.LASF31:
+ 1841 0114 7370645F 		.ascii	"spd_inc\000"
+ 1841      696E6300 
+ 1842              	.LASF44:
+ 1843 011c 73717274 		.ascii	"sqrt\000"
+ 1843      00
+ 1844              	.LASF26:
+ 1845 0121 706F7369 		.ascii	"position\000"
+ 1845      74696F6E 
+ 1845      00
+ 1846              	.LASF40:
+ 1847 012a 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 1847      4320342E 
+ 1847      392E3320 
+ 1847      32303135 
+ 1847      30333033 
+ 1848 015d 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 1848      20726576 
+ 1848      6973696F 
+ 1848      6E203232 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 40
+
+
+ 1848      31323230 
+ 1849 0190 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1849      66756E63 
+ 1849      74696F6E 
+ 1849      2D736563 
+ 1849      74696F6E 
+ 1850              	.LASF38:
+ 1851 01b8 74726170 		.ascii	"trapez_transitions\000"
+ 1851      657A5F74 
+ 1851      72616E73 
+ 1851      6974696F 
+ 1851      6E7300
+ 1852              	.LASF8:
+ 1853 01cb 756E7369 		.ascii	"unsigned int\000"
+ 1853      676E6564 
+ 1853      20696E74 
+ 1853      00
+ 1854              	.LASF14:
+ 1855 01d8 706F735F 		.ascii	"pos_i\000"
+ 1855      6900
+ 1856              	.LASF0:
+ 1857 01de 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1857      206C6F6E 
+ 1857      6720756E 
+ 1857      7369676E 
+ 1857      65642069 
+ 1858              	.LASF23:
+ 1859 01f5 746D705F 		.ascii	"tmp_spd\000"
+ 1859      73706400 
+ 1860              	.LASF32:
+ 1861 01fd 6163635F 		.ascii	"acc_pos\000"
+ 1861      706F7300 
+ 1862              	.LASF25:
+ 1863 0205 746D705F 		.ascii	"tmp_pos\000"
+ 1863      706F7300 
+ 1864              	.LASF9:
+ 1865 020d 73697A65 		.ascii	"sizetype\000"
+ 1865      74797065 
+ 1865      00
+ 1866              	.LASF30:
+ 1867 0216 615F745F 		.ascii	"a_t_discrete\000"
+ 1867      64697363 
+ 1867      72657465 
+ 1867      00
+ 1868              	.LASF7:
+ 1869 0223 6C6F6E67 		.ascii	"long long int\000"
+ 1869      206C6F6E 
+ 1869      6720696E 
+ 1869      7400
+ 1870              	.LASF28:
+ 1871 0231 645F706F 		.ascii	"d_pos\000"
+ 1871      7300
+ 1872              	.LASF3:
+ 1873 0237 73686F72 		.ascii	"short int\000"
+ 1873      7420696E 
+ 1873      7400
+ 1874              	.LASF19:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccQGblqY.s 			page 41
+
+
+ 1875 0241 6475616C 		.ascii	"dual_abs_acc_pos\000"
+ 1875      5F616273 
+ 1875      5F616363 
+ 1875      5F706F73 
+ 1875      00
+ 1876              	.LASF18:
+ 1877 0252 6162735F 		.ascii	"abs_acc_pos\000"
+ 1877      6163635F 
+ 1877      706F7300 
+ 1878              	.LASF15:
+ 1879 025e 706F735F 		.ascii	"pos_f\000"
+ 1879      6600
+ 1880              	.LASF17:
+ 1881 0264 6162735F 		.ascii	"abs_d_pos\000"
+ 1881      645F706F 
+ 1881      7300
+ 1882              	.LASF5:
+ 1883 026e 6C6F6E67 		.ascii	"long int\000"
+ 1883      20696E74 
+ 1883      00
+ 1884              	.LASF10:
+ 1885 0277 63686172 		.ascii	"char\000"
+ 1885      00
+ 1886              	.LASF13:
+ 1887 027c 6C6F6E67 		.ascii	"long double\000"
+ 1887      20646F75 
+ 1887      626C6500 
+ 1888              	.LASF1:
+ 1889 0288 7369676E 		.ascii	"signed char\000"
+ 1889      65642063 
+ 1889      68617200 
+ 1890              	.LASF21:
+ 1891 0294 74726170 		.ascii	"trapez_get_pos\000"
+ 1891      657A5F67 
+ 1891      65745F70 
+ 1891      6F7300
+ 1892              	.LASF22:
+ 1893 02a3 6D61785F 		.ascii	"max_steps\000"
+ 1893      73746570 
+ 1893      7300
+ 1894              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

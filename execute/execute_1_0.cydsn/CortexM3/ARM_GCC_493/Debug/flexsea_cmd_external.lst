@@ -1,0 +1,1840 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"flexsea_cmd_external.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.global _printf_float
+  19              		.thumb
+  20              		.section	.text.tx_cmd_exp_pwro,"ax",%progbits
+  21              		.align	2
+  22              		.global	tx_cmd_exp_pwro
+  23              		.thumb
+  24              		.thumb_func
+  25              		.type	tx_cmd_exp_pwro, %function
+  26              	tx_cmd_exp_pwro:
+  27              	.LFB63:
+  28              		.file 1 "..\\..\\flexsea-system\\src\\flexsea_cmd_external.c"
+   1:..\..\flexsea-system\src/flexsea_cmd_external.c **** //****************************************************************************
+   2:..\..\flexsea-system\src/flexsea_cmd_external.c **** // MIT Media Lab - Biomechatronics
+   3:..\..\flexsea-system\src/flexsea_cmd_external.c **** // Jean-François (Jeff) Duval
+   4:..\..\flexsea-system\src/flexsea_cmd_external.c **** // jfduval@media.mit.edu
+   5:..\..\flexsea-system\src/flexsea_cmd_external.c **** // 04/2016
+   6:..\..\flexsea-system\src/flexsea_cmd_external.c **** //****************************************************************************
+   7:..\..\flexsea-system\src/flexsea_cmd_external.c **** // flexsea_cmd_external: External/Expansion connector
+   8:..\..\flexsea-system\src/flexsea_cmd_external.c **** //****************************************************************************
+   9:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  10:..\..\flexsea-system\src/flexsea_cmd_external.c **** #ifdef __cplusplus
+  11:..\..\flexsea-system\src/flexsea_cmd_external.c **** extern "C" {
+  12:..\..\flexsea-system\src/flexsea_cmd_external.c **** #endif
+  13:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  14:..\..\flexsea-system\src/flexsea_cmd_external.c **** //****************************************************************************
+  15:..\..\flexsea-system\src/flexsea_cmd_external.c **** // Include(s)
+  16:..\..\flexsea-system\src/flexsea_cmd_external.c **** //****************************************************************************
+  17:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  18:..\..\flexsea-system\src/flexsea_cmd_external.c **** #include "main.h"
+  19:..\..\flexsea-system\src/flexsea_cmd_external.c **** #include "../inc/flexsea_system.h"
+  20:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  21:..\..\flexsea-system\src/flexsea_cmd_external.c **** //****************************************************************************
+  22:..\..\flexsea-system\src/flexsea_cmd_external.c **** // Variable(s)
+  23:..\..\flexsea-system\src/flexsea_cmd_external.c **** //****************************************************************************
+  24:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  25:..\..\flexsea-system\src/flexsea_cmd_external.c **** //Will change this, but for now the payloads will be stored in:
+  26:..\..\flexsea-system\src/flexsea_cmd_external.c **** unsigned char tmp_payload_xmit[PAYLOAD_BUF_LEN];
+  27:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  28:..\..\flexsea-system\src/flexsea_cmd_external.c **** //****************************************************************************
+  29:..\..\flexsea-system\src/flexsea_cmd_external.c **** // Function(s)
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 2
+
+
+  30:..\..\flexsea-system\src/flexsea_cmd_external.c **** //****************************************************************************
+  31:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  32:..\..\flexsea-system\src/flexsea_cmd_external.c **** /*
+  33:..\..\flexsea-system\src/flexsea_cmd_external.c **** //Transmission of a DIGITAL_IN command
+  34:..\..\flexsea-system\src/flexsea_cmd_external.c **** uint32_t tx_cmd_digital_in(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_t len)
+  35:..\..\flexsea-system\src/flexsea_cmd_external.c **** {
+  36:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	uint32_t bytes = 0;
+  37:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  38:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	//Fresh payload string:
+  39:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	prepare_empty_payload(board_id, receiver, buf, len);
+  40:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  41:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	//Command:
+  42:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	buf[P_CMDS] = 1;                     //1 command in string
+  43:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  44:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	if(cmd_type == CMD_READ)
+  45:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+  46:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_CMD1] = CMD_R(CMD_DIGITAL_IN);
+  47:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  48:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = P_CMD1 + 1;     //Bytes is always last+1
+  49:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+  50:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	else if(cmd_type == CMD_WRITE)
+  51:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+  52:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//In that case Write is only used for the Reply
+  53:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	
+  54:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_CMD1] = CMD_W(CMD_DIGITAL_IN);
+  55:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  56:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+  57:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  58:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		ToDo!
+  59:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+  60:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Arguments:
+  61:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_DATA1 + 0] = read_digital_inputs();
+  62:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+  63:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  64:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = P_DATA1 + 1;     //Bytes is always last+1
+  65:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  66:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#else
+  67:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  68:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = 0;
+  69:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  70:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#endif	//BOARD_TYPE_FLEXSEA_APPLICATION
+  71:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+  72:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	else
+  73:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+  74:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Invalid
+  75:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		flexsea_error(SE_INVALID_READ_TYPE);
+  76:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = 0;
+  77:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+  78:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  79:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	return bytes;
+  80:..\..\flexsea-system\src/flexsea_cmd_external.c **** }
+  81:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  82:..\..\flexsea-system\src/flexsea_cmd_external.c **** //Reception of a DIGITAL_IN command
+  83:..\..\flexsea-system\src/flexsea_cmd_external.c **** void rx_cmd_digital_in(uint8_t *buf)
+  84:..\..\flexsea-system\src/flexsea_cmd_external.c **** {
+  85:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	uint32_t numb = 0;
+  86:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	int8_t tmp_val1 = 0, tmp_val2 = 0, tmp_val3 = 0, tmp_val4 = 0;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 3
+
+
+  87:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  88:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	if(IS_CMD_RW(buf[P_CMD1]) == READ)
+  89:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+  90:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Received a Read command from our master, prepare a reply:
+  91:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+  92:..\..\flexsea-system\src/flexsea_cmd_external.c ****         #ifdef BOARD_TYPE_FLEXSEA_APPLICATION
+  93:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+  94:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		numb = tx_cmd_digital_in(buf[P_XID], CMD_WRITE, tmp_payload_xmit, PAYLOAD_BUF_LEN);
+  95:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		numb = comm_gen_str(tmp_payload_xmit, comm_str_485, numb);
+  96:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//numb = COMM_STR_BUF_LEN;    //Fixed length for now
+  97:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		flexsea_send_serial_master(0, comm_str_485, numb+1);
+  98:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+  99:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//ToDo: the reply should be managed elsewhere!
+ 100:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+ 101:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#endif	//BOARD_TYPE_FLEXSEA_APPLICATION
+ 102:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+ 103:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 104:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	else if(IS_CMD_RW(buf[P_CMD1]) == WRITE)
+ 105:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 106:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Two options: from Master of from slave (a read reply)
+ 107:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 108:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Decode data:
+ 109:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//[...]
+ 110:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 111:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		if(sent_from_a_slave(buf))
+ 112:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		{
+ 113:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//We received a reply to our read request
+ 114:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			
+ 115:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+ 116:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			
+ 117:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			ToDo!
+ 118:..\..\flexsea-system\src/flexsea_cmd_external.c **** 				
+ 119:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//As a test, we use Interface to read from Application
+ 120:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			tmp_val1 = buf[P_DATA1 + 0];
+ 121:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			
+ 122:..\..\flexsea-system\src/flexsea_cmd_external.c **** 				
+ 123:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#endif //BOARD_TYPE_FLEXSEA_INTERFACE
+ 124:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		}
+ 125:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		else
+ 126:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		{
+ 127:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//Master is writing a value to this board
+ 128:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			
+ 129:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//Can't write to digital inputs - nop()
+ 130:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 131:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		}
+ 132:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 133:..\..\flexsea-system\src/flexsea_cmd_external.c **** }
+ 134:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 135:..\..\flexsea-system\src/flexsea_cmd_external.c **** //Transmission of an ANALOG_IN command
+ 136:..\..\flexsea-system\src/flexsea_cmd_external.c **** uint32_t tx_cmd_analog_in(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_t len)
+ 137:..\..\flexsea-system\src/flexsea_cmd_external.c **** {
+ 138:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	uint32_t bytes = 0;
+ 139:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	uint8_t tmp0 = 0, tmp1 = 0;
+ 140:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 141:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	//Fresh payload string:
+ 142:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	prepare_empty_payload(board_id, receiver, buf, len);
+ 143:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 4
+
+
+ 144:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	//Command:
+ 145:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	buf[P_CMDS] = 1;                     //1 command in string
+ 146:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 147:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	if(cmd_type == CMD_READ)
+ 148:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 149:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_CMD1] = CMD_R(CMD_ANALOG_IN);
+ 150:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 151:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = P_CMD1 + 1;     //Bytes is always last+1
+ 152:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 153:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	else if(cmd_type == CMD_WRITE)
+ 154:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 155:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//In that case Write is only used for the Reply
+ 156:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	
+ 157:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_CMD1] = CMD_W(CMD_ANALOG_IN);
+ 158:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 159:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+ 160:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+ 161:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		ToDo!
+ 162:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 163:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Arguments:
+ 164:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		uint16_to_bytes((uint16_t)adc_res[0], &tmp0, &tmp1);
+ 165:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_DATA1 + 0] = tmp0;
+ 166:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_DATA1 + 1] = tmp1;
+ 167:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		uint16_to_bytes((uint16_t)adc_res[1], &tmp0, &tmp1);
+ 168:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_DATA1 + 2] = tmp0;
+ 169:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_DATA1 + 3] = tmp1;
+ 170:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		uint16_to_bytes((uint16_t)adc_res[2], &tmp0, &tmp1);
+ 171:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_DATA1 + 4] = tmp0;
+ 172:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_DATA1 + 5] = tmp1;
+ 173:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		uint16_to_bytes((uint16_t)adc_res[3], &tmp0, &tmp1);
+ 174:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_DATA1 + 6] = tmp0;
+ 175:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_DATA1 + 7] = tmp1;
+ 176:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 177:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = P_DATA1 + 8;     //Bytes is always last+1
+ 178:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 179:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#else
+ 180:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 181:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = 0;
+ 182:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 183:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#endif	//BOARD_TYPE_FLEXSEA_APPLICATION
+ 184:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 185:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	else
+ 186:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 187:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Invalid
+ 188:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		flexsea_error(SE_INVALID_READ_TYPE);
+ 189:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = 0;
+ 190:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 191:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 192:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	return bytes;
+ 193:..\..\flexsea-system\src/flexsea_cmd_external.c **** }
+ 194:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 195:..\..\flexsea-system\src/flexsea_cmd_external.c **** //Reception of an ANALOG_IN command
+ 196:..\..\flexsea-system\src/flexsea_cmd_external.c **** void rx_cmd_analog_in(uint8_t *buf)
+ 197:..\..\flexsea-system\src/flexsea_cmd_external.c **** {
+ 198:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	uint32_t numb = 0;
+ 199:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	int16_t tmp_val1 = 0, tmp_val2 = 0, tmp_val3 = 0, tmp_val4 = 0;
+ 200:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 5
+
+
+ 201:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	if(IS_CMD_RW(buf[P_CMD1]) == READ)
+ 202:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 203:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Received a Read command from our master, prepare a reply:
+ 204:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 205:..\..\flexsea-system\src/flexsea_cmd_external.c ****         #ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+ 206:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+ 207:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		numb = tx_cmd_analog_in(buf[P_XID], CMD_WRITE, tmp_payload_xmit, PAYLOAD_BUF_LEN);
+ 208:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		numb = comm_gen_str(tmp_payload_xmit, comm_str_485, numb);
+ 209:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//numb = COMM_STR_BUF_LEN;    //Fixed length for now
+ 210:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		flexsea_send_serial_master(0, comm_str_485, numb+1);
+ 211:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+ 212:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//ToDo: the reply should be managed elsewhere!
+ 213:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+ 214:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#endif	//BOARD_TYPE_FLEXSEA_APPLICATION
+ 215:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+ 216:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 217:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	else if(IS_CMD_RW(buf[P_CMD1]) == WRITE)
+ 218:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 219:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Two options: from Master of from slave (a read reply)
+ 220:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 221:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Decode data:
+ 222:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//[...]
+ 223:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 224:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		if(sent_from_a_slave(buf))
+ 225:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		{
+ 226:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//We received a reply to our read request
+ 227:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			
+ 228:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+ 229:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			
+ 230:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			ToDo!
+ 231:..\..\flexsea-system\src/flexsea_cmd_external.c **** 				
+ 232:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//As a test, we use Interface to read from Application
+ 233:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			tmp_val1 = (int16)BYTES_TO_UINT16(buf[P_DATA1 + 0], buf[P_DATA1 + 1]);
+ 234:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			tmp_val2 = (int16)BYTES_TO_UINT16(buf[P_DATA1 + 2], buf[P_DATA1 + 3]);
+ 235:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			tmp_val3 = (int16)BYTES_TO_UINT16(buf[P_DATA1 + 4], buf[P_DATA1 + 5]);
+ 236:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			tmp_val4 = (int16)BYTES_TO_UINT16(buf[P_DATA1 + 6], buf[P_DATA1 + 7]);
+ 237:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			sdata_app_adc_res[0] = tmp_val1;
+ 238:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			sdata_app_adc_res[1] = tmp_val2;
+ 239:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			sdata_app_adc_res[2] = tmp_val3;
+ 240:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			sdata_app_adc_res[3] = tmp_val4;
+ 241:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			
+ 242:..\..\flexsea-system\src/flexsea_cmd_external.c **** 				
+ 243:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#endif //BOARD_TYPE_FLEXSEA_INTERFACE
+ 244:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		}
+ 245:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		else
+ 246:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		{
+ 247:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//Master is writing a value to this board
+ 248:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			
+ 249:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//Can't write to digital inputs - nop()
+ 250:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 251:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		}
+ 252:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 253:..\..\flexsea-system\src/flexsea_cmd_external.c **** }
+ 254:..\..\flexsea-system\src/flexsea_cmd_external.c **** */
+ 255:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 256:..\..\flexsea-system\src/flexsea_cmd_external.c **** //Transmission of a PWRO command
+ 257:..\..\flexsea-system\src/flexsea_cmd_external.c **** uint32_t tx_cmd_exp_pwro(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_t len, \
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 6
+
+
+ 258:..\..\flexsea-system\src/flexsea_cmd_external.c **** 								uint8_t pwro_pwm)
+ 259:..\..\flexsea-system\src/flexsea_cmd_external.c **** {
+  29              		.loc 1 259 0
+  30              		.cfi_startproc
+  31              		@ args = 4, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              	.LVL0:
+  34 0000 70B5     		push	{r4, r5, r6, lr}
+  35              		.cfi_def_cfa_offset 16
+  36              		.cfi_offset 4, -16
+  37              		.cfi_offset 5, -12
+  38              		.cfi_offset 6, -8
+  39              		.cfi_offset 14, -4
+  40 0002 0646     		mov	r6, r0
+  41 0004 0D46     		mov	r5, r1
+  42 0006 1446     		mov	r4, r2
+  43              	.LVL1:
+ 260:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	uint32_t bytes = 0;
+ 261:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 262:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	//Fresh payload string:
+ 263:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	prepare_empty_payload(board_id, receiver, buf, len);
+  44              		.loc 1 263 0
+  45 0008 0C49     		ldr	r1, .L6
+  46              	.LVL2:
+  47 000a 0878     		ldrb	r0, [r1]	@ zero_extendqisi2
+  48              	.LVL3:
+  49 000c 3146     		mov	r1, r6
+  50 000e FFF7FEFF 		bl	prepare_empty_payload
+  51              	.LVL4:
+ 264:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 265:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	//Command:
+ 266:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	buf[P_CMDS] = 1;                     //1 command in string
+  52              		.loc 1 266 0
+  53 0012 0123     		movs	r3, #1
+  54 0014 A370     		strb	r3, [r4, #2]
+ 267:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 268:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	if(cmd_type == CMD_READ)
+  55              		.loc 1 268 0
+  56 0016 9D42     		cmp	r5, r3
+  57 0018 0ED0     		beq	.L4
+ 269:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 270:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//No arguments needed to read the clutch state
+ 271:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 272:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Arguments:
+ 273:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//...
+ 274:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 275:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = P_DATA1 + 0;     //Bytes is always last+1
+ 276:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 277:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	else if(cmd_type == CMD_WRITE)
+  58              		.loc 1 277 0
+  59 001a 022D     		cmp	r5, #2
+  60 001c 06D1     		bne	.L3
+ 278:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 279:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//In that case Write is only used for the Reply
+ 280:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 281:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_CMD1] = CMD_W(CMD_PWRO);
+  61              		.loc 1 281 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 7
+
+
+  62 001e 7A23     		movs	r3, #122
+  63 0020 E370     		strb	r3, [r4, #3]
+ 282:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 283:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Arguments:
+ 284:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		buf[P_DATA1 + 0] = pwro_pwm;
+  64              		.loc 1 284 0
+  65 0022 9DF81030 		ldrb	r3, [sp, #16]	@ zero_extendqisi2
+  66 0026 2371     		strb	r3, [r4, #4]
+  67              	.LVL5:
+ 285:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 286:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = P_DATA1 + 1;     //Bytes is always last+1
+  68              		.loc 1 286 0
+  69 0028 0520     		movs	r0, #5
+  70 002a 70BD     		pop	{r4, r5, r6, pc}
+  71              	.LVL6:
+  72              	.L3:
+ 287:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 288:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	else
+ 289:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 290:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Invalid
+ 291:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		flexsea_error(SE_INVALID_READ_TYPE);
+  73              		.loc 1 291 0
+  74 002c 4FF48060 		mov	r0, #1024
+  75 0030 FFF7FEFF 		bl	flexsea_error
+  76              	.LVL7:
+ 292:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		bytes = 0;
+  77              		.loc 1 292 0
+  78 0034 0020     		movs	r0, #0
+  79 0036 70BD     		pop	{r4, r5, r6, pc}
+  80              	.LVL8:
+  81              	.L4:
+ 275:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+  82              		.loc 1 275 0
+  83 0038 0420     		movs	r0, #4
+  84              	.LVL9:
+ 293:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 294:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 295:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	return bytes;
+ 296:..\..\flexsea-system\src/flexsea_cmd_external.c **** }
+  85              		.loc 1 296 0
+  86 003a 70BD     		pop	{r4, r5, r6, pc}
+  87              	.LVL10:
+  88              	.L7:
+  89              		.align	2
+  90              	.L6:
+  91 003c 00000000 		.word	board_id
+  92              		.cfi_endproc
+  93              	.LFE63:
+  94              		.size	tx_cmd_exp_pwro, .-tx_cmd_exp_pwro
+  95              		.section	.text.flexsea_payload_61,"ax",%progbits
+  96              		.align	2
+  97              		.weak	flexsea_payload_61
+  98              		.thumb
+  99              		.thumb_func
+ 100              		.type	flexsea_payload_61, %function
+ 101              	flexsea_payload_61:
+ 102              	.LFB64:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 8
+
+
+ 297:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 298:..\..\flexsea-system\src/flexsea_cmd_external.c **** //Reception of a PWRO command
+ 299:..\..\flexsea-system\src/flexsea_cmd_external.c **** void rx_cmd_exp_pwro(uint8_t *buf)
+ 300:..\..\flexsea-system\src/flexsea_cmd_external.c **** {
+ 103              		.loc 1 300 0
+ 104              		.cfi_startproc
+ 105              		@ args = 0, pretend = 0, frame = 0
+ 106              		@ frame_needed = 0, uses_anonymous_args = 0
+ 107              	.LVL11:
+ 108 0000 30B5     		push	{r4, r5, lr}
+ 109              		.cfi_def_cfa_offset 12
+ 110              		.cfi_offset 4, -12
+ 111              		.cfi_offset 5, -8
+ 112              		.cfi_offset 14, -4
+ 113 0002 83B0     		sub	sp, sp, #12
+ 114              		.cfi_def_cfa_offset 24
+ 115 0004 0446     		mov	r4, r0
+ 116              	.LVL12:
+ 301:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	uint32_t numb = 0;
+ 302:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 303:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	#if((defined BOARD_TYPE_FLEXSEA_MANAGE) || (defined BOARD_TYPE_FLEXSEA_PLAN))
+ 304:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 305:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	//Structure pointer. Points to exec1 by default.
+ 306:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	struct execute_s *exec_s_ptr = &exec1;
+ 307:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 308:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	//Point to the appropriate structure:
+ 309:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	if(buf[P_XID] == FLEXSEA_EXECUTE_1)
+ 310:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 311:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		exec_s_ptr = &exec1;
+ 312:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 313:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	else if(buf[P_XID] == FLEXSEA_EXECUTE_2)
+ 314:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 315:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		exec_s_ptr = &exec2;
+ 316:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 317:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 318:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	#endif	//((defined BOARD_TYPE_FLEXSEA_MANAGE) || (defined BOARD_TYPE_FLEXSEA_PLAN))
+ 319:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 320:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	if(IS_CMD_RW(buf[P_CMD1]) == READ)
+ 117              		.loc 1 320 0
+ 118 0006 C378     		ldrb	r3, [r0, #3]	@ zero_extendqisi2
+ 119 0008 13F00103 		ands	r3, r3, #1
+ 120 000c 15D0     		beq	.L9
+ 321:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 322:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Received a Read command from our master.
+ 323:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 324:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+ 325:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 326:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Generate the reply:
+ 327:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//===================
+ 328:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 329:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		numb = tx_cmd_exp_pwro(buf[P_XID], CMD_WRITE, tmp_payload_xmit, \
+ 121              		.loc 1 329 0
+ 122 000e 0478     		ldrb	r4, [r0]	@ zero_extendqisi2
+ 123 0010 FFF7FEFF 		bl	read_pwro
+ 124              	.LVL13:
+ 125 0014 104D     		ldr	r5, .L13
+ 126 0016 0090     		str	r0, [sp]
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 9
+
+
+ 127 0018 2046     		mov	r0, r4
+ 128 001a 0221     		movs	r1, #2
+ 129 001c 2A46     		mov	r2, r5
+ 130 001e 2423     		movs	r3, #36
+ 131 0020 FFF7FEFF 		bl	tx_cmd_exp_pwro
+ 132              	.LVL14:
+ 330:..\..\flexsea-system\src/flexsea_cmd_external.c **** 									PAYLOAD_BUF_LEN, read_pwro());
+ 331:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		numb = comm_gen_str(tmp_payload_xmit, comm_str_485, numb);
+ 133              		.loc 1 331 0
+ 134 0024 0D4C     		ldr	r4, .L13+4
+ 135 0026 C2B2     		uxtb	r2, r0
+ 136 0028 2846     		mov	r0, r5
+ 137              	.LVL15:
+ 138 002a 2146     		mov	r1, r4
+ 139 002c FFF7FEFF 		bl	comm_gen_str
+ 140              	.LVL16:
+ 332:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		numb = COMM_STR_BUF_LEN;	//Fixed length for now to accomodate the DMA
+ 333:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 334:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Notify the code that a buffer is ready to be transmitted:
+ 335:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//xmit_flag_1 = 1;
+ 336:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		
+ 337:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//(for now, send it)
+ 338:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		rs485_puts(comm_str_485, (numb));
+ 141              		.loc 1 338 0
+ 142 0030 2046     		mov	r0, r4
+ 143 0032 3021     		movs	r1, #48
+ 144 0034 FFF7FEFF 		bl	rs485_puts
+ 145              	.LVL17:
+ 146 0038 0BE0     		b	.L8
+ 147              	.LVL18:
+ 148              	.L9:
+ 339:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 340:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#endif	//BOARD_TYPE_FLEXSEA_EXECUTE
+ 341:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 342:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#ifdef BOARD_TYPE_FLEXSEA_MANAGE
+ 343:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//No code (yet), you shouldn't be here...
+ 344:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		flexsea_error(SE_CMD_NOT_PROGRAMMED);
+ 345:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#endif	//BOARD_TYPE_FLEXSEA_MANAGE
+ 346:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 347:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#ifdef BOARD_TYPE_FLEXSEA_PLAN
+ 348:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//No code (yet), you shouldn't be here...
+ 349:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		flexsea_error(SE_CMD_NOT_PROGRAMMED);
+ 350:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		#endif	//BOARD_TYPE_FLEXSEA_PLAN
+ 351:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 352:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	else if(IS_CMD_RW(buf[P_CMD1]) == WRITE)
+ 149              		.loc 1 352 0
+ 150 003a 53B9     		cbnz	r3, .L8
+ 353:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	{
+ 354:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		//Two options: from Master of from slave (a read reply)
+ 355:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 356:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		if(sent_from_a_slave(buf))
+ 151              		.loc 1 356 0
+ 152 003c FFF7FEFF 		bl	sent_from_a_slave
+ 153              	.LVL19:
+ 154 0040 20B1     		cbz	r0, .L11
+ 357:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		{
+ 358:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//We received a reply to our read request
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 10
+
+
+ 359:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 360:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+ 361:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//No code (yet), you shouldn't be here...
+ 362:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			flexsea_error(SE_CMD_NOT_PROGRAMMED);
+ 155              		.loc 1 362 0
+ 156 0042 4FF40070 		mov	r0, #512
+ 157 0046 FFF7FEFF 		bl	flexsea_error
+ 158              	.LVL20:
+ 159 004a 02E0     		b	.L8
+ 160              	.L11:
+ 363:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#endif	//BOARD_TYPE_FLEXSEA_EXECUTE
+ 364:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 365:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#if((defined BOARD_TYPE_FLEXSEA_MANAGE) || (defined BOARD_TYPE_FLEXSEA_PLAN))
+ 366:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 367:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//Store values:
+ 368:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 369:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			exec_s_ptr->pwro = buf[P_DATA1+0];
+ 370:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 371:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#endif	//BOARD_TYPE_FLEXSEA_MANAGE
+ 372:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 373:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#ifdef BOARD_TYPE_FLEXSEA_PLAN
+ 374:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 375:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#endif	//BOARD_TYPE_FLEXSEA_PLAN
+ 376:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		}
+ 377:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		else
+ 378:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		{
+ 379:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//Master is writing a value to this board
+ 380:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 381:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+ 382:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 383:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			pwro_output(buf[P_DATA1+0]);
+ 161              		.loc 1 383 0
+ 162 004c 2079     		ldrb	r0, [r4, #4]	@ zero_extendqisi2
+ 163 004e FFF7FEFF 		bl	pwro_output
+ 164              	.LVL21:
+ 165              	.L8:
+ 384:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 385:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#endif	//BOARD_TYPE_FLEXSEA_EXECUTE
+ 386:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 387:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#ifdef BOARD_TYPE_FLEXSEA_MANAGE
+ 388:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//No code (yet), you shouldn't be here...
+ 389:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			flexsea_error(SE_CMD_NOT_PROGRAMMED);
+ 390:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#endif	//BOARD_TYPE_FLEXSEA_MANAGE
+ 391:..\..\flexsea-system\src/flexsea_cmd_external.c **** 
+ 392:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#ifdef BOARD_TYPE_FLEXSEA_PLAN
+ 393:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			//No code (yet), you shouldn't be here...
+ 394:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			flexsea_error(SE_CMD_NOT_PROGRAMMED);
+ 395:..\..\flexsea-system\src/flexsea_cmd_external.c **** 			#endif	//BOARD_TYPE_FLEXSEA_PLAN
+ 396:..\..\flexsea-system\src/flexsea_cmd_external.c **** 		}
+ 397:..\..\flexsea-system\src/flexsea_cmd_external.c **** 	}
+ 398:..\..\flexsea-system\src/flexsea_cmd_external.c **** }
+ 166              		.loc 1 398 0
+ 167 0052 03B0     		add	sp, sp, #12
+ 168              		.cfi_def_cfa_offset 12
+ 169              		@ sp needed
+ 170 0054 30BD     		pop	{r4, r5, pc}
+ 171              	.L14:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 11
+
+
+ 172 0056 00BF     		.align	2
+ 173              	.L13:
+ 174 0058 00000000 		.word	tmp_payload_xmit
+ 175 005c 00000000 		.word	comm_str_1
+ 176              		.cfi_endproc
+ 177              	.LFE64:
+ 178              		.size	flexsea_payload_61, .-flexsea_payload_61
+ 179              		.comm	tmp_payload_xmit,36,4
+ 180              		.text
+ 181              	.Letext0:
+ 182              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 183              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 184              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 185              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 186              		.file 6 "..\\inc/flexsea_board.h"
+ 187              		.file 7 "c:\\flexsea_alx87grd\\flexsea-comm\\inc\\flexsea_comm.h"
+ 188              		.file 8 "c:\\flexsea_alx87grd\\flexsea-comm\\inc\\flexsea.h"
+ 189              		.file 9 "c:\\flexsea_alx87grd\\flexsea-comm\\inc\\flexsea_payload.h"
+ 190              		.file 10 "..\\inc/serial.h"
+ 191              		.file 11 "..\\inc/ext_output.h"
+ 192              		.section	.debug_info,"",%progbits
+ 193              	.Ldebug_info0:
+ 194 0000 4B030000 		.4byte	0x34b
+ 195 0004 0400     		.2byte	0x4
+ 196 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 197 000a 04       		.byte	0x4
+ 198 000b 01       		.uleb128 0x1
+ 199 000c 92010000 		.4byte	.LASF36
+ 200 0010 01       		.byte	0x1
+ 201 0011 66000000 		.4byte	.LASF37
+ 202 0015 2E000000 		.4byte	.LASF38
+ 203 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 204 001d 00000000 		.4byte	0
+ 205 0021 00000000 		.4byte	.Ldebug_line0
+ 206 0025 02       		.uleb128 0x2
+ 207 0026 01       		.byte	0x1
+ 208 0027 06       		.byte	0x6
+ 209 0028 AF020000 		.4byte	.LASF0
+ 210 002c 03       		.uleb128 0x3
+ 211 002d 0E000000 		.4byte	.LASF4
+ 212 0031 02       		.byte	0x2
+ 213 0032 1D       		.byte	0x1d
+ 214 0033 37000000 		.4byte	0x37
+ 215 0037 02       		.uleb128 0x2
+ 216 0038 01       		.byte	0x1
+ 217 0039 08       		.byte	0x8
+ 218 003a ED000000 		.4byte	.LASF1
+ 219 003e 02       		.uleb128 0x2
+ 220 003f 02       		.byte	0x2
+ 221 0040 05       		.byte	0x5
+ 222 0041 6A020000 		.4byte	.LASF2
+ 223 0045 02       		.uleb128 0x2
+ 224 0046 02       		.byte	0x2
+ 225 0047 07       		.byte	0x7
+ 226 0048 18010000 		.4byte	.LASF3
+ 227 004c 03       		.uleb128 0x3
+ 228 004d 5C000000 		.4byte	.LASF5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 12
+
+
+ 229 0051 02       		.byte	0x2
+ 230 0052 3F       		.byte	0x3f
+ 231 0053 57000000 		.4byte	0x57
+ 232 0057 02       		.uleb128 0x2
+ 233 0058 04       		.byte	0x4
+ 234 0059 05       		.byte	0x5
+ 235 005a 94020000 		.4byte	.LASF6
+ 236 005e 03       		.uleb128 0x3
+ 237 005f FB000000 		.4byte	.LASF7
+ 238 0063 02       		.byte	0x2
+ 239 0064 41       		.byte	0x41
+ 240 0065 69000000 		.4byte	0x69
+ 241 0069 02       		.uleb128 0x2
+ 242 006a 04       		.byte	0x4
+ 243 006b 07       		.byte	0x7
+ 244 006c 06010000 		.4byte	.LASF8
+ 245 0070 02       		.uleb128 0x2
+ 246 0071 08       		.byte	0x8
+ 247 0072 05       		.byte	0x5
+ 248 0073 00000000 		.4byte	.LASF9
+ 249 0077 02       		.uleb128 0x2
+ 250 0078 08       		.byte	0x8
+ 251 0079 07       		.byte	0x7
+ 252 007a 73010000 		.4byte	.LASF10
+ 253 007e 04       		.uleb128 0x4
+ 254 007f 04       		.byte	0x4
+ 255 0080 05       		.byte	0x5
+ 256 0081 696E7400 		.ascii	"int\000"
+ 257 0085 02       		.uleb128 0x2
+ 258 0086 04       		.byte	0x4
+ 259 0087 07       		.byte	0x7
+ 260 0088 66010000 		.4byte	.LASF11
+ 261 008c 03       		.uleb128 0x3
+ 262 008d 8A010000 		.4byte	.LASF12
+ 263 0091 03       		.byte	0x3
+ 264 0092 15       		.byte	0x15
+ 265 0093 2C000000 		.4byte	0x2c
+ 266 0097 03       		.uleb128 0x3
+ 267 0098 33020000 		.4byte	.LASF13
+ 268 009c 03       		.byte	0x3
+ 269 009d 2C       		.byte	0x2c
+ 270 009e 4C000000 		.4byte	0x4c
+ 271 00a2 03       		.uleb128 0x3
+ 272 00a3 8B020000 		.4byte	.LASF14
+ 273 00a7 03       		.byte	0x3
+ 274 00a8 2D       		.byte	0x2d
+ 275 00a9 5E000000 		.4byte	0x5e
+ 276 00ad 03       		.uleb128 0x3
+ 277 00ae 74020000 		.4byte	.LASF15
+ 278 00b2 04       		.byte	0x4
+ 279 00b3 C2       		.byte	0xc2
+ 280 00b4 37000000 		.4byte	0x37
+ 281 00b8 03       		.uleb128 0x3
+ 282 00b9 56010000 		.4byte	.LASF16
+ 283 00bd 04       		.byte	0x4
+ 284 00be C4       		.byte	0xc4
+ 285 00bf 69000000 		.4byte	0x69
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 13
+
+
+ 286 00c3 02       		.uleb128 0x2
+ 287 00c4 04       		.byte	0x4
+ 288 00c5 04       		.byte	0x4
+ 289 00c6 28000000 		.4byte	.LASF17
+ 290 00ca 02       		.uleb128 0x2
+ 291 00cb 08       		.byte	0x8
+ 292 00cc 04       		.byte	0x4
+ 293 00cd 38010000 		.4byte	.LASF18
+ 294 00d1 02       		.uleb128 0x2
+ 295 00d2 01       		.byte	0x1
+ 296 00d3 08       		.byte	0x8
+ 297 00d4 58020000 		.4byte	.LASF19
+ 298 00d8 02       		.uleb128 0x2
+ 299 00d9 04       		.byte	0x4
+ 300 00da 07       		.byte	0x7
+ 301 00db 3B020000 		.4byte	.LASF20
+ 302 00df 02       		.uleb128 0x2
+ 303 00e0 08       		.byte	0x8
+ 304 00e1 04       		.byte	0x4
+ 305 00e2 A3020000 		.4byte	.LASF21
+ 306 00e6 05       		.uleb128 0x5
+ 307 00e7 8C000000 		.4byte	0x8c
+ 308 00eb F6000000 		.4byte	0xf6
+ 309 00ef 06       		.uleb128 0x6
+ 310 00f0 D8000000 		.4byte	0xd8
+ 311 00f4 2F       		.byte	0x2f
+ 312 00f5 00       		.byte	0
+ 313 00f6 07       		.uleb128 0x7
+ 314 00f7 18000000 		.4byte	.LASF39
+ 315 00fb 01       		.byte	0x1
+ 316 00fc 0101     		.2byte	0x101
+ 317 00fe A2000000 		.4byte	0xa2
+ 318 0102 00000000 		.4byte	.LFB63
+ 319 0106 40000000 		.4byte	.LFE63-.LFB63
+ 320 010a 01       		.uleb128 0x1
+ 321 010b 9C       		.byte	0x9c
+ 322 010c A3010000 		.4byte	0x1a3
+ 323 0110 08       		.uleb128 0x8
+ 324 0111 DB000000 		.4byte	.LASF22
+ 325 0115 01       		.byte	0x1
+ 326 0116 0101     		.2byte	0x101
+ 327 0118 8C000000 		.4byte	0x8c
+ 328 011c 00000000 		.4byte	.LLST0
+ 329 0120 08       		.uleb128 0x8
+ 330 0121 4F020000 		.4byte	.LASF23
+ 331 0125 01       		.byte	0x1
+ 332 0126 0101     		.2byte	0x101
+ 333 0128 8C000000 		.4byte	0x8c
+ 334 012c 21000000 		.4byte	.LLST1
+ 335 0130 09       		.uleb128 0x9
+ 336 0131 62756600 		.ascii	"buf\000"
+ 337 0135 01       		.byte	0x1
+ 338 0136 0101     		.2byte	0x101
+ 339 0138 A3010000 		.4byte	0x1a3
+ 340 013c 42000000 		.4byte	.LLST2
+ 341 0140 09       		.uleb128 0x9
+ 342 0141 6C656E00 		.ascii	"len\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 14
+
+
+ 343 0145 01       		.byte	0x1
+ 344 0146 0101     		.2byte	0x101
+ 345 0148 A2000000 		.4byte	0xa2
+ 346 014c 6E000000 		.4byte	.LLST3
+ 347 0150 08       		.uleb128 0x8
+ 348 0151 E4000000 		.4byte	.LASF24
+ 349 0155 01       		.byte	0x1
+ 350 0156 0201     		.2byte	0x102
+ 351 0158 8C000000 		.4byte	0x8c
+ 352 015c 8F000000 		.4byte	.LLST4
+ 353 0160 0A       		.uleb128 0xa
+ 354 0161 9D020000 		.4byte	.LASF25
+ 355 0165 01       		.byte	0x1
+ 356 0166 0401     		.2byte	0x104
+ 357 0168 A2000000 		.4byte	0xa2
+ 358 016c BB000000 		.4byte	.LLST5
+ 359 0170 0B       		.uleb128 0xb
+ 360 0171 12000000 		.4byte	.LVL4
+ 361 0175 B1020000 		.4byte	0x2b1
+ 362 0179 91010000 		.4byte	0x191
+ 363 017d 0C       		.uleb128 0xc
+ 364 017e 01       		.uleb128 0x1
+ 365 017f 53       		.byte	0x53
+ 366 0180 03       		.uleb128 0x3
+ 367 0181 F3       		.byte	0xf3
+ 368 0182 01       		.uleb128 0x1
+ 369 0183 53       		.byte	0x53
+ 370 0184 0C       		.uleb128 0xc
+ 371 0185 01       		.uleb128 0x1
+ 372 0186 52       		.byte	0x52
+ 373 0187 02       		.uleb128 0x2
+ 374 0188 74       		.byte	0x74
+ 375 0189 00       		.sleb128 0
+ 376 018a 0C       		.uleb128 0xc
+ 377 018b 01       		.uleb128 0x1
+ 378 018c 51       		.byte	0x51
+ 379 018d 02       		.uleb128 0x2
+ 380 018e 76       		.byte	0x76
+ 381 018f 00       		.sleb128 0
+ 382 0190 00       		.byte	0
+ 383 0191 0D       		.uleb128 0xd
+ 384 0192 34000000 		.4byte	.LVL7
+ 385 0196 D1020000 		.4byte	0x2d1
+ 386 019a 0C       		.uleb128 0xc
+ 387 019b 01       		.uleb128 0x1
+ 388 019c 50       		.byte	0x50
+ 389 019d 03       		.uleb128 0x3
+ 390 019e 0A       		.byte	0xa
+ 391 019f 0004     		.2byte	0x400
+ 392 01a1 00       		.byte	0
+ 393 01a2 00       		.byte	0
+ 394 01a3 0E       		.uleb128 0xe
+ 395 01a4 04       		.byte	0x4
+ 396 01a5 8C000000 		.4byte	0x8c
+ 397 01a9 0F       		.uleb128 0xf
+ 398 01aa B6000000 		.4byte	.LASF40
+ 399 01ae 01       		.byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 15
+
+
+ 400 01af 2B01     		.2byte	0x12b
+ 401 01b1 00000000 		.4byte	.LFB64
+ 402 01b5 60000000 		.4byte	.LFE64-.LFB64
+ 403 01b9 01       		.uleb128 0x1
+ 404 01ba 9C       		.byte	0x9c
+ 405 01bb 69020000 		.4byte	0x269
+ 406 01bf 09       		.uleb128 0x9
+ 407 01c0 62756600 		.ascii	"buf\000"
+ 408 01c4 01       		.byte	0x1
+ 409 01c5 2B01     		.2byte	0x12b
+ 410 01c7 A3010000 		.4byte	0x1a3
+ 411 01cb F2000000 		.4byte	.LLST6
+ 412 01cf 0A       		.uleb128 0xa
+ 413 01d0 20020000 		.4byte	.LASF26
+ 414 01d4 01       		.byte	0x1
+ 415 01d5 2D01     		.2byte	0x12d
+ 416 01d7 A2000000 		.4byte	0xa2
+ 417 01db 37010000 		.4byte	.LLST7
+ 418 01df 10       		.uleb128 0x10
+ 419 01e0 14000000 		.4byte	.LVL13
+ 420 01e4 E6020000 		.4byte	0x2e6
+ 421 01e8 0B       		.uleb128 0xb
+ 422 01e9 24000000 		.4byte	.LVL14
+ 423 01ed F6000000 		.4byte	0xf6
+ 424 01f1 0D020000 		.4byte	0x20d
+ 425 01f5 0C       		.uleb128 0xc
+ 426 01f6 01       		.uleb128 0x1
+ 427 01f7 53       		.byte	0x53
+ 428 01f8 02       		.uleb128 0x2
+ 429 01f9 08       		.byte	0x8
+ 430 01fa 24       		.byte	0x24
+ 431 01fb 0C       		.uleb128 0xc
+ 432 01fc 01       		.uleb128 0x1
+ 433 01fd 52       		.byte	0x52
+ 434 01fe 02       		.uleb128 0x2
+ 435 01ff 75       		.byte	0x75
+ 436 0200 00       		.sleb128 0
+ 437 0201 0C       		.uleb128 0xc
+ 438 0202 01       		.uleb128 0x1
+ 439 0203 51       		.byte	0x51
+ 440 0204 01       		.uleb128 0x1
+ 441 0205 32       		.byte	0x32
+ 442 0206 0C       		.uleb128 0xc
+ 443 0207 01       		.uleb128 0x1
+ 444 0208 50       		.byte	0x50
+ 445 0209 02       		.uleb128 0x2
+ 446 020a 74       		.byte	0x74
+ 447 020b 00       		.sleb128 0
+ 448 020c 00       		.byte	0
+ 449 020d 0B       		.uleb128 0xb
+ 450 020e 30000000 		.4byte	.LVL16
+ 451 0212 F1020000 		.4byte	0x2f1
+ 452 0216 27020000 		.4byte	0x227
+ 453 021a 0C       		.uleb128 0xc
+ 454 021b 01       		.uleb128 0x1
+ 455 021c 51       		.byte	0x51
+ 456 021d 02       		.uleb128 0x2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 16
+
+
+ 457 021e 74       		.byte	0x74
+ 458 021f 00       		.sleb128 0
+ 459 0220 0C       		.uleb128 0xc
+ 460 0221 01       		.uleb128 0x1
+ 461 0222 50       		.byte	0x50
+ 462 0223 02       		.uleb128 0x2
+ 463 0224 75       		.byte	0x75
+ 464 0225 00       		.sleb128 0
+ 465 0226 00       		.byte	0
+ 466 0227 0B       		.uleb128 0xb
+ 467 0228 38000000 		.4byte	.LVL17
+ 468 022c 10030000 		.4byte	0x310
+ 469 0230 41020000 		.4byte	0x241
+ 470 0234 0C       		.uleb128 0xc
+ 471 0235 01       		.uleb128 0x1
+ 472 0236 51       		.byte	0x51
+ 473 0237 02       		.uleb128 0x2
+ 474 0238 08       		.byte	0x8
+ 475 0239 30       		.byte	0x30
+ 476 023a 0C       		.uleb128 0xc
+ 477 023b 01       		.uleb128 0x1
+ 478 023c 50       		.byte	0x50
+ 479 023d 02       		.uleb128 0x2
+ 480 023e 74       		.byte	0x74
+ 481 023f 00       		.sleb128 0
+ 482 0240 00       		.byte	0
+ 483 0241 10       		.uleb128 0x10
+ 484 0242 40000000 		.4byte	.LVL19
+ 485 0246 2C030000 		.4byte	0x32c
+ 486 024a 0B       		.uleb128 0xb
+ 487 024b 4A000000 		.4byte	.LVL20
+ 488 024f D1020000 		.4byte	0x2d1
+ 489 0253 5F020000 		.4byte	0x25f
+ 490 0257 0C       		.uleb128 0xc
+ 491 0258 01       		.uleb128 0x1
+ 492 0259 50       		.byte	0x50
+ 493 025a 03       		.uleb128 0x3
+ 494 025b 0A       		.byte	0xa
+ 495 025c 0002     		.2byte	0x200
+ 496 025e 00       		.byte	0
+ 497 025f 10       		.uleb128 0x10
+ 498 0260 52000000 		.4byte	.LVL21
+ 499 0264 41030000 		.4byte	0x341
+ 500 0268 00       		.byte	0
+ 501 0269 11       		.uleb128 0x11
+ 502 026a 2B010000 		.4byte	.LASF27
+ 503 026e 05       		.byte	0x5
+ 504 026f 2A06     		.2byte	0x62a
+ 505 0271 75020000 		.4byte	0x275
+ 506 0275 12       		.uleb128 0x12
+ 507 0276 97000000 		.4byte	0x97
+ 508 027a 13       		.uleb128 0x13
+ 509 027b 5D010000 		.4byte	.LASF28
+ 510 027f 06       		.byte	0x6
+ 511 0280 54       		.byte	0x54
+ 512 0281 8C000000 		.4byte	0x8c
+ 513 0285 13       		.uleb128 0x13
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 17
+
+
+ 514 0286 4B010000 		.4byte	.LASF29
+ 515 028a 07       		.byte	0x7
+ 516 028b 20       		.byte	0x20
+ 517 028c E6000000 		.4byte	0xe6
+ 518 0290 05       		.uleb128 0x5
+ 519 0291 37000000 		.4byte	0x37
+ 520 0295 A0020000 		.4byte	0x2a0
+ 521 0299 06       		.uleb128 0x6
+ 522 029a D8000000 		.4byte	0xd8
+ 523 029e 23       		.byte	0x23
+ 524 029f 00       		.byte	0
+ 525 02a0 14       		.uleb128 0x14
+ 526 02a1 7A020000 		.4byte	.LASF30
+ 527 02a5 01       		.byte	0x1
+ 528 02a6 1A       		.byte	0x1a
+ 529 02a7 90020000 		.4byte	0x290
+ 530 02ab 05       		.uleb128 0x5
+ 531 02ac 03       		.byte	0x3
+ 532 02ad 00000000 		.4byte	tmp_payload_xmit
+ 533 02b1 15       		.uleb128 0x15
+ 534 02b2 96000000 		.4byte	.LASF33
+ 535 02b6 09       		.byte	0x9
+ 536 02b7 24       		.byte	0x24
+ 537 02b8 D1020000 		.4byte	0x2d1
+ 538 02bc 16       		.uleb128 0x16
+ 539 02bd 8C000000 		.4byte	0x8c
+ 540 02c1 16       		.uleb128 0x16
+ 541 02c2 8C000000 		.4byte	0x8c
+ 542 02c6 16       		.uleb128 0x16
+ 543 02c7 A3010000 		.4byte	0x1a3
+ 544 02cb 16       		.uleb128 0x16
+ 545 02cc A2000000 		.4byte	0xa2
+ 546 02d0 00       		.byte	0
+ 547 02d1 17       		.uleb128 0x17
+ 548 02d2 25020000 		.4byte	.LASF31
+ 549 02d6 08       		.byte	0x8
+ 550 02d7 18       		.byte	0x18
+ 551 02d8 85000000 		.4byte	0x85
+ 552 02dc E6020000 		.4byte	0x2e6
+ 553 02e0 16       		.uleb128 0x16
+ 554 02e1 85000000 		.4byte	0x85
+ 555 02e5 00       		.byte	0
+ 556 02e6 18       		.uleb128 0x18
+ 557 02e7 AC000000 		.4byte	.LASF41
+ 558 02eb 0B       		.byte	0xb
+ 559 02ec 1D       		.byte	0x1d
+ 560 02ed AD000000 		.4byte	0xad
+ 561 02f1 17       		.uleb128 0x17
+ 562 02f2 5D020000 		.4byte	.LASF32
+ 563 02f6 07       		.byte	0x7
+ 564 02f7 37       		.byte	0x37
+ 565 02f8 8C000000 		.4byte	0x8c
+ 566 02fc 10030000 		.4byte	0x310
+ 567 0300 16       		.uleb128 0x16
+ 568 0301 A3010000 		.4byte	0x1a3
+ 569 0305 16       		.uleb128 0x16
+ 570 0306 A3010000 		.4byte	0x1a3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 18
+
+
+ 571 030a 16       		.uleb128 0x16
+ 572 030b 8C000000 		.4byte	0x8c
+ 573 030f 00       		.byte	0
+ 574 0310 15       		.uleb128 0x15
+ 575 0311 44020000 		.4byte	.LASF34
+ 576 0315 0A       		.byte	0xa
+ 577 0316 19       		.byte	0x19
+ 578 0317 26030000 		.4byte	0x326
+ 579 031b 16       		.uleb128 0x16
+ 580 031c 26030000 		.4byte	0x326
+ 581 0320 16       		.uleb128 0x16
+ 582 0321 B8000000 		.4byte	0xb8
+ 583 0325 00       		.byte	0
+ 584 0326 0E       		.uleb128 0xe
+ 585 0327 04       		.byte	0x4
+ 586 0328 AD000000 		.4byte	0xad
+ 587 032c 17       		.uleb128 0x17
+ 588 032d C9000000 		.4byte	.LASF35
+ 589 0331 09       		.byte	0x9
+ 590 0332 23       		.byte	0x23
+ 591 0333 8C000000 		.4byte	0x8c
+ 592 0337 41030000 		.4byte	0x341
+ 593 033b 16       		.uleb128 0x16
+ 594 033c A3010000 		.4byte	0x1a3
+ 595 0340 00       		.byte	0
+ 596 0341 19       		.uleb128 0x19
+ 597 0342 3F010000 		.4byte	.LASF42
+ 598 0346 0B       		.byte	0xb
+ 599 0347 1C       		.byte	0x1c
+ 600 0348 16       		.uleb128 0x16
+ 601 0349 AD000000 		.4byte	0xad
+ 602 034d 00       		.byte	0
+ 603 034e 00       		.byte	0
+ 604              		.section	.debug_abbrev,"",%progbits
+ 605              	.Ldebug_abbrev0:
+ 606 0000 01       		.uleb128 0x1
+ 607 0001 11       		.uleb128 0x11
+ 608 0002 01       		.byte	0x1
+ 609 0003 25       		.uleb128 0x25
+ 610 0004 0E       		.uleb128 0xe
+ 611 0005 13       		.uleb128 0x13
+ 612 0006 0B       		.uleb128 0xb
+ 613 0007 03       		.uleb128 0x3
+ 614 0008 0E       		.uleb128 0xe
+ 615 0009 1B       		.uleb128 0x1b
+ 616 000a 0E       		.uleb128 0xe
+ 617 000b 55       		.uleb128 0x55
+ 618 000c 17       		.uleb128 0x17
+ 619 000d 11       		.uleb128 0x11
+ 620 000e 01       		.uleb128 0x1
+ 621 000f 10       		.uleb128 0x10
+ 622 0010 17       		.uleb128 0x17
+ 623 0011 00       		.byte	0
+ 624 0012 00       		.byte	0
+ 625 0013 02       		.uleb128 0x2
+ 626 0014 24       		.uleb128 0x24
+ 627 0015 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 19
+
+
+ 628 0016 0B       		.uleb128 0xb
+ 629 0017 0B       		.uleb128 0xb
+ 630 0018 3E       		.uleb128 0x3e
+ 631 0019 0B       		.uleb128 0xb
+ 632 001a 03       		.uleb128 0x3
+ 633 001b 0E       		.uleb128 0xe
+ 634 001c 00       		.byte	0
+ 635 001d 00       		.byte	0
+ 636 001e 03       		.uleb128 0x3
+ 637 001f 16       		.uleb128 0x16
+ 638 0020 00       		.byte	0
+ 639 0021 03       		.uleb128 0x3
+ 640 0022 0E       		.uleb128 0xe
+ 641 0023 3A       		.uleb128 0x3a
+ 642 0024 0B       		.uleb128 0xb
+ 643 0025 3B       		.uleb128 0x3b
+ 644 0026 0B       		.uleb128 0xb
+ 645 0027 49       		.uleb128 0x49
+ 646 0028 13       		.uleb128 0x13
+ 647 0029 00       		.byte	0
+ 648 002a 00       		.byte	0
+ 649 002b 04       		.uleb128 0x4
+ 650 002c 24       		.uleb128 0x24
+ 651 002d 00       		.byte	0
+ 652 002e 0B       		.uleb128 0xb
+ 653 002f 0B       		.uleb128 0xb
+ 654 0030 3E       		.uleb128 0x3e
+ 655 0031 0B       		.uleb128 0xb
+ 656 0032 03       		.uleb128 0x3
+ 657 0033 08       		.uleb128 0x8
+ 658 0034 00       		.byte	0
+ 659 0035 00       		.byte	0
+ 660 0036 05       		.uleb128 0x5
+ 661 0037 01       		.uleb128 0x1
+ 662 0038 01       		.byte	0x1
+ 663 0039 49       		.uleb128 0x49
+ 664 003a 13       		.uleb128 0x13
+ 665 003b 01       		.uleb128 0x1
+ 666 003c 13       		.uleb128 0x13
+ 667 003d 00       		.byte	0
+ 668 003e 00       		.byte	0
+ 669 003f 06       		.uleb128 0x6
+ 670 0040 21       		.uleb128 0x21
+ 671 0041 00       		.byte	0
+ 672 0042 49       		.uleb128 0x49
+ 673 0043 13       		.uleb128 0x13
+ 674 0044 2F       		.uleb128 0x2f
+ 675 0045 0B       		.uleb128 0xb
+ 676 0046 00       		.byte	0
+ 677 0047 00       		.byte	0
+ 678 0048 07       		.uleb128 0x7
+ 679 0049 2E       		.uleb128 0x2e
+ 680 004a 01       		.byte	0x1
+ 681 004b 3F       		.uleb128 0x3f
+ 682 004c 19       		.uleb128 0x19
+ 683 004d 03       		.uleb128 0x3
+ 684 004e 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 20
+
+
+ 685 004f 3A       		.uleb128 0x3a
+ 686 0050 0B       		.uleb128 0xb
+ 687 0051 3B       		.uleb128 0x3b
+ 688 0052 05       		.uleb128 0x5
+ 689 0053 27       		.uleb128 0x27
+ 690 0054 19       		.uleb128 0x19
+ 691 0055 49       		.uleb128 0x49
+ 692 0056 13       		.uleb128 0x13
+ 693 0057 11       		.uleb128 0x11
+ 694 0058 01       		.uleb128 0x1
+ 695 0059 12       		.uleb128 0x12
+ 696 005a 06       		.uleb128 0x6
+ 697 005b 40       		.uleb128 0x40
+ 698 005c 18       		.uleb128 0x18
+ 699 005d 9742     		.uleb128 0x2117
+ 700 005f 19       		.uleb128 0x19
+ 701 0060 01       		.uleb128 0x1
+ 702 0061 13       		.uleb128 0x13
+ 703 0062 00       		.byte	0
+ 704 0063 00       		.byte	0
+ 705 0064 08       		.uleb128 0x8
+ 706 0065 05       		.uleb128 0x5
+ 707 0066 00       		.byte	0
+ 708 0067 03       		.uleb128 0x3
+ 709 0068 0E       		.uleb128 0xe
+ 710 0069 3A       		.uleb128 0x3a
+ 711 006a 0B       		.uleb128 0xb
+ 712 006b 3B       		.uleb128 0x3b
+ 713 006c 05       		.uleb128 0x5
+ 714 006d 49       		.uleb128 0x49
+ 715 006e 13       		.uleb128 0x13
+ 716 006f 02       		.uleb128 0x2
+ 717 0070 17       		.uleb128 0x17
+ 718 0071 00       		.byte	0
+ 719 0072 00       		.byte	0
+ 720 0073 09       		.uleb128 0x9
+ 721 0074 05       		.uleb128 0x5
+ 722 0075 00       		.byte	0
+ 723 0076 03       		.uleb128 0x3
+ 724 0077 08       		.uleb128 0x8
+ 725 0078 3A       		.uleb128 0x3a
+ 726 0079 0B       		.uleb128 0xb
+ 727 007a 3B       		.uleb128 0x3b
+ 728 007b 05       		.uleb128 0x5
+ 729 007c 49       		.uleb128 0x49
+ 730 007d 13       		.uleb128 0x13
+ 731 007e 02       		.uleb128 0x2
+ 732 007f 17       		.uleb128 0x17
+ 733 0080 00       		.byte	0
+ 734 0081 00       		.byte	0
+ 735 0082 0A       		.uleb128 0xa
+ 736 0083 34       		.uleb128 0x34
+ 737 0084 00       		.byte	0
+ 738 0085 03       		.uleb128 0x3
+ 739 0086 0E       		.uleb128 0xe
+ 740 0087 3A       		.uleb128 0x3a
+ 741 0088 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 21
+
+
+ 742 0089 3B       		.uleb128 0x3b
+ 743 008a 05       		.uleb128 0x5
+ 744 008b 49       		.uleb128 0x49
+ 745 008c 13       		.uleb128 0x13
+ 746 008d 02       		.uleb128 0x2
+ 747 008e 17       		.uleb128 0x17
+ 748 008f 00       		.byte	0
+ 749 0090 00       		.byte	0
+ 750 0091 0B       		.uleb128 0xb
+ 751 0092 898201   		.uleb128 0x4109
+ 752 0095 01       		.byte	0x1
+ 753 0096 11       		.uleb128 0x11
+ 754 0097 01       		.uleb128 0x1
+ 755 0098 31       		.uleb128 0x31
+ 756 0099 13       		.uleb128 0x13
+ 757 009a 01       		.uleb128 0x1
+ 758 009b 13       		.uleb128 0x13
+ 759 009c 00       		.byte	0
+ 760 009d 00       		.byte	0
+ 761 009e 0C       		.uleb128 0xc
+ 762 009f 8A8201   		.uleb128 0x410a
+ 763 00a2 00       		.byte	0
+ 764 00a3 02       		.uleb128 0x2
+ 765 00a4 18       		.uleb128 0x18
+ 766 00a5 9142     		.uleb128 0x2111
+ 767 00a7 18       		.uleb128 0x18
+ 768 00a8 00       		.byte	0
+ 769 00a9 00       		.byte	0
+ 770 00aa 0D       		.uleb128 0xd
+ 771 00ab 898201   		.uleb128 0x4109
+ 772 00ae 01       		.byte	0x1
+ 773 00af 11       		.uleb128 0x11
+ 774 00b0 01       		.uleb128 0x1
+ 775 00b1 31       		.uleb128 0x31
+ 776 00b2 13       		.uleb128 0x13
+ 777 00b3 00       		.byte	0
+ 778 00b4 00       		.byte	0
+ 779 00b5 0E       		.uleb128 0xe
+ 780 00b6 0F       		.uleb128 0xf
+ 781 00b7 00       		.byte	0
+ 782 00b8 0B       		.uleb128 0xb
+ 783 00b9 0B       		.uleb128 0xb
+ 784 00ba 49       		.uleb128 0x49
+ 785 00bb 13       		.uleb128 0x13
+ 786 00bc 00       		.byte	0
+ 787 00bd 00       		.byte	0
+ 788 00be 0F       		.uleb128 0xf
+ 789 00bf 2E       		.uleb128 0x2e
+ 790 00c0 01       		.byte	0x1
+ 791 00c1 3F       		.uleb128 0x3f
+ 792 00c2 19       		.uleb128 0x19
+ 793 00c3 03       		.uleb128 0x3
+ 794 00c4 0E       		.uleb128 0xe
+ 795 00c5 3A       		.uleb128 0x3a
+ 796 00c6 0B       		.uleb128 0xb
+ 797 00c7 3B       		.uleb128 0x3b
+ 798 00c8 05       		.uleb128 0x5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 22
+
+
+ 799 00c9 27       		.uleb128 0x27
+ 800 00ca 19       		.uleb128 0x19
+ 801 00cb 11       		.uleb128 0x11
+ 802 00cc 01       		.uleb128 0x1
+ 803 00cd 12       		.uleb128 0x12
+ 804 00ce 06       		.uleb128 0x6
+ 805 00cf 40       		.uleb128 0x40
+ 806 00d0 18       		.uleb128 0x18
+ 807 00d1 9742     		.uleb128 0x2117
+ 808 00d3 19       		.uleb128 0x19
+ 809 00d4 01       		.uleb128 0x1
+ 810 00d5 13       		.uleb128 0x13
+ 811 00d6 00       		.byte	0
+ 812 00d7 00       		.byte	0
+ 813 00d8 10       		.uleb128 0x10
+ 814 00d9 898201   		.uleb128 0x4109
+ 815 00dc 00       		.byte	0
+ 816 00dd 11       		.uleb128 0x11
+ 817 00de 01       		.uleb128 0x1
+ 818 00df 31       		.uleb128 0x31
+ 819 00e0 13       		.uleb128 0x13
+ 820 00e1 00       		.byte	0
+ 821 00e2 00       		.byte	0
+ 822 00e3 11       		.uleb128 0x11
+ 823 00e4 34       		.uleb128 0x34
+ 824 00e5 00       		.byte	0
+ 825 00e6 03       		.uleb128 0x3
+ 826 00e7 0E       		.uleb128 0xe
+ 827 00e8 3A       		.uleb128 0x3a
+ 828 00e9 0B       		.uleb128 0xb
+ 829 00ea 3B       		.uleb128 0x3b
+ 830 00eb 05       		.uleb128 0x5
+ 831 00ec 49       		.uleb128 0x49
+ 832 00ed 13       		.uleb128 0x13
+ 833 00ee 3F       		.uleb128 0x3f
+ 834 00ef 19       		.uleb128 0x19
+ 835 00f0 3C       		.uleb128 0x3c
+ 836 00f1 19       		.uleb128 0x19
+ 837 00f2 00       		.byte	0
+ 838 00f3 00       		.byte	0
+ 839 00f4 12       		.uleb128 0x12
+ 840 00f5 35       		.uleb128 0x35
+ 841 00f6 00       		.byte	0
+ 842 00f7 49       		.uleb128 0x49
+ 843 00f8 13       		.uleb128 0x13
+ 844 00f9 00       		.byte	0
+ 845 00fa 00       		.byte	0
+ 846 00fb 13       		.uleb128 0x13
+ 847 00fc 34       		.uleb128 0x34
+ 848 00fd 00       		.byte	0
+ 849 00fe 03       		.uleb128 0x3
+ 850 00ff 0E       		.uleb128 0xe
+ 851 0100 3A       		.uleb128 0x3a
+ 852 0101 0B       		.uleb128 0xb
+ 853 0102 3B       		.uleb128 0x3b
+ 854 0103 0B       		.uleb128 0xb
+ 855 0104 49       		.uleb128 0x49
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 23
+
+
+ 856 0105 13       		.uleb128 0x13
+ 857 0106 3F       		.uleb128 0x3f
+ 858 0107 19       		.uleb128 0x19
+ 859 0108 3C       		.uleb128 0x3c
+ 860 0109 19       		.uleb128 0x19
+ 861 010a 00       		.byte	0
+ 862 010b 00       		.byte	0
+ 863 010c 14       		.uleb128 0x14
+ 864 010d 34       		.uleb128 0x34
+ 865 010e 00       		.byte	0
+ 866 010f 03       		.uleb128 0x3
+ 867 0110 0E       		.uleb128 0xe
+ 868 0111 3A       		.uleb128 0x3a
+ 869 0112 0B       		.uleb128 0xb
+ 870 0113 3B       		.uleb128 0x3b
+ 871 0114 0B       		.uleb128 0xb
+ 872 0115 49       		.uleb128 0x49
+ 873 0116 13       		.uleb128 0x13
+ 874 0117 3F       		.uleb128 0x3f
+ 875 0118 19       		.uleb128 0x19
+ 876 0119 02       		.uleb128 0x2
+ 877 011a 18       		.uleb128 0x18
+ 878 011b 00       		.byte	0
+ 879 011c 00       		.byte	0
+ 880 011d 15       		.uleb128 0x15
+ 881 011e 2E       		.uleb128 0x2e
+ 882 011f 01       		.byte	0x1
+ 883 0120 3F       		.uleb128 0x3f
+ 884 0121 19       		.uleb128 0x19
+ 885 0122 03       		.uleb128 0x3
+ 886 0123 0E       		.uleb128 0xe
+ 887 0124 3A       		.uleb128 0x3a
+ 888 0125 0B       		.uleb128 0xb
+ 889 0126 3B       		.uleb128 0x3b
+ 890 0127 0B       		.uleb128 0xb
+ 891 0128 27       		.uleb128 0x27
+ 892 0129 19       		.uleb128 0x19
+ 893 012a 3C       		.uleb128 0x3c
+ 894 012b 19       		.uleb128 0x19
+ 895 012c 01       		.uleb128 0x1
+ 896 012d 13       		.uleb128 0x13
+ 897 012e 00       		.byte	0
+ 898 012f 00       		.byte	0
+ 899 0130 16       		.uleb128 0x16
+ 900 0131 05       		.uleb128 0x5
+ 901 0132 00       		.byte	0
+ 902 0133 49       		.uleb128 0x49
+ 903 0134 13       		.uleb128 0x13
+ 904 0135 00       		.byte	0
+ 905 0136 00       		.byte	0
+ 906 0137 17       		.uleb128 0x17
+ 907 0138 2E       		.uleb128 0x2e
+ 908 0139 01       		.byte	0x1
+ 909 013a 3F       		.uleb128 0x3f
+ 910 013b 19       		.uleb128 0x19
+ 911 013c 03       		.uleb128 0x3
+ 912 013d 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 24
+
+
+ 913 013e 3A       		.uleb128 0x3a
+ 914 013f 0B       		.uleb128 0xb
+ 915 0140 3B       		.uleb128 0x3b
+ 916 0141 0B       		.uleb128 0xb
+ 917 0142 27       		.uleb128 0x27
+ 918 0143 19       		.uleb128 0x19
+ 919 0144 49       		.uleb128 0x49
+ 920 0145 13       		.uleb128 0x13
+ 921 0146 3C       		.uleb128 0x3c
+ 922 0147 19       		.uleb128 0x19
+ 923 0148 01       		.uleb128 0x1
+ 924 0149 13       		.uleb128 0x13
+ 925 014a 00       		.byte	0
+ 926 014b 00       		.byte	0
+ 927 014c 18       		.uleb128 0x18
+ 928 014d 2E       		.uleb128 0x2e
+ 929 014e 00       		.byte	0
+ 930 014f 3F       		.uleb128 0x3f
+ 931 0150 19       		.uleb128 0x19
+ 932 0151 03       		.uleb128 0x3
+ 933 0152 0E       		.uleb128 0xe
+ 934 0153 3A       		.uleb128 0x3a
+ 935 0154 0B       		.uleb128 0xb
+ 936 0155 3B       		.uleb128 0x3b
+ 937 0156 0B       		.uleb128 0xb
+ 938 0157 27       		.uleb128 0x27
+ 939 0158 19       		.uleb128 0x19
+ 940 0159 49       		.uleb128 0x49
+ 941 015a 13       		.uleb128 0x13
+ 942 015b 3C       		.uleb128 0x3c
+ 943 015c 19       		.uleb128 0x19
+ 944 015d 00       		.byte	0
+ 945 015e 00       		.byte	0
+ 946 015f 19       		.uleb128 0x19
+ 947 0160 2E       		.uleb128 0x2e
+ 948 0161 01       		.byte	0x1
+ 949 0162 3F       		.uleb128 0x3f
+ 950 0163 19       		.uleb128 0x19
+ 951 0164 03       		.uleb128 0x3
+ 952 0165 0E       		.uleb128 0xe
+ 953 0166 3A       		.uleb128 0x3a
+ 954 0167 0B       		.uleb128 0xb
+ 955 0168 3B       		.uleb128 0x3b
+ 956 0169 0B       		.uleb128 0xb
+ 957 016a 27       		.uleb128 0x27
+ 958 016b 19       		.uleb128 0x19
+ 959 016c 3C       		.uleb128 0x3c
+ 960 016d 19       		.uleb128 0x19
+ 961 016e 00       		.byte	0
+ 962 016f 00       		.byte	0
+ 963 0170 00       		.byte	0
+ 964              		.section	.debug_loc,"",%progbits
+ 965              	.Ldebug_loc0:
+ 966              	.LLST0:
+ 967 0000 00000000 		.4byte	.LVL0
+ 968 0004 0C000000 		.4byte	.LVL3
+ 969 0008 0100     		.2byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 25
+
+
+ 970 000a 50       		.byte	0x50
+ 971 000b 0C000000 		.4byte	.LVL3
+ 972 000f 40000000 		.4byte	.LFE63
+ 973 0013 0400     		.2byte	0x4
+ 974 0015 F3       		.byte	0xf3
+ 975 0016 01       		.uleb128 0x1
+ 976 0017 50       		.byte	0x50
+ 977 0018 9F       		.byte	0x9f
+ 978 0019 00000000 		.4byte	0
+ 979 001d 00000000 		.4byte	0
+ 980              	.LLST1:
+ 981 0021 00000000 		.4byte	.LVL0
+ 982 0025 0A000000 		.4byte	.LVL2
+ 983 0029 0100     		.2byte	0x1
+ 984 002b 51       		.byte	0x51
+ 985 002c 0A000000 		.4byte	.LVL2
+ 986 0030 40000000 		.4byte	.LFE63
+ 987 0034 0400     		.2byte	0x4
+ 988 0036 F3       		.byte	0xf3
+ 989 0037 01       		.uleb128 0x1
+ 990 0038 51       		.byte	0x51
+ 991 0039 9F       		.byte	0x9f
+ 992 003a 00000000 		.4byte	0
+ 993 003e 00000000 		.4byte	0
+ 994              	.LLST2:
+ 995 0042 00000000 		.4byte	.LVL0
+ 996 0046 11000000 		.4byte	.LVL4-1
+ 997 004a 0100     		.2byte	0x1
+ 998 004c 52       		.byte	0x52
+ 999 004d 11000000 		.4byte	.LVL4-1
+ 1000 0051 3C000000 		.4byte	.LVL10
+ 1001 0055 0100     		.2byte	0x1
+ 1002 0057 54       		.byte	0x54
+ 1003 0058 3C000000 		.4byte	.LVL10
+ 1004 005c 40000000 		.4byte	.LFE63
+ 1005 0060 0400     		.2byte	0x4
+ 1006 0062 F3       		.byte	0xf3
+ 1007 0063 01       		.uleb128 0x1
+ 1008 0064 52       		.byte	0x52
+ 1009 0065 9F       		.byte	0x9f
+ 1010 0066 00000000 		.4byte	0
+ 1011 006a 00000000 		.4byte	0
+ 1012              	.LLST3:
+ 1013 006e 00000000 		.4byte	.LVL0
+ 1014 0072 11000000 		.4byte	.LVL4-1
+ 1015 0076 0100     		.2byte	0x1
+ 1016 0078 53       		.byte	0x53
+ 1017 0079 11000000 		.4byte	.LVL4-1
+ 1018 007d 40000000 		.4byte	.LFE63
+ 1019 0081 0400     		.2byte	0x4
+ 1020 0083 F3       		.byte	0xf3
+ 1021 0084 01       		.uleb128 0x1
+ 1022 0085 53       		.byte	0x53
+ 1023 0086 9F       		.byte	0x9f
+ 1024 0087 00000000 		.4byte	0
+ 1025 008b 00000000 		.4byte	0
+ 1026              	.LLST4:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 26
+
+
+ 1027 008f 00000000 		.4byte	.LVL0
+ 1028 0093 2C000000 		.4byte	.LVL6
+ 1029 0097 0200     		.2byte	0x2
+ 1030 0099 91       		.byte	0x91
+ 1031 009a 00       		.sleb128 0
+ 1032 009b 2C000000 		.4byte	.LVL6
+ 1033 009f 3C000000 		.4byte	.LVL10
+ 1034 00a3 0200     		.2byte	0x2
+ 1035 00a5 91       		.byte	0x91
+ 1036 00a6 00       		.sleb128 0
+ 1037 00a7 3C000000 		.4byte	.LVL10
+ 1038 00ab 40000000 		.4byte	.LFE63
+ 1039 00af 0200     		.2byte	0x2
+ 1040 00b1 7D       		.byte	0x7d
+ 1041 00b2 00       		.sleb128 0
+ 1042 00b3 00000000 		.4byte	0
+ 1043 00b7 00000000 		.4byte	0
+ 1044              	.LLST5:
+ 1045 00bb 08000000 		.4byte	.LVL1
+ 1046 00bf 28000000 		.4byte	.LVL5
+ 1047 00c3 0200     		.2byte	0x2
+ 1048 00c5 30       		.byte	0x30
+ 1049 00c6 9F       		.byte	0x9f
+ 1050 00c7 28000000 		.4byte	.LVL5
+ 1051 00cb 2C000000 		.4byte	.LVL6
+ 1052 00cf 0200     		.2byte	0x2
+ 1053 00d1 35       		.byte	0x35
+ 1054 00d2 9F       		.byte	0x9f
+ 1055 00d3 2C000000 		.4byte	.LVL6
+ 1056 00d7 3A000000 		.4byte	.LVL9
+ 1057 00db 0200     		.2byte	0x2
+ 1058 00dd 30       		.byte	0x30
+ 1059 00de 9F       		.byte	0x9f
+ 1060 00df 3A000000 		.4byte	.LVL9
+ 1061 00e3 40000000 		.4byte	.LFE63
+ 1062 00e7 0100     		.2byte	0x1
+ 1063 00e9 50       		.byte	0x50
+ 1064 00ea 00000000 		.4byte	0
+ 1065 00ee 00000000 		.4byte	0
+ 1066              	.LLST6:
+ 1067 00f2 00000000 		.4byte	.LVL11
+ 1068 00f6 13000000 		.4byte	.LVL13-1
+ 1069 00fa 0100     		.2byte	0x1
+ 1070 00fc 50       		.byte	0x50
+ 1071 00fd 13000000 		.4byte	.LVL13-1
+ 1072 0101 3A000000 		.4byte	.LVL18
+ 1073 0105 0400     		.2byte	0x4
+ 1074 0107 F3       		.byte	0xf3
+ 1075 0108 01       		.uleb128 0x1
+ 1076 0109 50       		.byte	0x50
+ 1077 010a 9F       		.byte	0x9f
+ 1078 010b 3A000000 		.4byte	.LVL18
+ 1079 010f 3F000000 		.4byte	.LVL19-1
+ 1080 0113 0100     		.2byte	0x1
+ 1081 0115 50       		.byte	0x50
+ 1082 0116 3F000000 		.4byte	.LVL19-1
+ 1083 011a 52000000 		.4byte	.LVL21
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 27
+
+
+ 1084 011e 0100     		.2byte	0x1
+ 1085 0120 54       		.byte	0x54
+ 1086 0121 52000000 		.4byte	.LVL21
+ 1087 0125 60000000 		.4byte	.LFE64
+ 1088 0129 0400     		.2byte	0x4
+ 1089 012b F3       		.byte	0xf3
+ 1090 012c 01       		.uleb128 0x1
+ 1091 012d 50       		.byte	0x50
+ 1092 012e 9F       		.byte	0x9f
+ 1093 012f 00000000 		.4byte	0
+ 1094 0133 00000000 		.4byte	0
+ 1095              	.LLST7:
+ 1096 0137 06000000 		.4byte	.LVL12
+ 1097 013b 24000000 		.4byte	.LVL14
+ 1098 013f 0200     		.2byte	0x2
+ 1099 0141 30       		.byte	0x30
+ 1100 0142 9F       		.byte	0x9f
+ 1101 0143 24000000 		.4byte	.LVL14
+ 1102 0147 2A000000 		.4byte	.LVL15
+ 1103 014b 0100     		.2byte	0x1
+ 1104 014d 50       		.byte	0x50
+ 1105 014e 30000000 		.4byte	.LVL16
+ 1106 0152 3A000000 		.4byte	.LVL18
+ 1107 0156 0300     		.2byte	0x3
+ 1108 0158 08       		.byte	0x8
+ 1109 0159 30       		.byte	0x30
+ 1110 015a 9F       		.byte	0x9f
+ 1111 015b 3A000000 		.4byte	.LVL18
+ 1112 015f 52000000 		.4byte	.LVL21
+ 1113 0163 0200     		.2byte	0x2
+ 1114 0165 30       		.byte	0x30
+ 1115 0166 9F       		.byte	0x9f
+ 1116 0167 00000000 		.4byte	0
+ 1117 016b 00000000 		.4byte	0
+ 1118              		.section	.debug_aranges,"",%progbits
+ 1119 0000 24000000 		.4byte	0x24
+ 1120 0004 0200     		.2byte	0x2
+ 1121 0006 00000000 		.4byte	.Ldebug_info0
+ 1122 000a 04       		.byte	0x4
+ 1123 000b 00       		.byte	0
+ 1124 000c 0000     		.2byte	0
+ 1125 000e 0000     		.2byte	0
+ 1126 0010 00000000 		.4byte	.LFB63
+ 1127 0014 40000000 		.4byte	.LFE63-.LFB63
+ 1128 0018 00000000 		.4byte	.LFB64
+ 1129 001c 60000000 		.4byte	.LFE64-.LFB64
+ 1130 0020 00000000 		.4byte	0
+ 1131 0024 00000000 		.4byte	0
+ 1132              		.section	.debug_ranges,"",%progbits
+ 1133              	.Ldebug_ranges0:
+ 1134 0000 00000000 		.4byte	.LFB63
+ 1135 0004 40000000 		.4byte	.LFE63
+ 1136 0008 00000000 		.4byte	.LFB64
+ 1137 000c 60000000 		.4byte	.LFE64
+ 1138 0010 00000000 		.4byte	0
+ 1139 0014 00000000 		.4byte	0
+ 1140              		.section	.debug_line,"",%progbits
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 28
+
+
+ 1141              	.Ldebug_line0:
+ 1142 0000 49020000 		.section	.debug_str,"MS",%progbits,1
+ 1142      0200FF01 
+ 1142      00000201 
+ 1142      FB0E0D00 
+ 1142      01010101 
+ 1143              	.LASF9:
+ 1144 0000 6C6F6E67 		.ascii	"long long int\000"
+ 1144      206C6F6E 
+ 1144      6720696E 
+ 1144      7400
+ 1145              	.LASF4:
+ 1146 000e 5F5F7569 		.ascii	"__uint8_t\000"
+ 1146      6E74385F 
+ 1146      7400
+ 1147              	.LASF39:
+ 1148 0018 74785F63 		.ascii	"tx_cmd_exp_pwro\000"
+ 1148      6D645F65 
+ 1148      78705F70 
+ 1148      77726F00 
+ 1149              	.LASF17:
+ 1150 0028 666C6F61 		.ascii	"float\000"
+ 1150      7400
+ 1151              	.LASF38:
+ 1152 002e 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 1152      6C657853 
+ 1152      45415F61 
+ 1152      6C783837 
+ 1152      6772645C 
+ 1153              	.LASF5:
+ 1154 005c 5F5F696E 		.ascii	"__int32_t\000"
+ 1154      7433325F 
+ 1154      7400
+ 1155              	.LASF37:
+ 1156 0066 2E2E5C2E 		.ascii	"..\\..\\flexsea-system\\src\\flexsea_cmd_external.c"
+ 1156      2E5C666C 
+ 1156      65787365 
+ 1156      612D7379 
+ 1156      7374656D 
+ 1157 0095 00       		.ascii	"\000"
+ 1158              	.LASF33:
+ 1159 0096 70726570 		.ascii	"prepare_empty_payload\000"
+ 1159      6172655F 
+ 1159      656D7074 
+ 1159      795F7061 
+ 1159      796C6F61 
+ 1160              	.LASF41:
+ 1161 00ac 72656164 		.ascii	"read_pwro\000"
+ 1161      5F707772 
+ 1161      6F00
+ 1162              	.LASF40:
+ 1163 00b6 666C6578 		.ascii	"flexsea_payload_61\000"
+ 1163      7365615F 
+ 1163      7061796C 
+ 1163      6F61645F 
+ 1163      363100
+ 1164              	.LASF35:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 29
+
+
+ 1165 00c9 73656E74 		.ascii	"sent_from_a_slave\000"
+ 1165      5F66726F 
+ 1165      6D5F615F 
+ 1165      736C6176 
+ 1165      6500
+ 1166              	.LASF22:
+ 1167 00db 72656365 		.ascii	"receiver\000"
+ 1167      69766572 
+ 1167      00
+ 1168              	.LASF24:
+ 1169 00e4 7077726F 		.ascii	"pwro_pwm\000"
+ 1169      5F70776D 
+ 1169      00
+ 1170              	.LASF1:
+ 1171 00ed 756E7369 		.ascii	"unsigned char\000"
+ 1171      676E6564 
+ 1171      20636861 
+ 1171      7200
+ 1172              	.LASF7:
+ 1173 00fb 5F5F7569 		.ascii	"__uint32_t\000"
+ 1173      6E743332 
+ 1173      5F7400
+ 1174              	.LASF8:
+ 1175 0106 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1175      20756E73 
+ 1175      69676E65 
+ 1175      6420696E 
+ 1175      7400
+ 1176              	.LASF3:
+ 1177 0118 73686F72 		.ascii	"short unsigned int\000"
+ 1177      7420756E 
+ 1177      7369676E 
+ 1177      65642069 
+ 1177      6E7400
+ 1178              	.LASF27:
+ 1179 012b 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 1179      52784275 
+ 1179      66666572 
+ 1179      00
+ 1180              	.LASF18:
+ 1181 0138 646F7562 		.ascii	"double\000"
+ 1181      6C6500
+ 1182              	.LASF42:
+ 1183 013f 7077726F 		.ascii	"pwro_output\000"
+ 1183      5F6F7574 
+ 1183      70757400 
+ 1184              	.LASF29:
+ 1185 014b 636F6D6D 		.ascii	"comm_str_1\000"
+ 1185      5F737472 
+ 1185      5F3100
+ 1186              	.LASF16:
+ 1187 0156 75696E74 		.ascii	"uint32\000"
+ 1187      333200
+ 1188              	.LASF28:
+ 1189 015d 626F6172 		.ascii	"board_id\000"
+ 1189      645F6964 
+ 1189      00
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 30
+
+
+ 1190              	.LASF11:
+ 1191 0166 756E7369 		.ascii	"unsigned int\000"
+ 1191      676E6564 
+ 1191      20696E74 
+ 1191      00
+ 1192              	.LASF10:
+ 1193 0173 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1193      206C6F6E 
+ 1193      6720756E 
+ 1193      7369676E 
+ 1193      65642069 
+ 1194              	.LASF12:
+ 1195 018a 75696E74 		.ascii	"uint8_t\000"
+ 1195      385F7400 
+ 1196              	.LASF36:
+ 1197 0192 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 1197      4320342E 
+ 1197      392E3320 
+ 1197      32303135 
+ 1197      30333033 
+ 1198 01c5 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 1198      20726576 
+ 1198      6973696F 
+ 1198      6E203232 
+ 1198      31323230 
+ 1199 01f8 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1199      66756E63 
+ 1199      74696F6E 
+ 1199      2D736563 
+ 1199      74696F6E 
+ 1200              	.LASF26:
+ 1201 0220 6E756D62 		.ascii	"numb\000"
+ 1201      00
+ 1202              	.LASF31:
+ 1203 0225 666C6578 		.ascii	"flexsea_error\000"
+ 1203      7365615F 
+ 1203      6572726F 
+ 1203      7200
+ 1204              	.LASF13:
+ 1205 0233 696E7433 		.ascii	"int32_t\000"
+ 1205      325F7400 
+ 1206              	.LASF20:
+ 1207 023b 73697A65 		.ascii	"sizetype\000"
+ 1207      74797065 
+ 1207      00
+ 1208              	.LASF34:
+ 1209 0244 72733438 		.ascii	"rs485_puts\000"
+ 1209      355F7075 
+ 1209      747300
+ 1210              	.LASF23:
+ 1211 024f 636D645F 		.ascii	"cmd_type\000"
+ 1211      74797065 
+ 1211      00
+ 1212              	.LASF19:
+ 1213 0258 63686172 		.ascii	"char\000"
+ 1213      00
+ 1214              	.LASF32:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccPYhER7.s 			page 31
+
+
+ 1215 025d 636F6D6D 		.ascii	"comm_gen_str\000"
+ 1215      5F67656E 
+ 1215      5F737472 
+ 1215      00
+ 1216              	.LASF2:
+ 1217 026a 73686F72 		.ascii	"short int\000"
+ 1217      7420696E 
+ 1217      7400
+ 1218              	.LASF15:
+ 1219 0274 75696E74 		.ascii	"uint8\000"
+ 1219      3800
+ 1220              	.LASF30:
+ 1221 027a 746D705F 		.ascii	"tmp_payload_xmit\000"
+ 1221      7061796C 
+ 1221      6F61645F 
+ 1221      786D6974 
+ 1221      00
+ 1222              	.LASF14:
+ 1223 028b 75696E74 		.ascii	"uint32_t\000"
+ 1223      33325F74 
+ 1223      00
+ 1224              	.LASF6:
+ 1225 0294 6C6F6E67 		.ascii	"long int\000"
+ 1225      20696E74 
+ 1225      00
+ 1226              	.LASF25:
+ 1227 029d 62797465 		.ascii	"bytes\000"
+ 1227      7300
+ 1228              	.LASF21:
+ 1229 02a3 6C6F6E67 		.ascii	"long double\000"
+ 1229      20646F75 
+ 1229      626C6500 
+ 1230              	.LASF0:
+ 1231 02af 7369676E 		.ascii	"signed char\000"
+ 1231      65642063 
+ 1231      68617200 
+ 1232              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

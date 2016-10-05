@@ -1,0 +1,4421 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"sensor_commut.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.global _printf_float
+  19              		.thumb
+  20              		.section	.text.motor_stepper_test_blocking_1,"ax",%progbits
+  21              		.align	2
+  22              		.global	motor_stepper_test_blocking_1
+  23              		.thumb
+  24              		.thumb_func
+  25              		.type	motor_stepper_test_blocking_1, %function
+  26              	motor_stepper_test_blocking_1:
+  27              	.LFB63:
+  28              		.file 1 "..\\src\\sensor_commut.c"
+   1:..\src/sensor_commut.c **** //****************************************************************************
+   2:..\src/sensor_commut.c **** // MIT Media Lab - Biomechatronics
+   3:..\src/sensor_commut.c **** // Jean-Francois (Jeff) Duval, Luke Mooney & Jake Mooney
+   4:..\src/sensor_commut.c **** // jfduval@media.mit.edu, lmooney@mit.edu, mooneyj@mit.edu
+   5:..\src/sensor_commut.c **** // 05/2016
+   6:..\src/sensor_commut.c **** //****************************************************************************
+   7:..\src/sensor_commut.c **** // sensor_commut: Angle Sensor Motor Commutation
+   8:..\src/sensor_commut.c **** //****************************************************************************
+   9:..\src/sensor_commut.c **** 
+  10:..\src/sensor_commut.c **** //****************************************************************************
+  11:..\src/sensor_commut.c **** // Include(s)
+  12:..\src/sensor_commut.c **** //****************************************************************************
+  13:..\src/sensor_commut.c **** 
+  14:..\src/sensor_commut.c **** #include "main.h"
+  15:..\src/sensor_commut.c **** #include "sensor_commut.h"
+  16:..\src/sensor_commut.c **** 
+  17:..\src/sensor_commut.c **** //****************************************************************************
+  18:..\src/sensor_commut.c **** // Variable(s)
+  19:..\src/sensor_commut.c **** //****************************************************************************
+  20:..\src/sensor_commut.c **** 
+  21:..\src/sensor_commut.c **** uint8 hall_conv[6] = {5,4,6,2,3,1};
+  22:..\src/sensor_commut.c **** //uint16 anglemap[126] = {109,250,378,517,656,782,911,1045,1177,1306,1453,1580,1711,1846,1968,2101,
+  23:..\src/sensor_commut.c **** //uint16 anglemap[126] = {5,109,252,385,510,637,765,928,1033,1174,1298,1432,1554,1681,1843,1944,208
+  24:..\src/sensor_commut.c **** uint16 anglemap[126] = {53,164,305,436,561,690,814,969,1081,1221,1348,1478,1603,1727,1882,1991,2128
+  25:..\src/sensor_commut.c **** uint16 polemap[126] = {4, 6, 2, 3, 1, 5, 4, 6, 2, 3, 1, 5, 4, 6, 2, 3, 1, 5, 4, 6, 2, 3, 1, 5, 4, 6
+  26:..\src/sensor_commut.c **** uint8 hallmap_map2[6] = {2, 6, 4, 5, 1, 3};
+  27:..\src/sensor_commut.c **** 
+  28:..\src/sensor_commut.c **** uint8 hallmap_map[6] = {6, 4, 5, 1, 3, 2};
+  29:..\src/sensor_commut.c **** uint8 findingpoles = 0;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 2
+
+
+  30:..\src/sensor_commut.c **** 
+  31:..\src/sensor_commut.c **** //****************************************************************************
+  32:..\src/sensor_commut.c **** // Private Function Prototype(s):
+  33:..\src/sensor_commut.c **** //****************************************************************************	
+  34:..\src/sensor_commut.c **** 
+  35:..\src/sensor_commut.c **** 
+  36:..\src/sensor_commut.c **** //****************************************************************************
+  37:..\src/sensor_commut.c **** // Public Function(s)
+  38:..\src/sensor_commut.c **** //****************************************************************************
+  39:..\src/sensor_commut.c **** 
+  40:..\src/sensor_commut.c **** //Use before main while() as a basic test
+  41:..\src/sensor_commut.c **** void motor_stepper_test_blocking_1(int spd)
+  42:..\src/sensor_commut.c **** {
+  29              		.loc 1 42 0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              	.LVL0:
+  34 0000 38B5     		push	{r3, r4, r5, lr}
+  35              		.cfi_def_cfa_offset 16
+  36              		.cfi_offset 3, -16
+  37              		.cfi_offset 4, -12
+  38              		.cfi_offset 5, -8
+  39              		.cfi_offset 14, -4
+  40 0002 0446     		mov	r4, r0
+  41              	.LVL1:
+  43:..\src/sensor_commut.c **** 	uint8 hall_code_0 = 0, hall_code = 0;
+  44:..\src/sensor_commut.c **** 	
+  45:..\src/sensor_commut.c **** 	ctrl.active_ctrl = CTRL_OPEN;	
+  42              		.loc 1 45 0
+  43 0004 0120     		movs	r0, #1
+  44              	.LVL2:
+  45 0006 144B     		ldr	r3, .L4
+  46 0008 1870     		strb	r0, [r3]
+  46:..\src/sensor_commut.c **** 	Coast_Brake_Write(1);	//Brake
+  47              		.loc 1 46 0
+  48 000a FFF7FEFF 		bl	Coast_Brake_Write
+  49              	.LVL3:
+  47:..\src/sensor_commut.c **** 	motor_open_speed_1(spd);
+  50              		.loc 1 47 0
+  51 000e 20B2     		sxth	r0, r4
+  52 0010 FFF7FEFF 		bl	motor_open_speed_1
+  53              	.LVL4:
+  43:..\src/sensor_commut.c **** 	uint8 hall_code_0 = 0, hall_code = 0;
+  54              		.loc 1 43 0
+  55 0014 0024     		movs	r4, #0
+  56              	.LVL5:
+  57              	.L2:
+  48:..\src/sensor_commut.c **** 	
+  49:..\src/sensor_commut.c **** 	while(1)
+  50:..\src/sensor_commut.c **** 	{
+  51:..\src/sensor_commut.c **** 		hall_code_0++;
+  58              		.loc 1 51 0 discriminator 1
+  59 0016 0134     		adds	r4, r4, #1
+  60              	.LVL6:
+  61 0018 E4B2     		uxtb	r4, r4
+  62              	.LVL7:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 3
+
+
+  52:..\src/sensor_commut.c **** 		hall_code_0 %= 6;
+  63              		.loc 1 52 0 discriminator 1
+  64 001a 104B     		ldr	r3, .L4+4
+  65 001c A3FB0423 		umull	r2, r3, r3, r4
+  66 0020 9B08     		lsrs	r3, r3, #2
+  67 0022 03EB4303 		add	r3, r3, r3, lsl #1
+  68 0026 5B00     		lsls	r3, r3, #1
+  69 0028 E41A     		subs	r4, r4, r3
+  70              	.LVL8:
+  71 002a E4B2     		uxtb	r4, r4
+  72              	.LVL9:
+  53:..\src/sensor_commut.c **** 		hall_code = hall_conv[hall_code_0];
+  73              		.loc 1 53 0 discriminator 1
+  74 002c 0C4B     		ldr	r3, .L4+8
+  75 002e 1D5D     		ldrb	r5, [r3, r4]	@ zero_extendqisi2
+  76              	.LVL10:
+  54:..\src/sensor_commut.c **** 		
+  55:..\src/sensor_commut.c **** 		Virtual_Hall_Write(hall_code);
+  77              		.loc 1 55 0 discriminator 1
+  78 0030 2846     		mov	r0, r5
+  79 0032 FFF7FEFF 		bl	Virtual_Hall_Write
+  80              	.LVL11:
+  56:..\src/sensor_commut.c **** 
+  57:..\src/sensor_commut.c **** 		
+  58:..\src/sensor_commut.c **** 		LED_R_Write(hall_code & 0x01);
+  81              		.loc 1 58 0 discriminator 1
+  82 0036 05F00100 		and	r0, r5, #1
+  83 003a FFF7FEFF 		bl	LED_R_Write
+  84              	.LVL12:
+  59:..\src/sensor_commut.c **** 		LED_G_Write((hall_code & 0x02)>>1);
+  85              		.loc 1 59 0 discriminator 1
+  86 003e C5F34000 		ubfx	r0, r5, #1, #1
+  87 0042 FFF7FEFF 		bl	LED_G_Write
+  88              	.LVL13:
+  60:..\src/sensor_commut.c **** 		LED_B_Write((hall_code & 0x04)>>2);
+  89              		.loc 1 60 0 discriminator 1
+  90 0046 C5F38000 		ubfx	r0, r5, #2, #1
+  91 004a FFF7FEFF 		bl	LED_B_Write
+  92              	.LVL14:
+  61:..\src/sensor_commut.c **** 		
+  62:..\src/sensor_commut.c **** 		CyDelay(10);
+  93              		.loc 1 62 0 discriminator 1
+  94 004e 0A20     		movs	r0, #10
+  95 0050 FFF7FEFF 		bl	CyDelay
+  96              	.LVL15:
+  63:..\src/sensor_commut.c **** 	}
+  97              		.loc 1 63 0 discriminator 1
+  98 0054 DFE7     		b	.L2
+  99              	.L5:
+ 100 0056 00BF     		.align	2
+ 101              	.L4:
+ 102 0058 00000000 		.word	ctrl
+ 103 005c ABAAAAAA 		.word	-1431655765
+ 104 0060 00000000 		.word	.LANCHOR0
+ 105              		.cfi_endproc
+ 106              	.LFE63:
+ 107              		.size	motor_stepper_test_blocking_1, .-motor_stepper_test_blocking_1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 4
+
+
+ 108              		.section	.text.motor_stepper_test_init,"ax",%progbits
+ 109              		.align	2
+ 110              		.global	motor_stepper_test_init
+ 111              		.thumb
+ 112              		.thumb_func
+ 113              		.type	motor_stepper_test_init, %function
+ 114              	motor_stepper_test_init:
+ 115              	.LFB64:
+  64:..\src/sensor_commut.c **** }
+  65:..\src/sensor_commut.c **** 
+  66:..\src/sensor_commut.c **** //To test with the full stack, use this init...
+  67:..\src/sensor_commut.c **** void motor_stepper_test_init(int spd)
+  68:..\src/sensor_commut.c **** {
+ 116              		.loc 1 68 0
+ 117              		.cfi_startproc
+ 118              		@ args = 0, pretend = 0, frame = 0
+ 119              		@ frame_needed = 0, uses_anonymous_args = 0
+ 120              	.LVL16:
+ 121 0000 10B5     		push	{r4, lr}
+ 122              		.cfi_def_cfa_offset 8
+ 123              		.cfi_offset 4, -8
+ 124              		.cfi_offset 14, -4
+ 125 0002 0446     		mov	r4, r0
+  69:..\src/sensor_commut.c **** 	ctrl.active_ctrl = CTRL_OPEN;	
+ 126              		.loc 1 69 0
+ 127 0004 0120     		movs	r0, #1
+ 128              	.LVL17:
+ 129 0006 044B     		ldr	r3, .L8
+ 130 0008 1870     		strb	r0, [r3]
+  70:..\src/sensor_commut.c **** 	Coast_Brake_Write(1);	
+ 131              		.loc 1 70 0
+ 132 000a FFF7FEFF 		bl	Coast_Brake_Write
+ 133              	.LVL18:
+  71:..\src/sensor_commut.c **** 	motor_open_speed_1(spd);	
+ 134              		.loc 1 71 0
+ 135 000e 20B2     		sxth	r0, r4
+ 136 0010 FFF7FEFF 		bl	motor_open_speed_1
+ 137              	.LVL19:
+ 138 0014 10BD     		pop	{r4, pc}
+ 139              	.LVL20:
+ 140              	.L9:
+ 141 0016 00BF     		.align	2
+ 142              	.L8:
+ 143 0018 00000000 		.word	ctrl
+ 144              		.cfi_endproc
+ 145              	.LFE64:
+ 146              		.size	motor_stepper_test_init, .-motor_stepper_test_init
+ 147              		.section	.text.motor_stepper_test_runtime,"ax",%progbits
+ 148              		.align	2
+ 149              		.global	motor_stepper_test_runtime
+ 150              		.thumb
+ 151              		.thumb_func
+ 152              		.type	motor_stepper_test_runtime, %function
+ 153              	motor_stepper_test_runtime:
+ 154              	.LFB65:
+  72:..\src/sensor_commut.c **** }
+  73:..\src/sensor_commut.c **** 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 5
+
+
+  74:..\src/sensor_commut.c **** //...and this runtime function
+  75:..\src/sensor_commut.c **** void motor_stepper_test_runtime(int div)
+  76:..\src/sensor_commut.c **** {
+ 155              		.loc 1 76 0
+ 156              		.cfi_startproc
+ 157              		@ args = 0, pretend = 0, frame = 0
+ 158              		@ frame_needed = 0, uses_anonymous_args = 0
+ 159              		@ link register save eliminated.
+ 160              	.LVL21:
+  77:..\src/sensor_commut.c **** 	//Call this function at 1ms intervals. The divider will
+  78:..\src/sensor_commut.c **** 	//allow longer delays between steps.
+  79:..\src/sensor_commut.c **** 	
+  80:..\src/sensor_commut.c **** 	static uint8 hall_code_0 = 0, hall_code = 0;
+  81:..\src/sensor_commut.c **** 	static int delay_cnt = 0;
+  82:..\src/sensor_commut.c **** 	
+  83:..\src/sensor_commut.c **** 	delay_cnt++;
+ 161              		.loc 1 83 0
+ 162 0000 0D4A     		ldr	r2, .L12
+ 163 0002 1368     		ldr	r3, [r2]
+ 164 0004 0133     		adds	r3, r3, #1
+ 165 0006 1360     		str	r3, [r2]
+  84:..\src/sensor_commut.c **** 	if(delay_cnt >= div)
+ 166              		.loc 1 84 0
+ 167 0008 8342     		cmp	r3, r0
+ 168 000a 13DB     		blt	.L10
+  85:..\src/sensor_commut.c **** 	{
+  86:..\src/sensor_commut.c **** 		delay_cnt = 0;
+ 169              		.loc 1 86 0
+ 170 000c 1146     		mov	r1, r2
+ 171 000e 0023     		movs	r3, #0
+ 172 0010 1360     		str	r3, [r2]
+  87:..\src/sensor_commut.c **** 	
+  88:..\src/sensor_commut.c **** 		hall_code_0++;
+ 173              		.loc 1 88 0
+ 174 0012 1279     		ldrb	r2, [r2, #4]	@ zero_extendqisi2
+ 175 0014 0132     		adds	r2, r2, #1
+ 176 0016 D2B2     		uxtb	r2, r2
+  89:..\src/sensor_commut.c **** 		hall_code_0 %= 6;
+ 177              		.loc 1 89 0
+ 178 0018 A3F15533 		sub	r3, r3, #1431655765
+ 179 001c A3FB0203 		umull	r0, r3, r3, r2
+ 180              	.LVL22:
+ 181 0020 9B08     		lsrs	r3, r3, #2
+ 182 0022 03EB4303 		add	r3, r3, r3, lsl #1
+ 183 0026 A2EB4303 		sub	r3, r2, r3, lsl #1
+ 184 002a DBB2     		uxtb	r3, r3
+ 185 002c 0B71     		strb	r3, [r1, #4]
+  90:..\src/sensor_commut.c **** 		hall_code = hall_conv[hall_code_0];
+ 186              		.loc 1 90 0
+ 187 002e 034A     		ldr	r2, .L12+4
+ 188 0030 D35C     		ldrb	r3, [r2, r3]	@ zero_extendqisi2
+ 189 0032 4B71     		strb	r3, [r1, #5]
+ 190              	.L10:
+ 191 0034 7047     		bx	lr
+ 192              	.L13:
+ 193 0036 00BF     		.align	2
+ 194              	.L12:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 6
+
+
+ 195 0038 00000000 		.word	.LANCHOR1
+ 196 003c 00000000 		.word	.LANCHOR0
+ 197              		.cfi_endproc
+ 198              	.LFE65:
+ 199              		.size	motor_stepper_test_runtime, .-motor_stepper_test_runtime
+ 200              		.section	.text.motor_spi_block_commutation,"ax",%progbits
+ 201              		.align	2
+ 202              		.global	motor_spi_block_commutation
+ 203              		.thumb
+ 204              		.thumb_func
+ 205              		.type	motor_spi_block_commutation, %function
+ 206              	motor_spi_block_commutation:
+ 207              	.LFB66:
+  91:..\src/sensor_commut.c **** 		
+  92:..\src/sensor_commut.c **** 		//Hall_Write(hall_code);	//ToDo Enable
+  93:..\src/sensor_commut.c **** 	}	
+  94:..\src/sensor_commut.c **** }
+  95:..\src/sensor_commut.c **** 
+  96:..\src/sensor_commut.c **** //motor commutation with SPI encoder
+  97:..\src/sensor_commut.c **** void motor_spi_block_commutation(int angle)
+  98:..\src/sensor_commut.c **** {
+ 208              		.loc 1 98 0
+ 209              		.cfi_startproc
+ 210              		@ args = 0, pretend = 0, frame = 0
+ 211              		@ frame_needed = 0, uses_anonymous_args = 0
+ 212              	.LVL23:
+ 213 0000 70B5     		push	{r4, r5, r6, lr}
+ 214              		.cfi_def_cfa_offset 16
+ 215              		.cfi_offset 4, -16
+ 216              		.cfi_offset 5, -12
+ 217              		.cfi_offset 6, -8
+ 218              		.cfi_offset 14, -4
+ 219 0002 0446     		mov	r4, r0
+ 220              	.LVL24:
+  99:..\src/sensor_commut.c ****     static int16 lastangle, lastcomindx=1;
+ 100:..\src/sensor_commut.c ****     int16 deadband = 10; 
+ 101:..\src/sensor_commut.c ****     int16 comindx,tempangle;
+ 102:..\src/sensor_commut.c ****     int16 offset;
+ 103:..\src/sensor_commut.c ****     
+ 104:..\src/sensor_commut.c ****     /*
+ 105:..\src/sensor_commut.c ****     //offset = deadband-anglemap[0];
+ 106:..\src/sensor_commut.c ****     //angle = angle+offset;
+ 107:..\src/sensor_commut.c ****     //angle = angle+(angle-lastangle)/5;
+ 108:..\src/sensor_commut.c ****     
+ 109:..\src/sensor_commut.c ****     if (lastcomindx==0)
+ 110:..\src/sensor_commut.c ****     {
+ 111:..\src/sensor_commut.c ****         //tempangle = angle;
+ 112:..\src/sensor_commut.c ****         //if (tempangle>16000)
+ 113:..\src/sensor_commut.c ****         //{
+ 114:..\src/sensor_commut.c ****         //    tempangle = tempangle-16384;
+ 115:..\src/sensor_commut.c ****         //}
+ 116:..\src/sensor_commut.c ****         if (angle>anglemap[0]+offset+deadband)
+ 117:..\src/sensor_commut.c ****         {comindx = 1;}
+ 118:..\src/sensor_commut.c ****         else if (angle<anglemap[125]-16384+offset-deadband)
+ 119:..\src/sensor_commut.c ****         {comindx = 5;}
+ 120:..\src/sensor_commut.c ****         else
+ 121:..\src/sensor_commut.c ****         {comindx = 0;}
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 7
+
+
+ 122:..\src/sensor_commut.c ****     }
+ 123:..\src/sensor_commut.c ****     else
+ 124:..\src/sensor_commut.c ****     {
+ 125:..\src/sensor_commut.c ****         int16 lo=0, hi = 126, mid=0;
+ 126:..\src/sensor_commut.c ****         while (lo<hi){
+ 127:..\src/sensor_commut.c ****             mid = (lo+hi)/2;
+ 128:..\src/sensor_commut.c ****             if (((anglemap[mid]+offset))>=angle)
+ 129:..\src/sensor_commut.c ****                 hi = mid;
+ 130:..\src/sensor_commut.c ****             else
+ 131:..\src/sensor_commut.c ****                 lo = mid+1;
+ 132:..\src/sensor_commut.c ****         }
+ 133:..\src/sensor_commut.c ****         comindx = lo%126;
+ 134:..\src/sensor_commut.c **** 
+ 135:..\src/sensor_commut.c ****         
+ 136:..\src/sensor_commut.c ****         //if (comindx>lastcomindx && angle<(anglemap[lastcomindx]+deadband))
+ 137:..\src/sensor_commut.c ****         //{comindx = lastcomindx;}
+ 138:..\src/sensor_commut.c ****         //else if (comindx<lastcomindx && angle>(anglemap[comindx]-deadband))
+ 139:..\src/sensor_commut.c ****         //{comindx = lastcomindx;}
+ 140:..\src/sensor_commut.c **** 
+ 141:..\src/sensor_commut.c ****     }
+ 142:..\src/sensor_commut.c ****     */
+ 143:..\src/sensor_commut.c ****     
+ 144:..\src/sensor_commut.c ****     
+ 145:..\src/sensor_commut.c ****     
+ 146:..\src/sensor_commut.c ****     
+ 147:..\src/sensor_commut.c ****     int16 lo=0, hi = 126, mid=0;
+ 221              		.loc 1 147 0
+ 222 0004 7E20     		movs	r0, #126
+ 223              	.LVL25:
+ 224 0006 0021     		movs	r1, #0
+ 148:..\src/sensor_commut.c ****     while (lo<hi){
+ 225              		.loc 1 148 0
+ 226 0008 12E0     		b	.L16
+ 227              	.LVL26:
+ 228              	.L17:
+ 149:..\src/sensor_commut.c ****         mid = (lo+hi)/2;
+ 229              		.loc 1 149 0
+ 230 000a 0BB2     		sxth	r3, r1
+ 231 000c 02B2     		sxth	r2, r0
+ 232 000e 1344     		add	r3, r3, r2
+ 233 0010 03EBD373 		add	r3, r3, r3, lsr #31
+ 234 0014 5B10     		asrs	r3, r3, #1
+ 235 0016 9DB2     		uxth	r5, r3
+ 236              	.LVL27:
+ 150:..\src/sensor_commut.c ****         if (((anglemap[mid]))>=angle)
+ 237              		.loc 1 150 0
+ 238 0018 2EB2     		sxth	r6, r5
+ 239 001a 5F4A     		ldr	r2, .L42
+ 240 001c 02EB4602 		add	r2, r2, r6, lsl #1
+ 241 0020 1289     		ldrh	r2, [r2, #8]
+ 242 0022 89B2     		uxth	r1, r1
+ 243 0024 A242     		cmp	r2, r4
+ 244 0026 02DA     		bge	.L29
+ 151:..\src/sensor_commut.c ****             hi = mid;
+ 152:..\src/sensor_commut.c ****         else
+ 153:..\src/sensor_commut.c ****             lo = mid+1;
+ 245              		.loc 1 153 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 8
+
+
+ 246 0028 0133     		adds	r3, r3, #1
+ 247 002a 99B2     		uxth	r1, r3
+ 248              	.LVL28:
+ 249 002c 00E0     		b	.L16
+ 250              	.L29:
+ 151:..\src/sensor_commut.c ****             hi = mid;
+ 251              		.loc 1 151 0
+ 252 002e 2846     		mov	r0, r5
+ 253              	.LVL29:
+ 254              	.L16:
+ 148:..\src/sensor_commut.c ****         mid = (lo+hi)/2;
+ 255              		.loc 1 148 0
+ 256 0030 0BB2     		sxth	r3, r1
+ 257 0032 02B2     		sxth	r2, r0
+ 258 0034 9342     		cmp	r3, r2
+ 259 0036 E8DB     		blt	.L17
+ 154:..\src/sensor_commut.c ****     }
+ 155:..\src/sensor_commut.c ****     comindx = lo%126;
+ 260              		.loc 1 155 0
+ 261 0038 5848     		ldr	r0, .L42+4
+ 262              	.LVL30:
+ 263 003a 83FB0001 		smull	r0, r1, r3, r0
+ 264 003e 5D18     		adds	r5, r3, r1
+ 265 0040 DA17     		asrs	r2, r3, #31
+ 266              	.LVL31:
+ 267 0042 C2EBA515 		rsb	r5, r2, r5, asr #6
+ 268 0046 C5EB8515 		rsb	r5, r5, r5, lsl #6
+ 269 004a 6D00     		lsls	r5, r5, #1
+ 270 004c 5B1B     		subs	r3, r3, r5
+ 271 004e 9DB2     		uxth	r5, r3
+ 272              	.LVL32:
+ 156:..\src/sensor_commut.c ****     
+ 157:..\src/sensor_commut.c ****     if (comindx!=lastcomindx)
+ 273              		.loc 1 157 0
+ 274 0050 514B     		ldr	r3, .L42
+ 275 0052 B3F80431 		ldrh	r3, [r3, #260]
+ 276 0056 29B2     		sxth	r1, r5
+ 277              	.LVL33:
+ 278 0058 1AB2     		sxth	r2, r3
+ 279 005a 9142     		cmp	r1, r2
+ 280 005c 7FD0     		beq	.L18
+ 158:..\src/sensor_commut.c ****     {
+ 159:..\src/sensor_commut.c ****         if (lastcomindx == 0)
+ 281              		.loc 1 159 0
+ 282 005e 5BB9     		cbnz	r3, .L19
+ 160:..\src/sensor_commut.c ****         {
+ 161:..\src/sensor_commut.c ****             if (angle<anglemap[0]+deadband)
+ 283              		.loc 1 161 0
+ 284 0060 4D4A     		ldr	r2, .L42
+ 285 0062 1289     		ldrh	r2, [r2, #8]
+ 286 0064 0A32     		adds	r2, r2, #10
+ 287 0066 A242     		cmp	r2, r4
+ 288 0068 66DC     		bgt	.L30
+ 162:..\src/sensor_commut.c ****             {
+ 163:..\src/sensor_commut.c ****                 comindx = 0;
+ 164:..\src/sensor_commut.c ****             }
+ 165:..\src/sensor_commut.c ****             else if (angle>anglemap[125]-deadband)
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 9
+
+
+ 289              		.loc 1 165 0
+ 290 006a 4B4A     		ldr	r2, .L42
+ 291 006c B2F80221 		ldrh	r2, [r2, #258]
+ 292 0070 0A3A     		subs	r2, r2, #10
+ 293 0072 A242     		cmp	r2, r4
+ 294 0074 62DB     		blt	.L31
+ 295 0076 72E0     		b	.L18
+ 296              	.L19:
+ 166:..\src/sensor_commut.c ****             {
+ 167:..\src/sensor_commut.c ****                 comindx = 0;
+ 168:..\src/sensor_commut.c ****             }
+ 169:..\src/sensor_commut.c ****             
+ 170:..\src/sensor_commut.c ****         }
+ 171:..\src/sensor_commut.c ****         else if (lastcomindx == 1)
+ 297              		.loc 1 171 0
+ 298 0078 1AB2     		sxth	r2, r3
+ 299 007a 012A     		cmp	r2, #1
+ 300 007c 24D1     		bne	.L20
+ 172:..\src/sensor_commut.c ****         {
+ 173:..\src/sensor_commut.c ****             if (comindx == 0)
+ 301              		.loc 1 173 0
+ 302 007e D5B9     		cbnz	r5, .L21
+ 174:..\src/sensor_commut.c ****             {
+ 175:..\src/sensor_commut.c ****                 if (angle<anglemap[1]+deadband)
+ 303              		.loc 1 175 0
+ 304 0080 454A     		ldr	r2, .L42
+ 305 0082 5289     		ldrh	r2, [r2, #10]
+ 306 0084 0A32     		adds	r2, r2, #10
+ 307 0086 A242     		cmp	r2, r4
+ 308 0088 00DD     		ble	.L22
+ 176:..\src/sensor_commut.c ****                 {
+ 177:..\src/sensor_commut.c ****                     comindx = 1;
+ 309              		.loc 1 177 0
+ 310 008a 1D46     		mov	r5, r3
+ 311              	.LVL34:
+ 312              	.L22:
+ 178:..\src/sensor_commut.c ****                 }
+ 179:..\src/sensor_commut.c ****                 if (angle >anglemap[124])
+ 313              		.loc 1 179 0
+ 314 008c 424A     		ldr	r2, .L42
+ 315 008e B2F80021 		ldrh	r2, [r2, #256]
+ 316 0092 A242     		cmp	r2, r4
+ 317 0094 08DA     		bge	.L23
+ 180:..\src/sensor_commut.c ****                 {
+ 181:..\src/sensor_commut.c ****                     if (angle-16384> (int16)anglemap[0]-deadband)
+ 318              		.loc 1 181 0
+ 319 0096 A4F58041 		sub	r1, r4, #16384
+ 320 009a 3F4A     		ldr	r2, .L42
+ 321 009c B2F90820 		ldrsh	r2, [r2, #8]
+ 322 00a0 0A3A     		subs	r2, r2, #10
+ 323 00a2 9142     		cmp	r1, r2
+ 324 00a4 4CDC     		bgt	.L33
+ 325 00a6 5AE0     		b	.L18
+ 326              	.L23:
+ 182:..\src/sensor_commut.c ****                     {comindx = 1;}
+ 183:..\src/sensor_commut.c ****                 }
+ 184:..\src/sensor_commut.c ****                 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 10
+
+
+ 185:..\src/sensor_commut.c ****                 else
+ 186:..\src/sensor_commut.c ****                 {
+ 187:..\src/sensor_commut.c ****                     if (angle>(int16)anglemap[0]-deadband)
+ 327              		.loc 1 187 0
+ 328 00a8 3B4A     		ldr	r2, .L42
+ 329 00aa B2F90820 		ldrsh	r2, [r2, #8]
+ 330 00ae 0A3A     		subs	r2, r2, #10
+ 331 00b0 A242     		cmp	r2, r4
+ 332 00b2 47DB     		blt	.L34
+ 333 00b4 53E0     		b	.L18
+ 334              	.L21:
+ 188:..\src/sensor_commut.c ****                     {comindx = 1;}
+ 189:..\src/sensor_commut.c ****                 }
+ 190:..\src/sensor_commut.c ****             }
+ 191:..\src/sensor_commut.c ****             else if (comindx == 2 &&(angle<anglemap[1]+deadband))
+ 335              		.loc 1 191 0
+ 336 00b6 2AB2     		sxth	r2, r5
+ 337 00b8 022A     		cmp	r2, #2
+ 338 00ba 50D1     		bne	.L18
+ 339              		.loc 1 191 0 is_stmt 0 discriminator 1
+ 340 00bc 364A     		ldr	r2, .L42
+ 341 00be 5289     		ldrh	r2, [r2, #10]
+ 342 00c0 0A32     		adds	r2, r2, #10
+ 343 00c2 A242     		cmp	r2, r4
+ 344 00c4 40DC     		bgt	.L35
+ 345 00c6 4AE0     		b	.L18
+ 346              	.L20:
+ 192:..\src/sensor_commut.c ****             {
+ 193:..\src/sensor_commut.c ****                 comindx = 1;
+ 194:..\src/sensor_commut.c ****             }
+ 195:..\src/sensor_commut.c **** 
+ 196:..\src/sensor_commut.c ****         }
+ 197:..\src/sensor_commut.c ****         else if (lastcomindx == 125)
+ 347              		.loc 1 197 0 is_stmt 1
+ 348 00c8 1AB2     		sxth	r2, r3
+ 349 00ca 7D2A     		cmp	r2, #125
+ 350 00cc 1ED1     		bne	.L24
+ 198:..\src/sensor_commut.c ****         {
+ 199:..\src/sensor_commut.c ****             if (comindx == 0)
+ 351              		.loc 1 199 0
+ 352 00ce 9DB9     		cbnz	r5, .L25
+ 200:..\src/sensor_commut.c ****             {
+ 201:..\src/sensor_commut.c ****                 if (angle <= anglemap[0])
+ 353              		.loc 1 201 0
+ 354 00d0 314A     		ldr	r2, .L42
+ 355 00d2 1289     		ldrh	r2, [r2, #8]
+ 356 00d4 A242     		cmp	r2, r4
+ 357 00d6 08DB     		blt	.L26
+ 202:..\src/sensor_commut.c ****                 {
+ 203:..\src/sensor_commut.c ****                     if (angle+16384<anglemap[125]+deadband)
+ 358              		.loc 1 203 0
+ 359 00d8 04F58041 		add	r1, r4, #16384
+ 360 00dc 2E4A     		ldr	r2, .L42
+ 361 00de B2F80221 		ldrh	r2, [r2, #258]
+ 362 00e2 0A32     		adds	r2, r2, #10
+ 363 00e4 9142     		cmp	r1, r2
+ 364 00e6 31DB     		blt	.L36
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 11
+
+
+ 365 00e8 39E0     		b	.L18
+ 366              	.L26:
+ 204:..\src/sensor_commut.c ****                     {comindx = 125;}
+ 205:..\src/sensor_commut.c ****                 }
+ 206:..\src/sensor_commut.c ****                 else
+ 207:..\src/sensor_commut.c ****                 {
+ 208:..\src/sensor_commut.c ****                     if (angle < anglemap[125]+deadband)
+ 367              		.loc 1 208 0
+ 368 00ea 2B4A     		ldr	r2, .L42
+ 369 00ec B2F80221 		ldrh	r2, [r2, #258]
+ 370 00f0 0A32     		adds	r2, r2, #10
+ 371 00f2 A242     		cmp	r2, r4
+ 372 00f4 2CDC     		bgt	.L37
+ 373 00f6 32E0     		b	.L18
+ 374              	.L25:
+ 209:..\src/sensor_commut.c ****                     {comindx = 125;}
+ 210:..\src/sensor_commut.c ****                 }
+ 211:..\src/sensor_commut.c ****             }
+ 212:..\src/sensor_commut.c ****             else if (comindx == 124 &&(angle>anglemap[124]-deadband))
+ 375              		.loc 1 212 0
+ 376 00f8 2AB2     		sxth	r2, r5
+ 377 00fa 7C2A     		cmp	r2, #124
+ 378 00fc 2FD1     		bne	.L18
+ 379              		.loc 1 212 0 is_stmt 0 discriminator 1
+ 380 00fe 264A     		ldr	r2, .L42
+ 381 0100 B2F80021 		ldrh	r2, [r2, #256]
+ 382 0104 0A3A     		subs	r2, r2, #10
+ 383 0106 A242     		cmp	r2, r4
+ 384 0108 24DB     		blt	.L38
+ 385 010a 28E0     		b	.L18
+ 386              	.L24:
+ 213:..\src/sensor_commut.c ****             {
+ 214:..\src/sensor_commut.c ****                 comindx = 125;
+ 215:..\src/sensor_commut.c ****             }
+ 216:..\src/sensor_commut.c **** 
+ 217:..\src/sensor_commut.c ****         }
+ 218:..\src/sensor_commut.c ****         else
+ 219:..\src/sensor_commut.c ****         {
+ 220:..\src/sensor_commut.c ****             if (comindx>lastcomindx)
+ 387              		.loc 1 220 0 is_stmt 1
+ 388 010c 2AB2     		sxth	r2, r5
+ 389 010e 19B2     		sxth	r1, r3
+ 390 0110 8A42     		cmp	r2, r1
+ 391 0112 08DD     		ble	.L27
+ 221:..\src/sensor_commut.c ****             {
+ 222:..\src/sensor_commut.c ****                 if (angle<anglemap[lastcomindx]+deadband)
+ 392              		.loc 1 222 0
+ 393 0114 0A46     		mov	r2, r1
+ 394 0116 2049     		ldr	r1, .L42
+ 395 0118 01EB4202 		add	r2, r1, r2, lsl #1
+ 396 011c 1289     		ldrh	r2, [r2, #8]
+ 397 011e 0A32     		adds	r2, r2, #10
+ 398 0120 A242     		cmp	r2, r4
+ 399 0122 19DC     		bgt	.L39
+ 400 0124 1BE0     		b	.L18
+ 401              	.L27:
+ 223:..\src/sensor_commut.c ****                 {comindx = lastcomindx;}
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 12
+
+
+ 224:..\src/sensor_commut.c ****             }
+ 225:..\src/sensor_commut.c ****             else
+ 226:..\src/sensor_commut.c ****             {
+ 227:..\src/sensor_commut.c ****                 if (angle>anglemap[comindx]-deadband)
+ 402              		.loc 1 227 0
+ 403 0126 2AB2     		sxth	r2, r5
+ 404 0128 1B49     		ldr	r1, .L42
+ 405 012a 01EB4202 		add	r2, r1, r2, lsl #1
+ 406 012e 1289     		ldrh	r2, [r2, #8]
+ 407 0130 0A3A     		subs	r2, r2, #10
+ 408 0132 A242     		cmp	r2, r4
+ 409 0134 12DB     		blt	.L40
+ 410 0136 12E0     		b	.L18
+ 411              	.L30:
+ 163:..\src/sensor_commut.c ****             }
+ 412              		.loc 1 163 0
+ 413 0138 1D46     		mov	r5, r3
+ 414              	.LVL35:
+ 415 013a 10E0     		b	.L18
+ 416              	.LVL36:
+ 417              	.L31:
+ 167:..\src/sensor_commut.c ****             }
+ 418              		.loc 1 167 0
+ 419 013c 1D46     		mov	r5, r3
+ 420              	.LVL37:
+ 421 013e 0EE0     		b	.L18
+ 422              	.LVL38:
+ 423              	.L33:
+ 182:..\src/sensor_commut.c ****                 }
+ 424              		.loc 1 182 0
+ 425 0140 1D46     		mov	r5, r3
+ 426              	.LVL39:
+ 427 0142 0CE0     		b	.L18
+ 428              	.LVL40:
+ 429              	.L34:
+ 188:..\src/sensor_commut.c ****                 }
+ 430              		.loc 1 188 0
+ 431 0144 1D46     		mov	r5, r3
+ 432              	.LVL41:
+ 433 0146 0AE0     		b	.L18
+ 434              	.LVL42:
+ 435              	.L35:
+ 193:..\src/sensor_commut.c ****             }
+ 436              		.loc 1 193 0
+ 437 0148 1D46     		mov	r5, r3
+ 438              	.LVL43:
+ 439 014a 08E0     		b	.L18
+ 440              	.LVL44:
+ 441              	.L36:
+ 204:..\src/sensor_commut.c ****                 }
+ 442              		.loc 1 204 0
+ 443 014c 1D46     		mov	r5, r3
+ 444              	.LVL45:
+ 445 014e 06E0     		b	.L18
+ 446              	.LVL46:
+ 447              	.L37:
+ 209:..\src/sensor_commut.c ****                 }
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 13
+
+
+ 448              		.loc 1 209 0
+ 449 0150 1D46     		mov	r5, r3
+ 450              	.LVL47:
+ 451 0152 04E0     		b	.L18
+ 452              	.LVL48:
+ 453              	.L38:
+ 214:..\src/sensor_commut.c ****             }
+ 454              		.loc 1 214 0
+ 455 0154 1D46     		mov	r5, r3
+ 456              	.LVL49:
+ 457 0156 02E0     		b	.L18
+ 458              	.LVL50:
+ 459              	.L39:
+ 223:..\src/sensor_commut.c ****             }
+ 460              		.loc 1 223 0
+ 461 0158 1D46     		mov	r5, r3
+ 462              	.LVL51:
+ 463 015a 00E0     		b	.L18
+ 464              	.LVL52:
+ 465              	.L40:
+ 228:..\src/sensor_commut.c ****                 {comindx = lastcomindx;}
+ 466              		.loc 1 228 0
+ 467 015c 1D46     		mov	r5, r3
+ 468              	.LVL53:
+ 469              	.L18:
+ 229:..\src/sensor_commut.c ****             }
+ 230:..\src/sensor_commut.c ****         }
+ 231:..\src/sensor_commut.c ****     }
+ 232:..\src/sensor_commut.c ****         
+ 233:..\src/sensor_commut.c ****         
+ 234:..\src/sensor_commut.c ****     if (findingpoles == 0)
+ 470              		.loc 1 234 0
+ 471 015e 104B     		ldr	r3, .L42+8
+ 472 0160 9B79     		ldrb	r3, [r3, #6]	@ zero_extendqisi2
+ 473 0162 9BB9     		cbnz	r3, .L28
+ 235:..\src/sensor_commut.c ****     {Virtual_Hall_Write(hallmap_map2[comindx%6]);}
+ 474              		.loc 1 235 0
+ 475 0164 2AB2     		sxth	r2, r5
+ 476 0166 A3F15533 		sub	r3, r3, #1431655765
+ 477 016a 03F10043 		add	r3, r3, #-2147483648
+ 478 016e 83FB0213 		smull	r1, r3, r3, r2
+ 479 0172 A3EBE273 		sub	r3, r3, r2, asr #31
+ 480 0176 03EB4303 		add	r3, r3, r3, lsl #1
+ 481 017a 5B00     		lsls	r3, r3, #1
+ 482 017c D31A     		subs	r3, r2, r3
+ 483 017e 1BB2     		sxth	r3, r3
+ 484 0180 054A     		ldr	r2, .L42
+ 485 0182 1344     		add	r3, r3, r2
+ 486 0184 93F80801 		ldrb	r0, [r3, #264]	@ zero_extendqisi2
+ 487 0188 FFF7FEFF 		bl	Virtual_Hall_Write
+ 488              	.LVL54:
+ 489              	.L28:
+ 236:..\src/sensor_commut.c ****     
+ 237:..\src/sensor_commut.c ****     lastangle = angle; 
+ 490              		.loc 1 237 0
+ 491 018c 044B     		ldr	r3, .L42+8
+ 492 018e 1C81     		strh	r4, [r3, #8]	@ movhi
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 14
+
+
+ 238:..\src/sensor_commut.c ****     lastcomindx = comindx;
+ 493              		.loc 1 238 0
+ 494 0190 014B     		ldr	r3, .L42
+ 495 0192 A3F80451 		strh	r5, [r3, #260]	@ movhi
+ 496 0196 70BD     		pop	{r4, r5, r6, pc}
+ 497              	.LVL55:
+ 498              	.L43:
+ 499              		.align	2
+ 500              	.L42:
+ 501 0198 00000000 		.word	.LANCHOR0
+ 502 019c 83200882 		.word	-2113396605
+ 503 01a0 00000000 		.word	.LANCHOR1
+ 504              		.cfi_endproc
+ 505              	.LFE66:
+ 506              		.size	motor_spi_block_commutation, .-motor_spi_block_commutation
+ 507              		.section	.text.motor_spi_block_commutation_triangletest,"ax",%progbits
+ 508              		.align	2
+ 509              		.global	motor_spi_block_commutation_triangletest
+ 510              		.thumb
+ 511              		.thumb_func
+ 512              		.type	motor_spi_block_commutation_triangletest, %function
+ 513              	motor_spi_block_commutation_triangletest:
+ 514              	.LFB67:
+ 239:..\src/sensor_commut.c ****      
+ 240:..\src/sensor_commut.c **** }
+ 241:..\src/sensor_commut.c **** 
+ 242:..\src/sensor_commut.c **** void motor_spi_block_commutation_triangletest(){
+ 515              		.loc 1 242 0
+ 516              		.cfi_startproc
+ 517              		@ args = 0, pretend = 0, frame = 0
+ 518              		@ frame_needed = 0, uses_anonymous_args = 0
+ 519 0000 08B5     		push	{r3, lr}
+ 520              		.cfi_def_cfa_offset 8
+ 521              		.cfi_offset 3, -8
+ 522              		.cfi_offset 14, -4
+ 243:..\src/sensor_commut.c ****     static int32 offsetcount = 1;
+ 244:..\src/sensor_commut.c ****     //Swap between equation and mapping functions
+ 245:..\src/sensor_commut.c ****     static int16 switchmode = 0;
+ 246:..\src/sensor_commut.c ****     if (offsetcount%50000==0){
+ 523              		.loc 1 246 0
+ 524 0002 204B     		ldr	r3, .L51
+ 525 0004 D3F81031 		ldr	r3, [r3, #272]
+ 526 0008 1F4A     		ldr	r2, .L51+4
+ 527 000a 82FB0321 		smull	r2, r1, r2, r3
+ 528 000e DA17     		asrs	r2, r3, #31
+ 529 0010 C2EB2132 		rsb	r2, r2, r1, asr #12
+ 530 0014 4CF25031 		movw	r1, #50000
+ 531 0018 01FB1232 		mls	r2, r1, r2, r3
+ 532 001c 1AB9     		cbnz	r2, .L45
+ 247:..\src/sensor_commut.c ****         switchmode++;
+ 533              		.loc 1 247 0
+ 534 001e 1B49     		ldr	r1, .L51+8
+ 535 0020 4A89     		ldrh	r2, [r1, #10]
+ 536 0022 0132     		adds	r2, r2, #1
+ 537 0024 4A81     		strh	r2, [r1, #10]	@ movhi
+ 538              	.L45:
+ 248:..\src/sensor_commut.c ****     }
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 15
+
+
+ 249:..\src/sensor_commut.c **** 
+ 250:..\src/sensor_commut.c ****     //Triangle wave speed
+ 251:..\src/sensor_commut.c ****     static int16 comm_spd = 0;   
+ 252:..\src/sensor_commut.c ****     if (offsetcount%100 == 0)
+ 539              		.loc 1 252 0
+ 540 0026 1A4A     		ldr	r2, .L51+12
+ 541 0028 82FB0321 		smull	r2, r1, r2, r3
+ 542 002c DA17     		asrs	r2, r3, #31
+ 543 002e C2EB6112 		rsb	r2, r2, r1, asr #5
+ 544 0032 6421     		movs	r1, #100
+ 545 0034 01FB1232 		mls	r2, r1, r2, r3
+ 546 0038 C2B9     		cbnz	r2, .L46
+ 253:..\src/sensor_commut.c ****     {
+ 254:..\src/sensor_commut.c ****             if (switchmode%4 == 0 || switchmode%4 == 3){comm_spd++;}
+ 547              		.loc 1 254 0
+ 548 003a 144B     		ldr	r3, .L51+8
+ 549 003c 5B89     		ldrh	r3, [r3, #10]
+ 550 003e 13F0030F 		tst	r3, #3
+ 551 0042 0AD0     		beq	.L47
+ 552              		.loc 1 254 0 is_stmt 0 discriminator 2
+ 553 0044 1BB2     		sxth	r3, r3
+ 554 0046 134A     		ldr	r2, .L51+16
+ 555 0048 1340     		ands	r3, r3, r2
+ 556 004a 03D5     		bpl	.L48
+ 557 004c 013B     		subs	r3, r3, #1
+ 558 004e 63F00303 		orn	r3, r3, #3
+ 559 0052 0133     		adds	r3, r3, #1
+ 560              	.L48:
+ 561 0054 1BB2     		sxth	r3, r3
+ 562 0056 032B     		cmp	r3, #3
+ 563 0058 04D1     		bne	.L49
+ 564              	.L47:
+ 565              		.loc 1 254 0 discriminator 3
+ 566 005a 0C4A     		ldr	r2, .L51+8
+ 567 005c 9389     		ldrh	r3, [r2, #12]
+ 568 005e 0133     		adds	r3, r3, #1
+ 569 0060 9381     		strh	r3, [r2, #12]	@ movhi
+ 570 0062 03E0     		b	.L46
+ 571              	.L49:
+ 255:..\src/sensor_commut.c ****             else{comm_spd--;}
+ 572              		.loc 1 255 0 is_stmt 1
+ 573 0064 094A     		ldr	r2, .L51+8
+ 574 0066 9389     		ldrh	r3, [r2, #12]
+ 575 0068 013B     		subs	r3, r3, #1
+ 576 006a 9381     		strh	r3, [r2, #12]	@ movhi
+ 577              	.L46:
+ 256:..\src/sensor_commut.c ****     }   
+ 257:..\src/sensor_commut.c ****     motor_open_speed_1(comm_spd);
+ 578              		.loc 1 257 0
+ 579 006c 074B     		ldr	r3, .L51+8
+ 580 006e B3F90C00 		ldrsh	r0, [r3, #12]
+ 581 0072 FFF7FEFF 		bl	motor_open_speed_1
+ 582              	.LVL56:
+ 258:..\src/sensor_commut.c ****     offsetcount++;
+ 583              		.loc 1 258 0
+ 584 0076 034A     		ldr	r2, .L51
+ 585 0078 D2F81031 		ldr	r3, [r2, #272]
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 16
+
+
+ 586 007c 0133     		adds	r3, r3, #1
+ 587 007e C2F81031 		str	r3, [r2, #272]
+ 588 0082 08BD     		pop	{r3, pc}
+ 589              	.L52:
+ 590              		.align	2
+ 591              	.L51:
+ 592 0084 00000000 		.word	.LANCHOR0
+ 593 0088 89B5F814 		.word	351843721
+ 594 008c 00000000 		.word	.LANCHOR1
+ 595 0090 1F85EB51 		.word	1374389535
+ 596 0094 03000080 		.word	-2147483645
+ 597              		.cfi_endproc
+ 598              	.LFE67:
+ 599              		.size	motor_spi_block_commutation_triangletest, .-motor_spi_block_commutation_triangletest
+ 600              		.section	.text.motor_spi_findpoles,"ax",%progbits
+ 601              		.align	2
+ 602              		.global	motor_spi_findpoles
+ 603              		.thumb
+ 604              		.thumb_func
+ 605              		.type	motor_spi_findpoles, %function
+ 606              	motor_spi_findpoles:
+ 607              	.LFB68:
+ 259:..\src/sensor_commut.c **** }
+ 260:..\src/sensor_commut.c **** 
+ 261:..\src/sensor_commut.c **** //Stepper code to map all of the pole positions run at 10000 Hz
+ 262:..\src/sensor_commut.c **** void motor_spi_findpoles(int angle){   
+ 608              		.loc 1 262 0
+ 609              		.cfi_startproc
+ 610              		@ args = 0, pretend = 0, frame = 0
+ 611              		@ frame_needed = 0, uses_anonymous_args = 0
+ 612              	.LVL57:
+ 613 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 614              		.cfi_def_cfa_offset 32
+ 615              		.cfi_offset 3, -32
+ 616              		.cfi_offset 4, -28
+ 617              		.cfi_offset 5, -24
+ 618              		.cfi_offset 6, -20
+ 619              		.cfi_offset 7, -16
+ 620              		.cfi_offset 8, -12
+ 621              		.cfi_offset 9, -8
+ 622              		.cfi_offset 14, -4
+ 263:..\src/sensor_commut.c ****     static int32 curangle = 0, offsetcount = 1;
+ 264:..\src/sensor_commut.c ****     static int16 polecounter = 0; 
+ 265:..\src/sensor_commut.c ****     static int16 mincomang = 30000, mincomangindx = -1;
+ 266:..\src/sensor_commut.c ****     static int32 stepperiod = 4000, numavgsamples = 1000, actnumsamples = 0, lsamp = 0, hsamp = 0, 
+ 267:..\src/sensor_commut.c ****     if (polecounter<130)
+ 623              		.loc 1 267 0
+ 624 0004 A94B     		ldr	r3, .L69
+ 625 0006 DB89     		ldrh	r3, [r3, #14]
+ 626 0008 1AB2     		sxth	r2, r3
+ 627 000a 812A     		cmp	r2, #129
+ 628 000c 00F3B880 		bgt	.L54
+ 629 0010 0446     		mov	r4, r0
+ 268:..\src/sensor_commut.c ****     {
+ 269:..\src/sensor_commut.c ****         findingpoles = 1;
+ 630              		.loc 1 269 0
+ 631 0012 A64D     		ldr	r5, .L69
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 17
+
+
+ 632 0014 0123     		movs	r3, #1
+ 633 0016 AB71     		strb	r3, [r5, #6]
+ 270:..\src/sensor_commut.c ****         motor_open_speed_1(100);
+ 634              		.loc 1 270 0
+ 635 0018 6420     		movs	r0, #100
+ 636              	.LVL58:
+ 637 001a FFF7FEFF 		bl	motor_open_speed_1
+ 638              	.LVL59:
+ 271:..\src/sensor_commut.c ****         Virtual_Hall_Write(hallmap_map[polecounter%6]);
+ 639              		.loc 1 271 0
+ 640 001e B5F90E20 		ldrsh	r2, [r5, #14]
+ 641 0022 A34B     		ldr	r3, .L69+4
+ 642 0024 83FB0213 		smull	r1, r3, r3, r2
+ 643 0028 A3EBE273 		sub	r3, r3, r2, asr #31
+ 644 002c 03EB4303 		add	r3, r3, r3, lsl #1
+ 645 0030 5B00     		lsls	r3, r3, #1
+ 646 0032 D31A     		subs	r3, r2, r3
+ 647 0034 1BB2     		sxth	r3, r3
+ 648 0036 9F4D     		ldr	r5, .L69+8
+ 649 0038 2B44     		add	r3, r3, r5
+ 650 003a 93F81401 		ldrb	r0, [r3, #276]	@ zero_extendqisi2
+ 651 003e FFF7FEFF 		bl	Virtual_Hall_Write
+ 652              	.LVL60:
+ 272:..\src/sensor_commut.c ****         if (offsetcount%stepperiod == 0)
+ 653              		.loc 1 272 0
+ 654 0042 D5F81C21 		ldr	r2, [r5, #284]
+ 655 0046 9C4B     		ldr	r3, .L69+12
+ 656 0048 83FB0213 		smull	r1, r3, r3, r2
+ 657 004c D117     		asrs	r1, r2, #31
+ 658 004e C1EB2323 		rsb	r3, r1, r3, asr #8
+ 659 0052 4FF47A61 		mov	r1, #4000
+ 660 0056 01FB1323 		mls	r3, r1, r3, r2
+ 661 005a 002B     		cmp	r3, #0
+ 662 005c 6DD1     		bne	.L55
+ 273:..\src/sensor_commut.c ****         {
+ 274:..\src/sensor_commut.c ****             if (hsamp == 0 || lsamp || 0)
+ 663              		.loc 1 274 0
+ 664 005e 934A     		ldr	r2, .L69
+ 665 0060 1269     		ldr	r2, [r2, #16]
+ 666 0062 12B1     		cbz	r2, .L56
+ 667              		.loc 1 274 0 is_stmt 0 discriminator 1
+ 668 0064 9149     		ldr	r1, .L69
+ 669 0066 4D69     		ldr	r5, [r1, #20]
+ 670 0068 C5B1     		cbz	r5, .L57
+ 671              	.L56:
+ 275:..\src/sensor_commut.c ****             {
+ 276:..\src/sensor_commut.c ****                 polemap[polecounter%126] = (uint16)(curangle/actnumsamples);
+ 672              		.loc 1 276 0 is_stmt 1
+ 673 006a 9048     		ldr	r0, .L69
+ 674 006c B0F90E20 		ldrsh	r2, [r0, #14]
+ 675 0070 924E     		ldr	r6, .L69+16
+ 676 0072 82FB0667 		smull	r6, r7, r2, r6
+ 677 0076 D519     		adds	r5, r2, r7
+ 678 0078 D117     		asrs	r1, r2, #31
+ 679 007a C1EBA511 		rsb	r1, r1, r5, asr #6
+ 680 007e C1EB8111 		rsb	r1, r1, r1, lsl #6
+ 681 0082 4900     		lsls	r1, r1, #1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 18
+
+
+ 682 0084 521A     		subs	r2, r2, r1
+ 683 0086 12B2     		sxth	r2, r2
+ 684 0088 8169     		ldr	r1, [r0, #24]
+ 685 008a C069     		ldr	r0, [r0, #28]
+ 686 008c 91FBF0F0 		sdiv	r0, r1, r0
+ 687 0090 8849     		ldr	r1, .L69+8
+ 688 0092 01EB4202 		add	r2, r1, r2, lsl #1
+ 689 0096 A2F82001 		strh	r0, [r2, #288]	@ movhi
+ 690 009a 26E0     		b	.L58
+ 691              	.L57:
+ 277:..\src/sensor_commut.c ****             }
+ 278:..\src/sensor_commut.c ****             else
+ 279:..\src/sensor_commut.c ****             {
+ 280:..\src/sensor_commut.c ****                 polemap[polecounter%126] = (uint16)(((lang+16384*lsamp+hang)/(lsamp+hsamp))%16384);
+ 692              		.loc 1 280 0
+ 693 009c 834F     		ldr	r7, .L69
+ 694 009e B7F90E00 		ldrsh	r0, [r7, #14]
+ 695 00a2 8649     		ldr	r1, .L69+16
+ 696 00a4 80FB0189 		smull	r8, r9, r0, r1
+ 697 00a8 00EB0906 		add	r6, r0, r9
+ 698 00ac C117     		asrs	r1, r0, #31
+ 699 00ae C1EBA611 		rsb	r1, r1, r6, asr #6
+ 700 00b2 C1EB8111 		rsb	r1, r1, r1, lsl #6
+ 701 00b6 4900     		lsls	r1, r1, #1
+ 702 00b8 411A     		subs	r1, r0, r1
+ 703 00ba 09B2     		sxth	r1, r1
+ 704 00bc 386A     		ldr	r0, [r7, #32]
+ 705 00be 00EB8536 		add	r6, r0, r5, lsl #14
+ 706 00c2 786A     		ldr	r0, [r7, #36]
+ 707 00c4 3044     		add	r0, r0, r6
+ 708 00c6 2A44     		add	r2, r2, r5
+ 709 00c8 90FBF2F2 		sdiv	r2, r0, r2
+ 710 00cc 7C48     		ldr	r0, .L69+20
+ 711 00ce 1040     		ands	r0, r0, r2
+ 712 00d0 0028     		cmp	r0, #0
+ 713 00d2 05DA     		bge	.L59
+ 714 00d4 0138     		subs	r0, r0, #1
+ 715 00d6 6FEA8040 		mvn	r0, r0, lsl #18
+ 716 00da 6FEA9040 		mvn	r0, r0, lsr #18
+ 717 00de 0130     		adds	r0, r0, #1
+ 718              	.L59:
+ 719 00e0 744A     		ldr	r2, .L69+8
+ 720 00e2 02EB4101 		add	r1, r2, r1, lsl #1
+ 721 00e6 A1F82001 		strh	r0, [r1, #288]	@ movhi
+ 722              	.L58:
+ 281:..\src/sensor_commut.c ****             }
+ 282:..\src/sensor_commut.c ****             if (polemap[polecounter%126]<mincomang)
+ 723              		.loc 1 282 0
+ 724 00ea 704A     		ldr	r2, .L69
+ 725 00ec D089     		ldrh	r0, [r2, #14]
+ 726 00ee 02B2     		sxth	r2, r0
+ 727 00f0 724E     		ldr	r6, .L69+16
+ 728 00f2 82FB0667 		smull	r6, r7, r2, r6
+ 729 00f6 D519     		adds	r5, r2, r7
+ 730 00f8 D117     		asrs	r1, r2, #31
+ 731 00fa C1EBA511 		rsb	r1, r1, r5, asr #6
+ 732 00fe C1EB8111 		rsb	r1, r1, r1, lsl #6
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 19
+
+
+ 733 0102 4900     		lsls	r1, r1, #1
+ 734 0104 521A     		subs	r2, r2, r1
+ 735 0106 92B2     		uxth	r2, r2
+ 736 0108 11B2     		sxth	r1, r2
+ 737 010a 6A4D     		ldr	r5, .L69+8
+ 738 010c 05EB4101 		add	r1, r5, r1, lsl #1
+ 739 0110 B1F82011 		ldrh	r1, [r1, #288]
+ 740 0114 B5F91C52 		ldrsh	r5, [r5, #540]
+ 741 0118 A942     		cmp	r1, r5
+ 742 011a 04DA     		bge	.L60
+ 283:..\src/sensor_commut.c ****             {
+ 284:..\src/sensor_commut.c ****                 mincomang = polemap[polecounter%126];
+ 743              		.loc 1 284 0
+ 744 011c 654D     		ldr	r5, .L69+8
+ 745 011e A5F81C12 		strh	r1, [r5, #540]	@ movhi
+ 285:..\src/sensor_commut.c ****                 mincomangindx = polecounter%126;
+ 746              		.loc 1 285 0
+ 747 0122 A5F81E22 		strh	r2, [r5, #542]	@ movhi
+ 748              	.L60:
+ 286:..\src/sensor_commut.c ****             }
+ 287:..\src/sensor_commut.c ****             polecounter++;
+ 749              		.loc 1 287 0
+ 750 0126 614A     		ldr	r2, .L69
+ 751 0128 0130     		adds	r0, r0, #1
+ 752 012a D081     		strh	r0, [r2, #14]	@ movhi
+ 288:..\src/sensor_commut.c ****             curangle = 0;
+ 753              		.loc 1 288 0
+ 754 012c 0021     		movs	r1, #0
+ 755 012e 9161     		str	r1, [r2, #24]
+ 289:..\src/sensor_commut.c ****             actnumsamples = 0;
+ 756              		.loc 1 289 0
+ 757 0130 D161     		str	r1, [r2, #28]
+ 290:..\src/sensor_commut.c ****             lsamp = 0;
+ 758              		.loc 1 290 0
+ 759 0132 5161     		str	r1, [r2, #20]
+ 291:..\src/sensor_commut.c ****             hsamp = 0;
+ 760              		.loc 1 291 0
+ 761 0134 1161     		str	r1, [r2, #16]
+ 292:..\src/sensor_commut.c ****             lang = 0;
+ 762              		.loc 1 292 0
+ 763 0136 1162     		str	r1, [r2, #32]
+ 293:..\src/sensor_commut.c ****             hang = 0;
+ 764              		.loc 1 293 0
+ 765 0138 5162     		str	r1, [r2, #36]
+ 766              	.L55:
+ 294:..\src/sensor_commut.c ****         }
+ 295:..\src/sensor_commut.c ****         
+ 296:..\src/sensor_commut.c ****         if (offsetcount%stepperiod >= stepperiod-numavgsamples)
+ 767              		.loc 1 296 0
+ 768 013a 40F6B732 		movw	r2, #2999
+ 769 013e 9342     		cmp	r3, r2
+ 770 0140 40F3AB80 		ble	.L61
+ 297:..\src/sensor_commut.c ****         {
+ 298:..\src/sensor_commut.c ****             curangle = curangle+(int32)angle;
+ 771              		.loc 1 298 0
+ 772 0144 594B     		ldr	r3, .L69
+ 773 0146 9A69     		ldr	r2, [r3, #24]
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 20
+
+
+ 774 0148 2244     		add	r2, r2, r4
+ 775 014a 9A61     		str	r2, [r3, #24]
+ 299:..\src/sensor_commut.c ****             actnumsamples++;
+ 776              		.loc 1 299 0
+ 777 014c DA69     		ldr	r2, [r3, #28]
+ 778 014e 0132     		adds	r2, r2, #1
+ 779 0150 DA61     		str	r2, [r3, #28]
+ 300:..\src/sensor_commut.c ****             
+ 301:..\src/sensor_commut.c ****             if (angle<1000)
+ 780              		.loc 1 301 0
+ 781 0152 B4F57A7F 		cmp	r4, #1000
+ 782 0156 06DA     		bge	.L62
+ 302:..\src/sensor_commut.c ****             {
+ 303:..\src/sensor_commut.c ****                 lsamp++;
+ 783              		.loc 1 303 0
+ 784 0158 5A69     		ldr	r2, [r3, #20]
+ 785 015a 0132     		adds	r2, r2, #1
+ 786 015c 5A61     		str	r2, [r3, #20]
+ 304:..\src/sensor_commut.c ****                 lang = lang+(int32)angle;
+ 787              		.loc 1 304 0
+ 788 015e 1A6A     		ldr	r2, [r3, #32]
+ 789 0160 1444     		add	r4, r4, r2
+ 790              	.LVL61:
+ 791 0162 1C62     		str	r4, [r3, #32]
+ 792 0164 99E0     		b	.L61
+ 793              	.LVL62:
+ 794              	.L62:
+ 305:..\src/sensor_commut.c ****             }
+ 306:..\src/sensor_commut.c ****             else if (angle>15000)
+ 795              		.loc 1 306 0
+ 796 0166 43F69823 		movw	r3, #15000
+ 797 016a 9C42     		cmp	r4, r3
+ 798 016c 40F39580 		ble	.L61
+ 307:..\src/sensor_commut.c ****             {
+ 308:..\src/sensor_commut.c ****                 hsamp++;
+ 799              		.loc 1 308 0
+ 800 0170 4E4B     		ldr	r3, .L69
+ 801 0172 1A69     		ldr	r2, [r3, #16]
+ 802 0174 0132     		adds	r2, r2, #1
+ 803 0176 1A61     		str	r2, [r3, #16]
+ 309:..\src/sensor_commut.c ****                 hang = hang+(int32)angle;
+ 804              		.loc 1 309 0
+ 805 0178 5A6A     		ldr	r2, [r3, #36]
+ 806 017a 2244     		add	r2, r2, r4
+ 807 017c 5A62     		str	r2, [r3, #36]
+ 808 017e 8CE0     		b	.L61
+ 809              	.LVL63:
+ 810              	.L54:
+ 310:..\src/sensor_commut.c ****             }
+ 311:..\src/sensor_commut.c ****         }
+ 312:..\src/sensor_commut.c ****     }
+ 313:..\src/sensor_commut.c ****     else if (polecounter == 130)
+ 811              		.loc 1 313 0
+ 812 0180 1AB2     		sxth	r2, r3
+ 813 0182 822A     		cmp	r2, #130
+ 814 0184 40F08480 		bne	.L63
+ 815              	.LBB2:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 21
+
+
+ 314:..\src/sensor_commut.c ****     {
+ 315:..\src/sensor_commut.c ****         polecounter++;
+ 816              		.loc 1 315 0
+ 817 0188 0133     		adds	r3, r3, #1
+ 818 018a 484A     		ldr	r2, .L69
+ 819 018c D381     		strh	r3, [r2, #14]	@ movhi
+ 316:..\src/sensor_commut.c ****         int16 polemapindx = mincomangindx;
+ 820              		.loc 1 316 0
+ 821 018e 4948     		ldr	r0, .L69+8
+ 822              	.LVL64:
+ 823 0190 B0F81E22 		ldrh	r2, [r0, #542]
+ 824              	.LVL65:
+ 317:..\src/sensor_commut.c ****         int16 anglemapindx = 0;
+ 318:..\src/sensor_commut.c ****         
+ 319:..\src/sensor_commut.c ****         int16 hallmapindx = (mincomangindx-2)%6;
+ 825              		.loc 1 319 0
+ 826 0194 14B2     		sxth	r4, r2
+ 827 0196 023C     		subs	r4, r4, #2
+ 828 0198 4549     		ldr	r1, .L69+4
+ 829 019a 81FB0453 		smull	r5, r3, r1, r4
+ 830 019e A3EBE473 		sub	r3, r3, r4, asr #31
+ 831 01a2 03EB4303 		add	r3, r3, r3, lsl #1
+ 832 01a6 5B00     		lsls	r3, r3, #1
+ 833 01a8 E31A     		subs	r3, r4, r3
+ 834              	.LVL66:
+ 320:..\src/sensor_commut.c ****         hallmap_map2[0] = hallmap_map[hallmapindx];
+ 835              		.loc 1 320 0
+ 836 01aa 1BB2     		sxth	r3, r3
+ 837 01ac C418     		adds	r4, r0, r3
+ 838 01ae 94F81441 		ldrb	r4, [r4, #276]	@ zero_extendqisi2
+ 839 01b2 80F80841 		strb	r4, [r0, #264]
+ 321:..\src/sensor_commut.c ****         hallmap_map2[1] = hallmap_map[(hallmapindx+1)%6];
+ 840              		.loc 1 321 0
+ 841 01b6 5D1C     		adds	r5, r3, #1
+ 842 01b8 81FB0564 		smull	r6, r4, r1, r5
+ 843 01bc A4EBE574 		sub	r4, r4, r5, asr #31
+ 844 01c0 04EB4404 		add	r4, r4, r4, lsl #1
+ 845 01c4 6400     		lsls	r4, r4, #1
+ 846 01c6 2C1B     		subs	r4, r5, r4
+ 847 01c8 0444     		add	r4, r4, r0
+ 848 01ca 94F81441 		ldrb	r4, [r4, #276]	@ zero_extendqisi2
+ 849 01ce 80F80941 		strb	r4, [r0, #265]
+ 322:..\src/sensor_commut.c ****         hallmap_map2[2] = hallmap_map[(hallmapindx+2)%6];
+ 850              		.loc 1 322 0
+ 851 01d2 9D1C     		adds	r5, r3, #2
+ 852 01d4 81FB0564 		smull	r6, r4, r1, r5
+ 853 01d8 A4EBE574 		sub	r4, r4, r5, asr #31
+ 854 01dc 04EB4404 		add	r4, r4, r4, lsl #1
+ 855 01e0 6400     		lsls	r4, r4, #1
+ 856 01e2 2C1B     		subs	r4, r5, r4
+ 857 01e4 0444     		add	r4, r4, r0
+ 858 01e6 94F81441 		ldrb	r4, [r4, #276]	@ zero_extendqisi2
+ 859 01ea 80F80A41 		strb	r4, [r0, #266]
+ 323:..\src/sensor_commut.c ****         hallmap_map2[3] = hallmap_map[(hallmapindx+3)%6];
+ 860              		.loc 1 323 0
+ 861 01ee DD1C     		adds	r5, r3, #3
+ 862 01f0 81FB0564 		smull	r6, r4, r1, r5
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 22
+
+
+ 863 01f4 A4EBE574 		sub	r4, r4, r5, asr #31
+ 864 01f8 04EB4404 		add	r4, r4, r4, lsl #1
+ 865 01fc 6400     		lsls	r4, r4, #1
+ 866 01fe 2C1B     		subs	r4, r5, r4
+ 867 0200 0444     		add	r4, r4, r0
+ 868 0202 94F81441 		ldrb	r4, [r4, #276]	@ zero_extendqisi2
+ 869 0206 80F80B41 		strb	r4, [r0, #267]
+ 324:..\src/sensor_commut.c ****         hallmap_map2[4] = hallmap_map[(hallmapindx+4)%6];
+ 870              		.loc 1 324 0
+ 871 020a 1D1D     		adds	r5, r3, #4
+ 872 020c 81FB0564 		smull	r6, r4, r1, r5
+ 873 0210 A4EBE574 		sub	r4, r4, r5, asr #31
+ 874 0214 04EB4404 		add	r4, r4, r4, lsl #1
+ 875 0218 6400     		lsls	r4, r4, #1
+ 876 021a 2C1B     		subs	r4, r5, r4
+ 877 021c 0444     		add	r4, r4, r0
+ 878 021e 94F81441 		ldrb	r4, [r4, #276]	@ zero_extendqisi2
+ 879 0222 80F80C41 		strb	r4, [r0, #268]
+ 325:..\src/sensor_commut.c ****         hallmap_map2[5] = hallmap_map[(hallmapindx+5)%6];
+ 880              		.loc 1 325 0
+ 881 0226 0533     		adds	r3, r3, #5
+ 882              	.LVL67:
+ 883 0228 81FB0341 		smull	r4, r1, r1, r3
+ 884 022c A1EBE371 		sub	r1, r1, r3, asr #31
+ 885 0230 01EB4101 		add	r1, r1, r1, lsl #1
+ 886 0234 4900     		lsls	r1, r1, #1
+ 887 0236 591A     		subs	r1, r3, r1
+ 888 0238 0144     		add	r1, r1, r0
+ 889 023a 91F81431 		ldrb	r3, [r1, #276]	@ zero_extendqisi2
+ 890              	.LVL68:
+ 891 023e 80F80D31 		strb	r3, [r0, #269]
+ 317:..\src/sensor_commut.c ****         
+ 892              		.loc 1 317 0
+ 893 0242 0023     		movs	r3, #0
+ 326:..\src/sensor_commut.c ****         
+ 327:..\src/sensor_commut.c ****         while (polemapindx <126)
+ 894              		.loc 1 327 0
+ 895 0244 0DE0     		b	.L64
+ 896              	.LVL69:
+ 897              	.L65:
+ 328:..\src/sensor_commut.c ****         {
+ 329:..\src/sensor_commut.c ****             anglemap[anglemapindx] = polemap[polemapindx];
+ 898              		.loc 1 329 0
+ 899 0246 1CB2     		sxth	r4, r3
+ 900 0248 1A49     		ldr	r1, .L69+8
+ 901 024a 10B2     		sxth	r0, r2
+ 902 024c 01EB4000 		add	r0, r1, r0, lsl #1
+ 903 0250 B0F82001 		ldrh	r0, [r0, #288]
+ 904 0254 01EB4401 		add	r1, r1, r4, lsl #1
+ 905 0258 0881     		strh	r0, [r1, #8]	@ movhi
+ 330:..\src/sensor_commut.c ****             polemapindx++;
+ 906              		.loc 1 330 0
+ 907 025a 0132     		adds	r2, r2, #1
+ 908              	.LVL70:
+ 909 025c 92B2     		uxth	r2, r2
+ 910              	.LVL71:
+ 331:..\src/sensor_commut.c ****             anglemapindx++;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 23
+
+
+ 911              		.loc 1 331 0
+ 912 025e 0133     		adds	r3, r3, #1
+ 913              	.LVL72:
+ 914 0260 9BB2     		uxth	r3, r3
+ 915              	.LVL73:
+ 916              	.L64:
+ 327:..\src/sensor_commut.c ****         {
+ 917              		.loc 1 327 0
+ 918 0262 11B2     		sxth	r1, r2
+ 919 0264 7D29     		cmp	r1, #125
+ 920 0266 EEDD     		ble	.L65
+ 921 0268 0022     		movs	r2, #0
+ 922              	.LVL74:
+ 923 026a 0DE0     		b	.L66
+ 924              	.LVL75:
+ 925              	.L67:
+ 332:..\src/sensor_commut.c ****         }
+ 333:..\src/sensor_commut.c ****         polemapindx = 0;
+ 334:..\src/sensor_commut.c ****         while (anglemapindx<126)
+ 335:..\src/sensor_commut.c ****         {
+ 336:..\src/sensor_commut.c ****             anglemap[anglemapindx] = polemap[polemapindx];
+ 926              		.loc 1 336 0
+ 927 026c 1CB2     		sxth	r4, r3
+ 928 026e 1149     		ldr	r1, .L69+8
+ 929 0270 10B2     		sxth	r0, r2
+ 930 0272 01EB4000 		add	r0, r1, r0, lsl #1
+ 931 0276 B0F82001 		ldrh	r0, [r0, #288]
+ 932 027a 01EB4401 		add	r1, r1, r4, lsl #1
+ 933 027e 0881     		strh	r0, [r1, #8]	@ movhi
+ 337:..\src/sensor_commut.c ****             polemapindx++;
+ 934              		.loc 1 337 0
+ 935 0280 0132     		adds	r2, r2, #1
+ 936              	.LVL76:
+ 937 0282 92B2     		uxth	r2, r2
+ 938              	.LVL77:
+ 338:..\src/sensor_commut.c ****             anglemapindx++;
+ 939              		.loc 1 338 0
+ 940 0284 0133     		adds	r3, r3, #1
+ 941              	.LVL78:
+ 942 0286 9BB2     		uxth	r3, r3
+ 943              	.LVL79:
+ 944              	.L66:
+ 334:..\src/sensor_commut.c ****         {
+ 945              		.loc 1 334 0
+ 946 0288 19B2     		sxth	r1, r3
+ 947 028a 7D29     		cmp	r1, #125
+ 948 028c EEDD     		ble	.L67
+ 949 028e 04E0     		b	.L61
+ 950              	.LVL80:
+ 951              	.L63:
+ 952              	.LBE2:
+ 339:..\src/sensor_commut.c ****         }
+ 340:..\src/sensor_commut.c ****     }
+ 341:..\src/sensor_commut.c ****     else 
+ 342:..\src/sensor_commut.c ****     {
+ 343:..\src/sensor_commut.c ****         findingpoles = 0;
+ 953              		.loc 1 343 0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 24
+
+
+ 954 0290 0020     		movs	r0, #0
+ 955              	.LVL81:
+ 956 0292 064B     		ldr	r3, .L69
+ 957 0294 9871     		strb	r0, [r3, #6]
+ 344:..\src/sensor_commut.c ****         motor_open_speed_1(0);
+ 958              		.loc 1 344 0
+ 959 0296 FFF7FEFF 		bl	motor_open_speed_1
+ 960              	.LVL82:
+ 961              	.L61:
+ 345:..\src/sensor_commut.c ****     }
+ 346:..\src/sensor_commut.c ****     
+ 347:..\src/sensor_commut.c ****     
+ 348:..\src/sensor_commut.c ****     offsetcount++;
+ 962              		.loc 1 348 0
+ 963 029a 064A     		ldr	r2, .L69+8
+ 964 029c D2F81C31 		ldr	r3, [r2, #284]
+ 965 02a0 0133     		adds	r3, r3, #1
+ 966 02a2 C2F81C31 		str	r3, [r2, #284]
+ 967 02a6 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 968              	.L70:
+ 969 02aa 00BF     		.align	2
+ 970              	.L69:
+ 971 02ac 00000000 		.word	.LANCHOR1
+ 972 02b0 ABAAAA2A 		.word	715827883
+ 973 02b4 00000000 		.word	.LANCHOR0
+ 974 02b8 D34D6210 		.word	274877907
+ 975 02bc 83200882 		.word	-2113396605
+ 976 02c0 FF3F0080 		.word	-2147467265
+ 977              		.cfi_endproc
+ 978              	.LFE68:
+ 979              		.size	motor_spi_findpoles, .-motor_spi_findpoles
+ 980              		.section	.text.sensor_commut_1,"ax",%progbits
+ 981              		.align	2
+ 982              		.global	sensor_commut_1
+ 983              		.thumb
+ 984              		.thumb_func
+ 985              		.type	sensor_commut_1, %function
+ 986              	sensor_commut_1:
+ 987              	.LFB69:
+ 349:..\src/sensor_commut.c **** }
+ 350:..\src/sensor_commut.c **** 
+ 351:..\src/sensor_commut.c **** //Call this function at 10kHz, in the main FSM:
+ 352:..\src/sensor_commut.c **** void sensor_commut_1(void)
+ 353:..\src/sensor_commut.c **** {
+ 988              		.loc 1 353 0
+ 989              		.cfi_startproc
+ 990              		@ args = 0, pretend = 0, frame = 0
+ 991              		@ frame_needed = 0, uses_anonymous_args = 0
+ 992 0000 08B5     		push	{r3, lr}
+ 993              		.cfi_def_cfa_offset 8
+ 994              		.cfi_offset 3, -8
+ 995              		.cfi_offset 14, -4
+ 354:..\src/sensor_commut.c **** 	static int16 mot_spins = 0;
+ 355:..\src/sensor_commut.c **** 	int32 tempangle;
+ 356:..\src/sensor_commut.c **** 	tempangle = (as5047_read_single(AS5047_REG_ANGLECOM));//%16384;
+ 996              		.loc 1 356 0
+ 997 0002 43F6FF70 		movw	r0, #16383
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 25
+
+
+ 998 0006 FFF7FEFF 		bl	as5047_read_single
+ 999              	.LVL83:
+ 357:..\src/sensor_commut.c **** 	if (tempangle<1000 && as5047.angle_raw>15000)
+ 1000              		.loc 1 357 0
+ 1001 000a B0F57A7F 		cmp	r0, #1000
+ 1002 000e 0ADA     		bge	.L72
+ 1003              		.loc 1 357 0 is_stmt 0 discriminator 1
+ 1004 0010 124B     		ldr	r3, .L75
+ 1005 0012 1A88     		ldrh	r2, [r3]
+ 1006 0014 43F69823 		movw	r3, #15000
+ 1007 0018 9A42     		cmp	r2, r3
+ 1008 001a 04D9     		bls	.L72
+ 358:..\src/sensor_commut.c **** 	{
+ 359:..\src/sensor_commut.c **** 	    mot_spins++;  
+ 1009              		.loc 1 359 0 is_stmt 1
+ 1010 001c 104A     		ldr	r2, .L75+4
+ 1011 001e 138D     		ldrh	r3, [r2, #40]
+ 1012 0020 0133     		adds	r3, r3, #1
+ 1013 0022 1385     		strh	r3, [r2, #40]	@ movhi
+ 1014 0024 0CE0     		b	.L73
+ 1015              	.L72:
+ 360:..\src/sensor_commut.c **** 	}
+ 361:..\src/sensor_commut.c **** 	else if ((tempangle>15000 && as5047.angle_raw<1000))
+ 1016              		.loc 1 361 0
+ 1017 0026 43F69823 		movw	r3, #15000
+ 1018 002a 9842     		cmp	r0, r3
+ 1019 002c 08DD     		ble	.L73
+ 1020              		.loc 1 361 0 is_stmt 0 discriminator 1
+ 1021 002e 0B4B     		ldr	r3, .L75
+ 1022 0030 1B88     		ldrh	r3, [r3]
+ 1023 0032 B3F57A7F 		cmp	r3, #1000
+ 1024 0036 03D2     		bcs	.L73
+ 362:..\src/sensor_commut.c **** 	{
+ 363:..\src/sensor_commut.c **** 	    mot_spins--;
+ 1025              		.loc 1 363 0 is_stmt 1
+ 1026 0038 094A     		ldr	r2, .L75+4
+ 1027 003a 138D     		ldrh	r3, [r2, #40]
+ 1028 003c 013B     		subs	r3, r3, #1
+ 1029 003e 1385     		strh	r3, [r2, #40]	@ movhi
+ 1030              	.L73:
+ 364:..\src/sensor_commut.c **** 	}
+ 365:..\src/sensor_commut.c **** 	as5047.angle_cont = mot_spins*16384+tempangle;
+ 1031              		.loc 1 365 0
+ 1032 0040 074B     		ldr	r3, .L75+4
+ 1033 0042 B3F92820 		ldrsh	r2, [r3, #40]
+ 1034 0046 00EB8232 		add	r2, r0, r2, lsl #14
+ 1035 004a 0449     		ldr	r1, .L75
+ 1036 004c D317     		asrs	r3, r2, #31
+ 1037 004e C1E90223 		strd	r2, [r1, #8]
+ 366:..\src/sensor_commut.c **** 	as5047.angle_raw = tempangle;
+ 1038              		.loc 1 366 0
+ 1039 0052 0880     		strh	r0, [r1]	@ movhi
+ 367:..\src/sensor_commut.c **** 
+ 368:..\src/sensor_commut.c **** 	motor_spi_block_commutation(as5047.angle_raw);
+ 1040              		.loc 1 368 0
+ 1041 0054 FFF7FEFF 		bl	motor_spi_block_commutation
+ 1042              	.LVL84:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 26
+
+
+ 1043 0058 08BD     		pop	{r3, pc}
+ 1044              	.L76:
+ 1045 005a 00BF     		.align	2
+ 1046              	.L75:
+ 1047 005c 00000000 		.word	as5047
+ 1048 0060 00000000 		.word	.LANCHOR1
+ 1049              		.cfi_endproc
+ 1050              	.LFE69:
+ 1051              		.size	sensor_commut_1, .-sensor_commut_1
+ 1052              		.global	findingpoles
+ 1053              		.global	hallmap_map
+ 1054              		.global	hallmap_map2
+ 1055              		.global	polemap
+ 1056              		.global	anglemap
+ 1057              		.global	hall_conv
+ 1058              		.data
+ 1059              		.align	2
+ 1060              		.set	.LANCHOR0,. + 0
+ 1061              		.type	hall_conv, %object
+ 1062              		.size	hall_conv, 6
+ 1063              	hall_conv:
+ 1064 0000 05       		.byte	5
+ 1065 0001 04       		.byte	4
+ 1066 0002 06       		.byte	6
+ 1067 0003 02       		.byte	2
+ 1068 0004 03       		.byte	3
+ 1069 0005 01       		.byte	1
+ 1070 0006 0000     		.space	2
+ 1071              		.type	anglemap, %object
+ 1072              		.size	anglemap, 252
+ 1073              	anglemap:
+ 1074 0008 3500     		.short	53
+ 1075 000a A400     		.short	164
+ 1076 000c 3101     		.short	305
+ 1077 000e B401     		.short	436
+ 1078 0010 3102     		.short	561
+ 1079 0012 B202     		.short	690
+ 1080 0014 2E03     		.short	814
+ 1081 0016 C903     		.short	969
+ 1082 0018 3904     		.short	1081
+ 1083 001a C504     		.short	1221
+ 1084 001c 4405     		.short	1348
+ 1085 001e C605     		.short	1478
+ 1086 0020 4306     		.short	1603
+ 1087 0022 BF06     		.short	1727
+ 1088 0024 5A07     		.short	1882
+ 1089 0026 C707     		.short	1991
+ 1090 0028 5008     		.short	2128
+ 1091 002a D608     		.short	2262
+ 1092 002c 5309     		.short	2387
+ 1093 002e CF09     		.short	2511
+ 1094 0030 4B0A     		.short	2635
+ 1095 0032 E60A     		.short	2790
+ 1096 0034 520B     		.short	2898
+ 1097 0036 DF0B     		.short	3039
+ 1098 0038 5F0C     		.short	3167
+ 1099 003a DE0C     		.short	3294
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 27
+
+
+ 1100 003c 5C0D     		.short	3420
+ 1101 003e D80D     		.short	3544
+ 1102 0040 710E     		.short	3697
+ 1103 0042 E00E     		.short	3808
+ 1104 0044 6A0F     		.short	3946
+ 1105 0046 E80F     		.short	4072
+ 1106 0048 6A10     		.short	4202
+ 1107 004a E910     		.short	4329
+ 1108 004c 6211     		.short	4450
+ 1109 004e FE11     		.short	4606
+ 1110 0050 6A12     		.short	4714
+ 1111 0052 F412     		.short	4852
+ 1112 0054 7313     		.short	4979
+ 1113 0056 F213     		.short	5106
+ 1114 0058 6F14     		.short	5231
+ 1115 005a EB14     		.short	5355
+ 1116 005c 8315     		.short	5507
+ 1117 005e F015     		.short	5616
+ 1118 0060 7B16     		.short	5755
+ 1119 0062 F716     		.short	5879
+ 1120 0064 7617     		.short	6006
+ 1121 0066 F917     		.short	6137
+ 1122 0068 7018     		.short	6256
+ 1123 006a 0B19     		.short	6411
+ 1124 006c 7919     		.short	6521
+ 1125 006e 041A     		.short	6660
+ 1126 0070 7E1A     		.short	6782
+ 1127 0072 061B     		.short	6918
+ 1128 0074 861B     		.short	7046
+ 1129 0076 011C     		.short	7169
+ 1130 0078 9F1C     		.short	7327
+ 1131 007a 0F1D     		.short	7439
+ 1132 007c 9A1D     		.short	7578
+ 1133 007e 1D1E     		.short	7709
+ 1134 0080 A01E     		.short	7840
+ 1135 0082 241F     		.short	7972
+ 1136 0084 A01F     		.short	8096
+ 1137 0086 3F20     		.short	8255
+ 1138 0088 AF20     		.short	8367
+ 1139 008a 4121     		.short	8513
+ 1140 008c C121     		.short	8641
+ 1141 008e 4422     		.short	8772
+ 1142 0090 CA22     		.short	8906
+ 1143 0092 4323     		.short	9027
+ 1144 0094 DF23     		.short	9183
+ 1145 0096 5324     		.short	9299
+ 1146 0098 DF24     		.short	9439
+ 1147 009a 5F25     		.short	9567
+ 1148 009c E325     		.short	9699
+ 1149 009e 6726     		.short	9831
+ 1150 00a0 DD26     		.short	9949
+ 1151 00a2 7A27     		.short	10106
+ 1152 00a4 E927     		.short	10217
+ 1153 00a6 7328     		.short	10355
+ 1154 00a8 F428     		.short	10484
+ 1155 00aa 7629     		.short	10614
+ 1156 00ac F729     		.short	10743
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 28
+
+
+ 1157 00ae 702A     		.short	10864
+ 1158 00b0 092B     		.short	11017
+ 1159 00b2 782B     		.short	11128
+ 1160 00b4 022C     		.short	11266
+ 1161 00b6 822C     		.short	11394
+ 1162 00b8 012D     		.short	11521
+ 1163 00ba 872D     		.short	11655
+ 1164 00bc FD2D     		.short	11773
+ 1165 00be 962E     		.short	11926
+ 1166 00c0 042F     		.short	12036
+ 1167 00c2 8E2F     		.short	12174
+ 1168 00c4 0830     		.short	12296
+ 1169 00c6 8D30     		.short	12429
+ 1170 00c8 0E31     		.short	12558
+ 1171 00ca 8631     		.short	12678
+ 1172 00cc 1E32     		.short	12830
+ 1173 00ce 8C32     		.short	12940
+ 1174 00d0 1133     		.short	13073
+ 1175 00d2 9033     		.short	13200
+ 1176 00d4 0E34     		.short	13326
+ 1177 00d6 8F34     		.short	13455
+ 1178 00d8 0735     		.short	13575
+ 1179 00da 9F35     		.short	13727
+ 1180 00dc 0B36     		.short	13835
+ 1181 00de 9336     		.short	13971
+ 1182 00e0 0D37     		.short	14093
+ 1183 00e2 8D37     		.short	14221
+ 1184 00e4 0E38     		.short	14350
+ 1185 00e6 8438     		.short	14468
+ 1186 00e8 1B39     		.short	14619
+ 1187 00ea 8B39     		.short	14731
+ 1188 00ec 113A     		.short	14865
+ 1189 00ee 8E3A     		.short	14990
+ 1190 00f0 0F3B     		.short	15119
+ 1191 00f2 8E3B     		.short	15246
+ 1192 00f4 073C     		.short	15367
+ 1193 00f6 A43C     		.short	15524
+ 1194 00f8 113D     		.short	15633
+ 1195 00fa 9A3D     		.short	15770
+ 1196 00fc 1D3E     		.short	15901
+ 1197 00fe 9D3E     		.short	16029
+ 1198 0100 1A3F     		.short	16154
+ 1199 0102 993F     		.short	16281
+ 1200              		.type	lastcomindx.10493, %object
+ 1201              		.size	lastcomindx.10493, 2
+ 1202              	lastcomindx.10493:
+ 1203 0104 0100     		.short	1
+ 1204 0106 0000     		.space	2
+ 1205              		.type	hallmap_map2, %object
+ 1206              		.size	hallmap_map2, 6
+ 1207              	hallmap_map2:
+ 1208 0108 02       		.byte	2
+ 1209 0109 06       		.byte	6
+ 1210 010a 04       		.byte	4
+ 1211 010b 05       		.byte	5
+ 1212 010c 01       		.byte	1
+ 1213 010d 03       		.byte	3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 29
+
+
+ 1214 010e 0000     		.space	2
+ 1215              		.type	offsetcount.10506, %object
+ 1216              		.size	offsetcount.10506, 4
+ 1217              	offsetcount.10506:
+ 1218 0110 01000000 		.word	1
+ 1219              		.type	hallmap_map, %object
+ 1220              		.size	hallmap_map, 6
+ 1221              	hallmap_map:
+ 1222 0114 06       		.byte	6
+ 1223 0115 04       		.byte	4
+ 1224 0116 05       		.byte	5
+ 1225 0117 01       		.byte	1
+ 1226 0118 03       		.byte	3
+ 1227 0119 02       		.byte	2
+ 1228 011a 0000     		.space	2
+ 1229              		.type	offsetcount.10513, %object
+ 1230              		.size	offsetcount.10513, 4
+ 1231              	offsetcount.10513:
+ 1232 011c 01000000 		.word	1
+ 1233              		.type	polemap, %object
+ 1234              		.size	polemap, 252
+ 1235              	polemap:
+ 1236 0120 0400     		.short	4
+ 1237 0122 0600     		.short	6
+ 1238 0124 0200     		.short	2
+ 1239 0126 0300     		.short	3
+ 1240 0128 0100     		.short	1
+ 1241 012a 0500     		.short	5
+ 1242 012c 0400     		.short	4
+ 1243 012e 0600     		.short	6
+ 1244 0130 0200     		.short	2
+ 1245 0132 0300     		.short	3
+ 1246 0134 0100     		.short	1
+ 1247 0136 0500     		.short	5
+ 1248 0138 0400     		.short	4
+ 1249 013a 0600     		.short	6
+ 1250 013c 0200     		.short	2
+ 1251 013e 0300     		.short	3
+ 1252 0140 0100     		.short	1
+ 1253 0142 0500     		.short	5
+ 1254 0144 0400     		.short	4
+ 1255 0146 0600     		.short	6
+ 1256 0148 0200     		.short	2
+ 1257 014a 0300     		.short	3
+ 1258 014c 0100     		.short	1
+ 1259 014e 0500     		.short	5
+ 1260 0150 0400     		.short	4
+ 1261 0152 0600     		.short	6
+ 1262 0154 0200     		.short	2
+ 1263 0156 0300     		.short	3
+ 1264 0158 0100     		.short	1
+ 1265 015a 0500     		.short	5
+ 1266 015c 0400     		.short	4
+ 1267 015e 0600     		.short	6
+ 1268 0160 0200     		.short	2
+ 1269 0162 0300     		.short	3
+ 1270 0164 0100     		.short	1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 30
+
+
+ 1271 0166 0500     		.short	5
+ 1272 0168 0400     		.short	4
+ 1273 016a 0600     		.short	6
+ 1274 016c 0200     		.short	2
+ 1275 016e 0300     		.short	3
+ 1276 0170 0100     		.short	1
+ 1277 0172 0500     		.short	5
+ 1278 0174 0400     		.short	4
+ 1279 0176 0600     		.short	6
+ 1280 0178 0200     		.short	2
+ 1281 017a 0300     		.short	3
+ 1282 017c 0100     		.short	1
+ 1283 017e 0500     		.short	5
+ 1284 0180 0400     		.short	4
+ 1285 0182 0600     		.short	6
+ 1286 0184 0200     		.short	2
+ 1287 0186 0300     		.short	3
+ 1288 0188 0100     		.short	1
+ 1289 018a 0500     		.short	5
+ 1290 018c 0400     		.short	4
+ 1291 018e 0600     		.short	6
+ 1292 0190 0200     		.short	2
+ 1293 0192 0300     		.short	3
+ 1294 0194 0100     		.short	1
+ 1295 0196 0500     		.short	5
+ 1296 0198 0400     		.short	4
+ 1297 019a 0600     		.short	6
+ 1298 019c 0200     		.short	2
+ 1299 019e 0300     		.short	3
+ 1300 01a0 0100     		.short	1
+ 1301 01a2 0500     		.short	5
+ 1302 01a4 0400     		.short	4
+ 1303 01a6 0600     		.short	6
+ 1304 01a8 0200     		.short	2
+ 1305 01aa 0300     		.short	3
+ 1306 01ac 0100     		.short	1
+ 1307 01ae 0500     		.short	5
+ 1308 01b0 0400     		.short	4
+ 1309 01b2 0600     		.short	6
+ 1310 01b4 0200     		.short	2
+ 1311 01b6 0300     		.short	3
+ 1312 01b8 0100     		.short	1
+ 1313 01ba 0500     		.short	5
+ 1314 01bc 0400     		.short	4
+ 1315 01be 0600     		.short	6
+ 1316 01c0 0200     		.short	2
+ 1317 01c2 0300     		.short	3
+ 1318 01c4 0100     		.short	1
+ 1319 01c6 0500     		.short	5
+ 1320 01c8 0400     		.short	4
+ 1321 01ca 0600     		.short	6
+ 1322 01cc 0200     		.short	2
+ 1323 01ce 0300     		.short	3
+ 1324 01d0 0100     		.short	1
+ 1325 01d2 0500     		.short	5
+ 1326 01d4 0400     		.short	4
+ 1327 01d6 0600     		.short	6
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 31
+
+
+ 1328 01d8 0200     		.short	2
+ 1329 01da 0300     		.short	3
+ 1330 01dc 0100     		.short	1
+ 1331 01de 0500     		.short	5
+ 1332 01e0 0400     		.short	4
+ 1333 01e2 0600     		.short	6
+ 1334 01e4 0200     		.short	2
+ 1335 01e6 0300     		.short	3
+ 1336 01e8 0100     		.short	1
+ 1337 01ea 0500     		.short	5
+ 1338 01ec 0400     		.short	4
+ 1339 01ee 0600     		.short	6
+ 1340 01f0 0200     		.short	2
+ 1341 01f2 0300     		.short	3
+ 1342 01f4 0100     		.short	1
+ 1343 01f6 0500     		.short	5
+ 1344 01f8 0400     		.short	4
+ 1345 01fa 0600     		.short	6
+ 1346 01fc 0200     		.short	2
+ 1347 01fe 0300     		.short	3
+ 1348 0200 0100     		.short	1
+ 1349 0202 0500     		.short	5
+ 1350 0204 0400     		.short	4
+ 1351 0206 0600     		.short	6
+ 1352 0208 0200     		.short	2
+ 1353 020a 0300     		.short	3
+ 1354 020c 0100     		.short	1
+ 1355 020e 0500     		.short	5
+ 1356 0210 0400     		.short	4
+ 1357 0212 0600     		.short	6
+ 1358 0214 0200     		.short	2
+ 1359 0216 0300     		.short	3
+ 1360 0218 0100     		.short	1
+ 1361 021a 0500     		.short	5
+ 1362              		.type	mincomang.10515, %object
+ 1363              		.size	mincomang.10515, 2
+ 1364              	mincomang.10515:
+ 1365 021c 3075     		.short	30000
+ 1366              		.type	mincomangindx.10516, %object
+ 1367              		.size	mincomangindx.10516, 2
+ 1368              	mincomangindx.10516:
+ 1369 021e FFFF     		.short	-1
+ 1370              		.bss
+ 1371              		.align	2
+ 1372              		.set	.LANCHOR1,. + 0
+ 1373              		.type	delay_cnt.10488, %object
+ 1374              		.size	delay_cnt.10488, 4
+ 1375              	delay_cnt.10488:
+ 1376 0000 00000000 		.space	4
+ 1377              		.type	hall_code_0.10486, %object
+ 1378              		.size	hall_code_0.10486, 1
+ 1379              	hall_code_0.10486:
+ 1380 0004 00       		.space	1
+ 1381              		.type	hall_code.10487, %object
+ 1382              		.size	hall_code.10487, 1
+ 1383              	hall_code.10487:
+ 1384 0005 00       		.space	1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 32
+
+
+ 1385              		.type	findingpoles, %object
+ 1386              		.size	findingpoles, 1
+ 1387              	findingpoles:
+ 1388 0006 00       		.space	1
+ 1389 0007 00       		.space	1
+ 1390              		.type	lastangle.10492, %object
+ 1391              		.size	lastangle.10492, 2
+ 1392              	lastangle.10492:
+ 1393 0008 0000     		.space	2
+ 1394              		.type	switchmode.10507, %object
+ 1395              		.size	switchmode.10507, 2
+ 1396              	switchmode.10507:
+ 1397 000a 0000     		.space	2
+ 1398              		.type	comm_spd.10508, %object
+ 1399              		.size	comm_spd.10508, 2
+ 1400              	comm_spd.10508:
+ 1401 000c 0000     		.space	2
+ 1402              		.type	polecounter.10514, %object
+ 1403              		.size	polecounter.10514, 2
+ 1404              	polecounter.10514:
+ 1405 000e 0000     		.space	2
+ 1406              		.type	hsamp.10521, %object
+ 1407              		.size	hsamp.10521, 4
+ 1408              	hsamp.10521:
+ 1409 0010 00000000 		.space	4
+ 1410              		.type	lsamp.10520, %object
+ 1411              		.size	lsamp.10520, 4
+ 1412              	lsamp.10520:
+ 1413 0014 00000000 		.space	4
+ 1414              		.type	curangle.10512, %object
+ 1415              		.size	curangle.10512, 4
+ 1416              	curangle.10512:
+ 1417 0018 00000000 		.space	4
+ 1418              		.type	actnumsamples.10519, %object
+ 1419              		.size	actnumsamples.10519, 4
+ 1420              	actnumsamples.10519:
+ 1421 001c 00000000 		.space	4
+ 1422              		.type	lang.10522, %object
+ 1423              		.size	lang.10522, 4
+ 1424              	lang.10522:
+ 1425 0020 00000000 		.space	4
+ 1426              		.type	hang.10523, %object
+ 1427              		.size	hang.10523, 4
+ 1428              	hang.10523:
+ 1429 0024 00000000 		.space	4
+ 1430              		.type	mot_spins.10536, %object
+ 1431              		.size	mot_spins.10536, 2
+ 1432              	mot_spins.10536:
+ 1433 0028 0000     		.space	2
+ 1434 002a 0000     		.text
+ 1435              	.Letext0:
+ 1436              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 1437              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 1438              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 1439              		.file 5 "..\\inc/ext_input.h"
+ 1440              		.file 6 "..\\inc/../../flexsea-system/inc/flexsea_cmd_control.h"
+ 1441              		.file 7 "Generated_Source\\PSoC5/core_cm3.h"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 33
+
+
+ 1442              		.file 8 "..\\inc/control.h"
+ 1443              		.file 9 "Generated_Source\\PSoC5/Coast_Brake.h"
+ 1444              		.file 10 "..\\inc/motor.h"
+ 1445              		.file 11 "Generated_Source\\PSoC5/Virtual_Hall.h"
+ 1446              		.file 12 "Generated_Source\\PSoC5/LED_R.h"
+ 1447              		.file 13 "Generated_Source\\PSoC5/LED_G.h"
+ 1448              		.file 14 "Generated_Source\\PSoC5/LED_B.h"
+ 1449              		.file 15 "Generated_Source\\PSoC5/CyLib.h"
+ 1450              		.section	.debug_info,"",%progbits
+ 1451              	.Ldebug_info0:
+ 1452 0000 5A080000 		.4byte	0x85a
+ 1453 0004 0400     		.2byte	0x4
+ 1454 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 1455 000a 04       		.byte	0x4
+ 1456 000b 01       		.uleb128 0x1
+ 1457 000c 3A030000 		.4byte	.LASF103
+ 1458 0010 01       		.byte	0x1
+ 1459 0011 3F050000 		.4byte	.LASF104
+ 1460 0015 DF000000 		.4byte	.LASF105
+ 1461 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 1462 001d 00000000 		.4byte	0
+ 1463 0021 00000000 		.4byte	.Ldebug_line0
+ 1464 0025 02       		.uleb128 0x2
+ 1465 0026 01       		.byte	0x1
+ 1466 0027 06       		.byte	0x6
+ 1467 0028 BF020000 		.4byte	.LASF0
+ 1468 002c 03       		.uleb128 0x3
+ 1469 002d 1B020000 		.4byte	.LASF3
+ 1470 0031 02       		.byte	0x2
+ 1471 0032 1D       		.byte	0x1d
+ 1472 0033 37000000 		.4byte	0x37
+ 1473 0037 02       		.uleb128 0x2
+ 1474 0038 01       		.byte	0x1
+ 1475 0039 08       		.byte	0x8
+ 1476 003a 76020000 		.4byte	.LASF1
+ 1477 003e 02       		.uleb128 0x2
+ 1478 003f 02       		.byte	0x2
+ 1479 0040 05       		.byte	0x5
+ 1480 0041 6A000000 		.4byte	.LASF2
+ 1481 0045 03       		.uleb128 0x3
+ 1482 0046 BB000000 		.4byte	.LASF4
+ 1483 004a 02       		.byte	0x2
+ 1484 004b 2B       		.byte	0x2b
+ 1485 004c 50000000 		.4byte	0x50
+ 1486 0050 02       		.uleb128 0x2
+ 1487 0051 02       		.byte	0x2
+ 1488 0052 07       		.byte	0x7
+ 1489 0053 11030000 		.4byte	.LASF5
+ 1490 0057 03       		.uleb128 0x3
+ 1491 0058 69040000 		.4byte	.LASF6
+ 1492 005c 02       		.byte	0x2
+ 1493 005d 3F       		.byte	0x3f
+ 1494 005e 62000000 		.4byte	0x62
+ 1495 0062 02       		.uleb128 0x2
+ 1496 0063 04       		.byte	0x4
+ 1497 0064 05       		.byte	0x5
+ 1498 0065 D5010000 		.4byte	.LASF7
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 34
+
+
+ 1499 0069 02       		.uleb128 0x2
+ 1500 006a 04       		.byte	0x4
+ 1501 006b 07       		.byte	0x7
+ 1502 006c 0C000000 		.4byte	.LASF8
+ 1503 0070 03       		.uleb128 0x3
+ 1504 0071 DE010000 		.4byte	.LASF9
+ 1505 0075 02       		.byte	0x2
+ 1506 0076 59       		.byte	0x59
+ 1507 0077 7B000000 		.4byte	0x7b
+ 1508 007b 02       		.uleb128 0x2
+ 1509 007c 08       		.byte	0x8
+ 1510 007d 05       		.byte	0x5
+ 1511 007e 8B010000 		.4byte	.LASF10
+ 1512 0082 02       		.uleb128 0x2
+ 1513 0083 08       		.byte	0x8
+ 1514 0084 07       		.byte	0x7
+ 1515 0085 CB020000 		.4byte	.LASF11
+ 1516 0089 04       		.uleb128 0x4
+ 1517 008a 04       		.byte	0x4
+ 1518 008b 05       		.byte	0x5
+ 1519 008c 696E7400 		.ascii	"int\000"
+ 1520 0090 02       		.uleb128 0x2
+ 1521 0091 04       		.byte	0x4
+ 1522 0092 07       		.byte	0x7
+ 1523 0093 E2020000 		.4byte	.LASF12
+ 1524 0097 03       		.uleb128 0x3
+ 1525 0098 34010000 		.4byte	.LASF13
+ 1526 009c 03       		.byte	0x3
+ 1527 009d 15       		.byte	0x15
+ 1528 009e 2C000000 		.4byte	0x2c
+ 1529 00a2 03       		.uleb128 0x3
+ 1530 00a3 EF020000 		.4byte	.LASF14
+ 1531 00a7 03       		.byte	0x3
+ 1532 00a8 21       		.byte	0x21
+ 1533 00a9 45000000 		.4byte	0x45
+ 1534 00ad 03       		.uleb128 0x3
+ 1535 00ae D4030000 		.4byte	.LASF15
+ 1536 00b2 03       		.byte	0x3
+ 1537 00b3 2C       		.byte	0x2c
+ 1538 00b4 57000000 		.4byte	0x57
+ 1539 00b8 03       		.uleb128 0x3
+ 1540 00b9 D7000000 		.4byte	.LASF16
+ 1541 00bd 03       		.byte	0x3
+ 1542 00be 38       		.byte	0x38
+ 1543 00bf 70000000 		.4byte	0x70
+ 1544 00c3 03       		.uleb128 0x3
+ 1545 00c4 42010000 		.4byte	.LASF17
+ 1546 00c8 04       		.byte	0x4
+ 1547 00c9 C2       		.byte	0xc2
+ 1548 00ca 37000000 		.4byte	0x37
+ 1549 00ce 03       		.uleb128 0x3
+ 1550 00cf 0C040000 		.4byte	.LASF18
+ 1551 00d3 04       		.byte	0x4
+ 1552 00d4 C3       		.byte	0xc3
+ 1553 00d5 50000000 		.4byte	0x50
+ 1554 00d9 03       		.uleb128 0x3
+ 1555 00da 2B040000 		.4byte	.LASF19
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 35
+
+
+ 1556 00de 04       		.byte	0x4
+ 1557 00df C4       		.byte	0xc4
+ 1558 00e0 69000000 		.4byte	0x69
+ 1559 00e4 03       		.uleb128 0x3
+ 1560 00e5 3C010000 		.4byte	.LASF20
+ 1561 00e9 04       		.byte	0x4
+ 1562 00ea C6       		.byte	0xc6
+ 1563 00eb 3E000000 		.4byte	0x3e
+ 1564 00ef 03       		.uleb128 0x3
+ 1565 00f0 4A040000 		.4byte	.LASF21
+ 1566 00f4 04       		.byte	0x4
+ 1567 00f5 C7       		.byte	0xc7
+ 1568 00f6 62000000 		.4byte	0x62
+ 1569 00fa 02       		.uleb128 0x2
+ 1570 00fb 04       		.byte	0x4
+ 1571 00fc 04       		.byte	0x4
+ 1572 00fd 85010000 		.4byte	.LASF22
+ 1573 0101 02       		.uleb128 0x2
+ 1574 0102 08       		.byte	0x8
+ 1575 0103 04       		.byte	0x4
+ 1576 0104 C6000000 		.4byte	.LASF23
+ 1577 0108 02       		.uleb128 0x2
+ 1578 0109 01       		.byte	0x1
+ 1579 010a 08       		.byte	0x8
+ 1580 010b 35030000 		.4byte	.LASF24
+ 1581 010f 02       		.uleb128 0x2
+ 1582 0110 04       		.byte	0x4
+ 1583 0111 07       		.byte	0x7
+ 1584 0112 7F000000 		.4byte	.LASF25
+ 1585 0116 02       		.uleb128 0x2
+ 1586 0117 08       		.byte	0x8
+ 1587 0118 04       		.byte	0x4
+ 1588 0119 54020000 		.4byte	.LASF26
+ 1589 011d 05       		.uleb128 0x5
+ 1590 011e 7C010000 		.4byte	.LASF31
+ 1591 0122 10       		.byte	0x10
+ 1592 0123 05       		.byte	0x5
+ 1593 0124 90       		.byte	0x90
+ 1594 0125 5A010000 		.4byte	0x15a
+ 1595 0129 06       		.uleb128 0x6
+ 1596 012a B1000000 		.4byte	.LASF27
+ 1597 012e 05       		.byte	0x5
+ 1598 012f 92       		.byte	0x92
+ 1599 0130 A2000000 		.4byte	0xa2
+ 1600 0134 00       		.byte	0
+ 1601 0135 06       		.uleb128 0x6
+ 1602 0136 24030000 		.4byte	.LASF28
+ 1603 013a 05       		.byte	0x5
+ 1604 013b 93       		.byte	0x93
+ 1605 013c A2000000 		.4byte	0xa2
+ 1606 0140 02       		.byte	0x2
+ 1607 0141 06       		.uleb128 0x6
+ 1608 0142 CA010000 		.4byte	.LASF29
+ 1609 0146 05       		.byte	0x5
+ 1610 0147 94       		.byte	0x94
+ 1611 0148 A2000000 		.4byte	0xa2
+ 1612 014c 04       		.byte	0x4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 36
+
+
+ 1613 014d 06       		.uleb128 0x6
+ 1614 014e EA040000 		.4byte	.LASF30
+ 1615 0152 05       		.byte	0x5
+ 1616 0153 95       		.byte	0x95
+ 1617 0154 B8000000 		.4byte	0xb8
+ 1618 0158 08       		.byte	0x8
+ 1619 0159 00       		.byte	0
+ 1620 015a 05       		.uleb128 0x5
+ 1621 015b 44000000 		.4byte	.LASF32
+ 1622 015f 0C       		.byte	0xc
+ 1623 0160 06       		.byte	0x6
+ 1624 0161 43       		.byte	0x43
+ 1625 0162 A9010000 		.4byte	0x1a9
+ 1626 0166 07       		.uleb128 0x7
+ 1627 0167 673000   		.ascii	"g0\000"
+ 1628 016a 06       		.byte	0x6
+ 1629 016b 45       		.byte	0x45
+ 1630 016c A2000000 		.4byte	0xa2
+ 1631 0170 00       		.byte	0
+ 1632 0171 07       		.uleb128 0x7
+ 1633 0172 673100   		.ascii	"g1\000"
+ 1634 0175 06       		.byte	0x6
+ 1635 0176 45       		.byte	0x45
+ 1636 0177 A2000000 		.4byte	0xa2
+ 1637 017b 02       		.byte	0x2
+ 1638 017c 07       		.uleb128 0x7
+ 1639 017d 673200   		.ascii	"g2\000"
+ 1640 0180 06       		.byte	0x6
+ 1641 0181 45       		.byte	0x45
+ 1642 0182 A2000000 		.4byte	0xa2
+ 1643 0186 04       		.byte	0x4
+ 1644 0187 07       		.uleb128 0x7
+ 1645 0188 673300   		.ascii	"g3\000"
+ 1646 018b 06       		.byte	0x6
+ 1647 018c 45       		.byte	0x45
+ 1648 018d A2000000 		.4byte	0xa2
+ 1649 0191 06       		.byte	0x6
+ 1650 0192 07       		.uleb128 0x7
+ 1651 0193 673400   		.ascii	"g4\000"
+ 1652 0196 06       		.byte	0x6
+ 1653 0197 45       		.byte	0x45
+ 1654 0198 A2000000 		.4byte	0xa2
+ 1655 019c 08       		.byte	0x8
+ 1656 019d 07       		.uleb128 0x7
+ 1657 019e 673500   		.ascii	"g5\000"
+ 1658 01a1 06       		.byte	0x6
+ 1659 01a2 45       		.byte	0x45
+ 1660 01a3 A2000000 		.4byte	0xa2
+ 1661 01a7 0A       		.byte	0xa
+ 1662 01a8 00       		.byte	0
+ 1663 01a9 05       		.uleb128 0x5
+ 1664 01aa 40020000 		.4byte	.LASF33
+ 1665 01ae 24       		.byte	0x24
+ 1666 01af 06       		.byte	0x6
+ 1667 01b0 49       		.byte	0x49
+ 1668 01b1 0A020000 		.4byte	0x20a
+ 1669 01b5 06       		.uleb128 0x6
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 37
+
+
+ 1670 01b6 0C030000 		.4byte	.LASF34
+ 1671 01ba 06       		.byte	0x6
+ 1672 01bb 4C       		.byte	0x4c
+ 1673 01bc 5A010000 		.4byte	0x15a
+ 1674 01c0 00       		.byte	0
+ 1675 01c1 06       		.uleb128 0x6
+ 1676 01c2 5F000000 		.4byte	.LASF35
+ 1677 01c6 06       		.byte	0x6
+ 1678 01c7 4F       		.byte	0x4f
+ 1679 01c8 AD000000 		.4byte	0xad
+ 1680 01cc 0C       		.byte	0xc
+ 1681 01cd 06       		.uleb128 0x6
+ 1682 01ce DD040000 		.4byte	.LASF36
+ 1683 01d2 06       		.byte	0x6
+ 1684 01d3 50       		.byte	0x50
+ 1685 01d4 AD000000 		.4byte	0xad
+ 1686 01d8 10       		.byte	0x10
+ 1687 01d9 06       		.uleb128 0x6
+ 1688 01da D7040000 		.4byte	.LASF37
+ 1689 01de 06       		.byte	0x6
+ 1690 01df 53       		.byte	0x53
+ 1691 01e0 AD000000 		.4byte	0xad
+ 1692 01e4 14       		.byte	0x14
+ 1693 01e5 06       		.uleb128 0x6
+ 1694 01e6 01030000 		.4byte	.LASF38
+ 1695 01ea 06       		.byte	0x6
+ 1696 01eb 54       		.byte	0x54
+ 1697 01ec AD000000 		.4byte	0xad
+ 1698 01f0 18       		.byte	0x18
+ 1699 01f1 06       		.uleb128 0x6
+ 1700 01f2 60020000 		.4byte	.LASF39
+ 1701 01f6 06       		.byte	0x6
+ 1702 01f7 55       		.byte	0x55
+ 1703 01f8 AD000000 		.4byte	0xad
+ 1704 01fc 1C       		.byte	0x1c
+ 1705 01fd 06       		.uleb128 0x6
+ 1706 01fe 24050000 		.4byte	.LASF40
+ 1707 0202 06       		.byte	0x6
+ 1708 0203 56       		.byte	0x56
+ 1709 0204 AD000000 		.4byte	0xad
+ 1710 0208 20       		.byte	0x20
+ 1711 0209 00       		.byte	0
+ 1712 020a 05       		.uleb128 0x5
+ 1713 020b 74000000 		.4byte	.LASF41
+ 1714 020f 34       		.byte	0x34
+ 1715 0210 06       		.byte	0x6
+ 1716 0211 5A       		.byte	0x5a
+ 1717 0212 9B020000 		.4byte	0x29b
+ 1718 0216 06       		.uleb128 0x6
+ 1719 0217 0C030000 		.4byte	.LASF34
+ 1720 021b 06       		.byte	0x6
+ 1721 021c 5D       		.byte	0x5d
+ 1722 021d 5A010000 		.4byte	0x15a
+ 1723 0221 00       		.byte	0
+ 1724 0222 07       		.uleb128 0x7
+ 1725 0223 706F7300 		.ascii	"pos\000"
+ 1726 0227 06       		.byte	0x6
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 38
+
+
+ 1727 0228 60       		.byte	0x60
+ 1728 0229 AD000000 		.4byte	0xad
+ 1729 022d 0C       		.byte	0xc
+ 1730 022e 06       		.uleb128 0x6
+ 1731 022f 07040000 		.4byte	.LASF42
+ 1732 0233 06       		.byte	0x6
+ 1733 0234 61       		.byte	0x61
+ 1734 0235 AD000000 		.4byte	0xad
+ 1735 0239 10       		.byte	0x10
+ 1736 023a 06       		.uleb128 0x6
+ 1737 023b 3A050000 		.4byte	.LASF43
+ 1738 023f 06       		.byte	0x6
+ 1739 0240 62       		.byte	0x62
+ 1740 0241 AD000000 		.4byte	0xad
+ 1741 0245 14       		.byte	0x14
+ 1742 0246 06       		.uleb128 0x6
+ 1743 0247 A7000000 		.4byte	.LASF44
+ 1744 024b 06       		.byte	0x6
+ 1745 024c 63       		.byte	0x63
+ 1746 024d AD000000 		.4byte	0xad
+ 1747 0251 18       		.byte	0x18
+ 1748 0252 06       		.uleb128 0x6
+ 1749 0253 E8010000 		.4byte	.LASF45
+ 1750 0257 06       		.byte	0x6
+ 1751 0258 64       		.byte	0x64
+ 1752 0259 AD000000 		.4byte	0xad
+ 1753 025d 1C       		.byte	0x1c
+ 1754 025e 07       		.uleb128 0x7
+ 1755 025f 61636300 		.ascii	"acc\000"
+ 1756 0263 06       		.byte	0x6
+ 1757 0264 65       		.byte	0x65
+ 1758 0265 AD000000 		.4byte	0xad
+ 1759 0269 20       		.byte	0x20
+ 1760 026a 06       		.uleb128 0x6
+ 1761 026b D7040000 		.4byte	.LASF37
+ 1762 026f 06       		.byte	0x6
+ 1763 0270 68       		.byte	0x68
+ 1764 0271 AD000000 		.4byte	0xad
+ 1765 0275 24       		.byte	0x24
+ 1766 0276 06       		.uleb128 0x6
+ 1767 0277 01030000 		.4byte	.LASF38
+ 1768 027b 06       		.byte	0x6
+ 1769 027c 69       		.byte	0x69
+ 1770 027d AD000000 		.4byte	0xad
+ 1771 0281 28       		.byte	0x28
+ 1772 0282 06       		.uleb128 0x6
+ 1773 0283 60020000 		.4byte	.LASF39
+ 1774 0287 06       		.byte	0x6
+ 1775 0288 6A       		.byte	0x6a
+ 1776 0289 AD000000 		.4byte	0xad
+ 1777 028d 2C       		.byte	0x2c
+ 1778 028e 06       		.uleb128 0x6
+ 1779 028f 24050000 		.4byte	.LASF40
+ 1780 0293 06       		.byte	0x6
+ 1781 0294 6B       		.byte	0x6b
+ 1782 0295 AD000000 		.4byte	0xad
+ 1783 0299 30       		.byte	0x30
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 39
+
+
+ 1784 029a 00       		.byte	0
+ 1785 029b 05       		.uleb128 0x5
+ 1786 029c F8030000 		.4byte	.LASF46
+ 1787 02a0 A4       		.byte	0xa4
+ 1788 02a1 06       		.byte	0x6
+ 1789 02a2 6F       		.byte	0x6f
+ 1790 02a3 F0020000 		.4byte	0x2f0
+ 1791 02a7 06       		.uleb128 0x6
+ 1792 02a8 32040000 		.4byte	.LASF47
+ 1793 02ac 06       		.byte	0x6
+ 1794 02ad 71       		.byte	0x71
+ 1795 02ae 97000000 		.4byte	0x97
+ 1796 02b2 00       		.byte	0
+ 1797 02b3 07       		.uleb128 0x7
+ 1798 02b4 70776D00 		.ascii	"pwm\000"
+ 1799 02b8 06       		.byte	0x6
+ 1800 02b9 72       		.byte	0x72
+ 1801 02ba 97000000 		.4byte	0x97
+ 1802 02be 01       		.byte	0x1
+ 1803 02bf 06       		.uleb128 0x6
+ 1804 02c0 FF030000 		.4byte	.LASF48
+ 1805 02c4 06       		.byte	0x6
+ 1806 02c5 73       		.byte	0x73
+ 1807 02c6 A9010000 		.4byte	0x1a9
+ 1808 02ca 04       		.byte	0x4
+ 1809 02cb 06       		.uleb128 0x6
+ 1810 02cc 0D010000 		.4byte	.LASF49
+ 1811 02d0 06       		.byte	0x6
+ 1812 02d1 74       		.byte	0x74
+ 1813 02d2 A9010000 		.4byte	0x1a9
+ 1814 02d6 28       		.byte	0x28
+ 1815 02d7 06       		.uleb128 0x6
+ 1816 02d8 4B020000 		.4byte	.LASF50
+ 1817 02dc 06       		.byte	0x6
+ 1818 02dd 75       		.byte	0x75
+ 1819 02de 0A020000 		.4byte	0x20a
+ 1820 02e2 4C       		.byte	0x4c
+ 1821 02e3 06       		.uleb128 0x6
+ 1822 02e4 2A010000 		.4byte	.LASF51
+ 1823 02e8 06       		.byte	0x6
+ 1824 02e9 76       		.byte	0x76
+ 1825 02ea A9010000 		.4byte	0x1a9
+ 1826 02ee 80       		.byte	0x80
+ 1827 02ef 00       		.byte	0
+ 1828 02f0 08       		.uleb128 0x8
+ 1829 02f1 8E020000 		.4byte	.LASF54
+ 1830 02f5 01       		.byte	0x1
+ 1831 02f6 29       		.byte	0x29
+ 1832 02f7 00000000 		.4byte	.LFB63
+ 1833 02fb 64000000 		.4byte	.LFE63-.LFB63
+ 1834 02ff 01       		.uleb128 0x1
+ 1835 0300 9C       		.byte	0x9c
+ 1836 0301 C3030000 		.4byte	0x3c3
+ 1837 0305 09       		.uleb128 0x9
+ 1838 0306 73706400 		.ascii	"spd\000"
+ 1839 030a 01       		.byte	0x1
+ 1840 030b 29       		.byte	0x29
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 40
+
+
+ 1841 030c 89000000 		.4byte	0x89
+ 1842 0310 00000000 		.4byte	.LLST0
+ 1843 0314 0A       		.uleb128 0xa
+ 1844 0315 9B000000 		.4byte	.LASF52
+ 1845 0319 01       		.byte	0x1
+ 1846 031a 2B       		.byte	0x2b
+ 1847 031b C3000000 		.4byte	0xc3
+ 1848 031f 2C000000 		.4byte	.LLST1
+ 1849 0323 0A       		.uleb128 0xa
+ 1850 0324 5F040000 		.4byte	.LASF53
+ 1851 0328 01       		.byte	0x1
+ 1852 0329 2B       		.byte	0x2b
+ 1853 032a C3000000 		.4byte	0xc3
+ 1854 032e 61000000 		.4byte	.LLST2
+ 1855 0332 0B       		.uleb128 0xb
+ 1856 0333 0E000000 		.4byte	.LVL3
+ 1857 0337 D5070000 		.4byte	0x7d5
+ 1858 033b 45030000 		.4byte	0x345
+ 1859 033f 0C       		.uleb128 0xc
+ 1860 0340 01       		.uleb128 0x1
+ 1861 0341 50       		.byte	0x50
+ 1862 0342 01       		.uleb128 0x1
+ 1863 0343 31       		.byte	0x31
+ 1864 0344 00       		.byte	0
+ 1865 0345 0B       		.uleb128 0xb
+ 1866 0346 14000000 		.4byte	.LVL4
+ 1867 034a E6070000 		.4byte	0x7e6
+ 1868 034e 59030000 		.4byte	0x359
+ 1869 0352 0C       		.uleb128 0xc
+ 1870 0353 01       		.uleb128 0x1
+ 1871 0354 50       		.byte	0x50
+ 1872 0355 02       		.uleb128 0x2
+ 1873 0356 74       		.byte	0x74
+ 1874 0357 00       		.sleb128 0
+ 1875 0358 00       		.byte	0
+ 1876 0359 0B       		.uleb128 0xb
+ 1877 035a 36000000 		.4byte	.LVL11
+ 1878 035e F7070000 		.4byte	0x7f7
+ 1879 0362 6D030000 		.4byte	0x36d
+ 1880 0366 0C       		.uleb128 0xc
+ 1881 0367 01       		.uleb128 0x1
+ 1882 0368 50       		.byte	0x50
+ 1883 0369 02       		.uleb128 0x2
+ 1884 036a 75       		.byte	0x75
+ 1885 036b 00       		.sleb128 0
+ 1886 036c 00       		.byte	0
+ 1887 036d 0B       		.uleb128 0xb
+ 1888 036e 3E000000 		.4byte	.LVL12
+ 1889 0372 08080000 		.4byte	0x808
+ 1890 0376 83030000 		.4byte	0x383
+ 1891 037a 0C       		.uleb128 0xc
+ 1892 037b 01       		.uleb128 0x1
+ 1893 037c 50       		.byte	0x50
+ 1894 037d 04       		.uleb128 0x4
+ 1895 037e 75       		.byte	0x75
+ 1896 037f 00       		.sleb128 0
+ 1897 0380 31       		.byte	0x31
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 41
+
+
+ 1898 0381 1A       		.byte	0x1a
+ 1899 0382 00       		.byte	0
+ 1900 0383 0B       		.uleb128 0xb
+ 1901 0384 46000000 		.4byte	.LVL13
+ 1902 0388 19080000 		.4byte	0x819
+ 1903 038c 9B030000 		.4byte	0x39b
+ 1904 0390 0C       		.uleb128 0xc
+ 1905 0391 01       		.uleb128 0x1
+ 1906 0392 50       		.byte	0x50
+ 1907 0393 06       		.uleb128 0x6
+ 1908 0394 75       		.byte	0x75
+ 1909 0395 00       		.sleb128 0
+ 1910 0396 32       		.byte	0x32
+ 1911 0397 24       		.byte	0x24
+ 1912 0398 33       		.byte	0x33
+ 1913 0399 25       		.byte	0x25
+ 1914 039a 00       		.byte	0
+ 1915 039b 0B       		.uleb128 0xb
+ 1916 039c 4E000000 		.4byte	.LVL14
+ 1917 03a0 2A080000 		.4byte	0x82a
+ 1918 03a4 B3030000 		.4byte	0x3b3
+ 1919 03a8 0C       		.uleb128 0xc
+ 1920 03a9 01       		.uleb128 0x1
+ 1921 03aa 50       		.byte	0x50
+ 1922 03ab 06       		.uleb128 0x6
+ 1923 03ac 75       		.byte	0x75
+ 1924 03ad 00       		.sleb128 0
+ 1925 03ae 31       		.byte	0x31
+ 1926 03af 24       		.byte	0x24
+ 1927 03b0 33       		.byte	0x33
+ 1928 03b1 25       		.byte	0x25
+ 1929 03b2 00       		.byte	0
+ 1930 03b3 0D       		.uleb128 0xd
+ 1931 03b4 54000000 		.4byte	.LVL15
+ 1932 03b8 3B080000 		.4byte	0x83b
+ 1933 03bc 0C       		.uleb128 0xc
+ 1934 03bd 01       		.uleb128 0x1
+ 1935 03be 50       		.byte	0x50
+ 1936 03bf 01       		.uleb128 0x1
+ 1937 03c0 3A       		.byte	0x3a
+ 1938 03c1 00       		.byte	0
+ 1939 03c2 00       		.byte	0
+ 1940 03c3 08       		.uleb128 0x8
+ 1941 03c4 13040000 		.4byte	.LASF55
+ 1942 03c8 01       		.byte	0x1
+ 1943 03c9 43       		.byte	0x43
+ 1944 03ca 00000000 		.4byte	.LFB64
+ 1945 03ce 1C000000 		.4byte	.LFE64-.LFB64
+ 1946 03d2 01       		.uleb128 0x1
+ 1947 03d3 9C       		.byte	0x9c
+ 1948 03d4 0B040000 		.4byte	0x40b
+ 1949 03d8 09       		.uleb128 0x9
+ 1950 03d9 73706400 		.ascii	"spd\000"
+ 1951 03dd 01       		.byte	0x1
+ 1952 03de 43       		.byte	0x43
+ 1953 03df 89000000 		.4byte	0x89
+ 1954 03e3 80000000 		.4byte	.LLST3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 42
+
+
+ 1955 03e7 0B       		.uleb128 0xb
+ 1956 03e8 0E000000 		.4byte	.LVL18
+ 1957 03ec D5070000 		.4byte	0x7d5
+ 1958 03f0 FA030000 		.4byte	0x3fa
+ 1959 03f4 0C       		.uleb128 0xc
+ 1960 03f5 01       		.uleb128 0x1
+ 1961 03f6 50       		.byte	0x50
+ 1962 03f7 01       		.uleb128 0x1
+ 1963 03f8 31       		.byte	0x31
+ 1964 03f9 00       		.byte	0
+ 1965 03fa 0D       		.uleb128 0xd
+ 1966 03fb 14000000 		.4byte	.LVL19
+ 1967 03ff E6070000 		.4byte	0x7e6
+ 1968 0403 0C       		.uleb128 0xc
+ 1969 0404 01       		.uleb128 0x1
+ 1970 0405 50       		.byte	0x50
+ 1971 0406 02       		.uleb128 0x2
+ 1972 0407 74       		.byte	0x74
+ 1973 0408 00       		.sleb128 0
+ 1974 0409 00       		.byte	0
+ 1975 040a 00       		.byte	0
+ 1976 040b 08       		.uleb128 0x8
+ 1977 040c 4F010000 		.4byte	.LASF56
+ 1978 0410 01       		.byte	0x1
+ 1979 0411 4B       		.byte	0x4b
+ 1980 0412 00000000 		.4byte	.LFB65
+ 1981 0416 40000000 		.4byte	.LFE65-.LFB65
+ 1982 041a 01       		.uleb128 0x1
+ 1983 041b 9C       		.byte	0x9c
+ 1984 041c 63040000 		.4byte	0x463
+ 1985 0420 09       		.uleb128 0x9
+ 1986 0421 64697600 		.ascii	"div\000"
+ 1987 0425 01       		.byte	0x1
+ 1988 0426 4B       		.byte	0x4b
+ 1989 0427 89000000 		.4byte	0x89
+ 1990 042b AC000000 		.4byte	.LLST4
+ 1991 042f 0E       		.uleb128 0xe
+ 1992 0430 9B000000 		.4byte	.LASF52
+ 1993 0434 01       		.byte	0x1
+ 1994 0435 50       		.byte	0x50
+ 1995 0436 C3000000 		.4byte	0xc3
+ 1996 043a 05       		.uleb128 0x5
+ 1997 043b 03       		.byte	0x3
+ 1998 043c 04000000 		.4byte	hall_code_0.10486
+ 1999 0440 0E       		.uleb128 0xe
+ 2000 0441 5F040000 		.4byte	.LASF53
+ 2001 0445 01       		.byte	0x1
+ 2002 0446 50       		.byte	0x50
+ 2003 0447 C3000000 		.4byte	0xc3
+ 2004 044b 05       		.uleb128 0x5
+ 2005 044c 03       		.byte	0x3
+ 2006 044d 05000000 		.4byte	hall_code.10487
+ 2007 0451 0E       		.uleb128 0xe
+ 2008 0452 6A010000 		.4byte	.LASF57
+ 2009 0456 01       		.byte	0x1
+ 2010 0457 51       		.byte	0x51
+ 2011 0458 89000000 		.4byte	0x89
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 43
+
+
+ 2012 045c 05       		.uleb128 0x5
+ 2013 045d 03       		.byte	0x3
+ 2014 045e 00000000 		.4byte	delay_cnt.10488
+ 2015 0462 00       		.byte	0
+ 2016 0463 08       		.uleb128 0x8
+ 2017 0464 F4010000 		.4byte	.LASF58
+ 2018 0468 01       		.byte	0x1
+ 2019 0469 61       		.byte	0x61
+ 2020 046a 00000000 		.4byte	.LFB66
+ 2021 046e A4010000 		.4byte	.LFE66-.LFB66
+ 2022 0472 01       		.uleb128 0x1
+ 2023 0473 9C       		.byte	0x9c
+ 2024 0474 0F050000 		.4byte	0x50f
+ 2025 0478 0F       		.uleb128 0xf
+ 2026 0479 30000000 		.4byte	.LASF59
+ 2027 047d 01       		.byte	0x1
+ 2028 047e 61       		.byte	0x61
+ 2029 047f 89000000 		.4byte	0x89
+ 2030 0483 CD000000 		.4byte	.LLST5
+ 2031 0487 0E       		.uleb128 0xe
+ 2032 0488 55040000 		.4byte	.LASF60
+ 2033 048c 01       		.byte	0x1
+ 2034 048d 63       		.byte	0x63
+ 2035 048e E4000000 		.4byte	0xe4
+ 2036 0492 05       		.uleb128 0x5
+ 2037 0493 03       		.byte	0x3
+ 2038 0494 08000000 		.4byte	lastangle.10492
+ 2039 0498 0E       		.uleb128 0xe
+ 2040 0499 00000000 		.4byte	.LASF61
+ 2041 049d 01       		.byte	0x1
+ 2042 049e 63       		.byte	0x63
+ 2043 049f E4000000 		.4byte	0xe4
+ 2044 04a3 05       		.uleb128 0x5
+ 2045 04a4 03       		.byte	0x3
+ 2046 04a5 04010000 		.4byte	lastcomindx.10493
+ 2047 04a9 10       		.uleb128 0x10
+ 2048 04aa EF030000 		.4byte	.LASF62
+ 2049 04ae 01       		.byte	0x1
+ 2050 04af 64       		.byte	0x64
+ 2051 04b0 E4000000 		.4byte	0xe4
+ 2052 04b4 0A       		.byte	0xa
+ 2053 04b5 0A       		.uleb128 0xa
+ 2054 04b6 93000000 		.4byte	.LASF63
+ 2055 04ba 01       		.byte	0x1
+ 2056 04bb 65       		.byte	0x65
+ 2057 04bc E4000000 		.4byte	0xe4
+ 2058 04c0 F9000000 		.4byte	.LLST6
+ 2059 04c4 11       		.uleb128 0x11
+ 2060 04c5 CD000000 		.4byte	.LASF64
+ 2061 04c9 01       		.byte	0x1
+ 2062 04ca 65       		.byte	0x65
+ 2063 04cb E4000000 		.4byte	0xe4
+ 2064 04cf 11       		.uleb128 0x11
+ 2065 04d0 ED010000 		.4byte	.LASF65
+ 2066 04d4 01       		.byte	0x1
+ 2067 04d5 66       		.byte	0x66
+ 2068 04d6 E4000000 		.4byte	0xe4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 44
+
+
+ 2069 04da 12       		.uleb128 0x12
+ 2070 04db 6C6F00   		.ascii	"lo\000"
+ 2071 04de 01       		.byte	0x1
+ 2072 04df 93       		.byte	0x93
+ 2073 04e0 E4000000 		.4byte	0xe4
+ 2074 04e4 B5010000 		.4byte	.LLST7
+ 2075 04e8 12       		.uleb128 0x12
+ 2076 04e9 686900   		.ascii	"hi\000"
+ 2077 04ec 01       		.byte	0x1
+ 2078 04ed 93       		.byte	0x93
+ 2079 04ee E4000000 		.4byte	0xe4
+ 2080 04f2 D4010000 		.4byte	.LLST8
+ 2081 04f6 12       		.uleb128 0x12
+ 2082 04f7 6D696400 		.ascii	"mid\000"
+ 2083 04fb 01       		.byte	0x1
+ 2084 04fc 93       		.byte	0x93
+ 2085 04fd E4000000 		.4byte	0xe4
+ 2086 0501 FF010000 		.4byte	.LLST9
+ 2087 0505 13       		.uleb128 0x13
+ 2088 0506 8C010000 		.4byte	.LVL54
+ 2089 050a F7070000 		.4byte	0x7f7
+ 2090 050e 00       		.byte	0
+ 2091 050f 14       		.uleb128 0x14
+ 2092 0510 AE040000 		.4byte	.LASF106
+ 2093 0514 01       		.byte	0x1
+ 2094 0515 F2       		.byte	0xf2
+ 2095 0516 00000000 		.4byte	.LFB67
+ 2096 051a 98000000 		.4byte	.LFE67-.LFB67
+ 2097 051e 01       		.uleb128 0x1
+ 2098 051f 9C       		.byte	0x9c
+ 2099 0520 61050000 		.4byte	0x561
+ 2100 0524 0E       		.uleb128 0xe
+ 2101 0525 BE010000 		.4byte	.LASF66
+ 2102 0529 01       		.byte	0x1
+ 2103 052a F3       		.byte	0xf3
+ 2104 052b EF000000 		.4byte	0xef
+ 2105 052f 05       		.uleb128 0x5
+ 2106 0530 03       		.byte	0x3
+ 2107 0531 10010000 		.4byte	offsetcount.10506
+ 2108 0535 0E       		.uleb128 0xe
+ 2109 0536 10020000 		.4byte	.LASF67
+ 2110 053a 01       		.byte	0x1
+ 2111 053b F5       		.byte	0xf5
+ 2112 053c E4000000 		.4byte	0xe4
+ 2113 0540 05       		.uleb128 0x5
+ 2114 0541 03       		.byte	0x3
+ 2115 0542 0A000000 		.4byte	switchmode.10507
+ 2116 0546 0E       		.uleb128 0xe
+ 2117 0547 AC020000 		.4byte	.LASF68
+ 2118 054b 01       		.byte	0x1
+ 2119 054c FB       		.byte	0xfb
+ 2120 054d E4000000 		.4byte	0xe4
+ 2121 0551 05       		.uleb128 0x5
+ 2122 0552 03       		.byte	0x3
+ 2123 0553 0C000000 		.4byte	comm_spd.10508
+ 2124 0557 13       		.uleb128 0x13
+ 2125 0558 76000000 		.4byte	.LVL56
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 45
+
+
+ 2126 055c E6070000 		.4byte	0x7e6
+ 2127 0560 00       		.byte	0
+ 2128 0561 15       		.uleb128 0x15
+ 2129 0562 9A040000 		.4byte	.LASF69
+ 2130 0566 01       		.byte	0x1
+ 2131 0567 0601     		.2byte	0x106
+ 2132 0569 00000000 		.4byte	.LFB68
+ 2133 056d C4020000 		.4byte	.LFE68-.LFB68
+ 2134 0571 01       		.uleb128 0x1
+ 2135 0572 9C       		.byte	0x9c
+ 2136 0573 C2060000 		.4byte	0x6c2
+ 2137 0577 16       		.uleb128 0x16
+ 2138 0578 30000000 		.4byte	.LASF59
+ 2139 057c 01       		.byte	0x1
+ 2140 057d 0601     		.2byte	0x106
+ 2141 057f 89000000 		.4byte	0x89
+ 2142 0583 1E020000 		.4byte	.LLST10
+ 2143 0587 17       		.uleb128 0x17
+ 2144 0588 21010000 		.4byte	.LASF70
+ 2145 058c 01       		.byte	0x1
+ 2146 058d 0701     		.2byte	0x107
+ 2147 058f EF000000 		.4byte	0xef
+ 2148 0593 05       		.uleb128 0x5
+ 2149 0594 03       		.byte	0x3
+ 2150 0595 18000000 		.4byte	curangle.10512
+ 2151 0599 17       		.uleb128 0x17
+ 2152 059a BE010000 		.4byte	.LASF66
+ 2153 059e 01       		.byte	0x1
+ 2154 059f 0701     		.2byte	0x107
+ 2155 05a1 EF000000 		.4byte	0xef
+ 2156 05a5 05       		.uleb128 0x5
+ 2157 05a6 03       		.byte	0x3
+ 2158 05a7 1C010000 		.4byte	offsetcount.10513
+ 2159 05ab 17       		.uleb128 0x17
+ 2160 05ac 6A020000 		.4byte	.LASF71
+ 2161 05b0 01       		.byte	0x1
+ 2162 05b1 0801     		.2byte	0x108
+ 2163 05b3 E4000000 		.4byte	0xe4
+ 2164 05b7 05       		.uleb128 0x5
+ 2165 05b8 03       		.byte	0x3
+ 2166 05b9 0E000000 		.4byte	polecounter.10514
+ 2167 05bd 17       		.uleb128 0x17
+ 2168 05be 83040000 		.4byte	.LASF72
+ 2169 05c2 01       		.byte	0x1
+ 2170 05c3 0901     		.2byte	0x109
+ 2171 05c5 E4000000 		.4byte	0xe4
+ 2172 05c9 05       		.uleb128 0x5
+ 2173 05ca 03       		.byte	0x3
+ 2174 05cb 1C020000 		.4byte	mincomang.10515
+ 2175 05cf 17       		.uleb128 0x17
+ 2176 05d0 36000000 		.4byte	.LASF73
+ 2177 05d4 01       		.byte	0x1
+ 2178 05d5 0901     		.2byte	0x109
+ 2179 05d7 E4000000 		.4byte	0xe4
+ 2180 05db 05       		.uleb128 0x5
+ 2181 05dc 03       		.byte	0x3
+ 2182 05dd 1E020000 		.4byte	mincomangindx.10516
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 46
+
+
+ 2183 05e1 18       		.uleb128 0x18
+ 2184 05e2 88000000 		.4byte	.LASF74
+ 2185 05e6 01       		.byte	0x1
+ 2186 05e7 0A01     		.2byte	0x10a
+ 2187 05e9 C2060000 		.4byte	0x6c2
+ 2188 05ed A00F     		.2byte	0xfa0
+ 2189 05ef 18       		.uleb128 0x18
+ 2190 05f0 16050000 		.4byte	.LASF75
+ 2191 05f4 01       		.byte	0x1
+ 2192 05f5 0A01     		.2byte	0x10a
+ 2193 05f7 C7060000 		.4byte	0x6c7
+ 2194 05fb E803     		.2byte	0x3e8
+ 2195 05fd 17       		.uleb128 0x17
+ 2196 05fe 32020000 		.4byte	.LASF76
+ 2197 0602 01       		.byte	0x1
+ 2198 0603 0A01     		.2byte	0x10a
+ 2199 0605 EF000000 		.4byte	0xef
+ 2200 0609 05       		.uleb128 0x5
+ 2201 060a 03       		.byte	0x3
+ 2202 060b 1C000000 		.4byte	actnumsamples.10519
+ 2203 060f 17       		.uleb128 0x17
+ 2204 0610 1E000000 		.4byte	.LASF77
+ 2205 0614 01       		.byte	0x1
+ 2206 0615 0A01     		.2byte	0x10a
+ 2207 0617 EF000000 		.4byte	0xef
+ 2208 061b 05       		.uleb128 0x5
+ 2209 061c 03       		.byte	0x3
+ 2210 061d 14000000 		.4byte	lsamp.10520
+ 2211 0621 17       		.uleb128 0x17
+ 2212 0622 2F030000 		.4byte	.LASF78
+ 2213 0626 01       		.byte	0x1
+ 2214 0627 0A01     		.2byte	0x10a
+ 2215 0629 EF000000 		.4byte	0xef
+ 2216 062d 05       		.uleb128 0x5
+ 2217 062e 03       		.byte	0x3
+ 2218 062f 10000000 		.4byte	hsamp.10521
+ 2219 0633 17       		.uleb128 0x17
+ 2220 0634 56050000 		.4byte	.LASF79
+ 2221 0638 01       		.byte	0x1
+ 2222 0639 0A01     		.2byte	0x10a
+ 2223 063b EF000000 		.4byte	0xef
+ 2224 063f 05       		.uleb128 0x5
+ 2225 0640 03       		.byte	0x3
+ 2226 0641 20000000 		.4byte	lang.10522
+ 2227 0645 17       		.uleb128 0x17
+ 2228 0646 AC000000 		.4byte	.LASF80
+ 2229 064a 01       		.byte	0x1
+ 2230 064b 0A01     		.2byte	0x10a
+ 2231 064d EF000000 		.4byte	0xef
+ 2232 0651 05       		.uleb128 0x5
+ 2233 0652 03       		.byte	0x3
+ 2234 0653 24000000 		.4byte	hang.10523
+ 2235 0657 19       		.uleb128 0x19
+ 2236 0658 88010000 		.4byte	.LBB2
+ 2237 065c 08010000 		.4byte	.LBE2-.LBB2
+ 2238 0660 95060000 		.4byte	0x695
+ 2239 0664 1A       		.uleb128 0x1a
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 47
+
+
+ 2240 0665 F5040000 		.4byte	.LASF81
+ 2241 0669 01       		.byte	0x1
+ 2242 066a 3C01     		.2byte	0x13c
+ 2243 066c E4000000 		.4byte	0xe4
+ 2244 0670 87020000 		.4byte	.LLST11
+ 2245 0674 1A       		.uleb128 0x1a
+ 2246 0675 8D040000 		.4byte	.LASF82
+ 2247 0679 01       		.byte	0x1
+ 2248 067a 3D01     		.2byte	0x13d
+ 2249 067c E4000000 		.4byte	0xe4
+ 2250 0680 C6020000 		.4byte	.LLST12
+ 2251 0684 1A       		.uleb128 0x1a
+ 2252 0685 2E050000 		.4byte	.LASF83
+ 2253 0689 01       		.byte	0x1
+ 2254 068a 3F01     		.2byte	0x13f
+ 2255 068c E4000000 		.4byte	0xe4
+ 2256 0690 11030000 		.4byte	.LLST13
+ 2257 0694 00       		.byte	0
+ 2258 0695 0B       		.uleb128 0xb
+ 2259 0696 1E000000 		.4byte	.LVL59
+ 2260 069a E6070000 		.4byte	0x7e6
+ 2261 069e A9060000 		.4byte	0x6a9
+ 2262 06a2 0C       		.uleb128 0xc
+ 2263 06a3 01       		.uleb128 0x1
+ 2264 06a4 50       		.byte	0x50
+ 2265 06a5 02       		.uleb128 0x2
+ 2266 06a6 08       		.byte	0x8
+ 2267 06a7 64       		.byte	0x64
+ 2268 06a8 00       		.byte	0
+ 2269 06a9 13       		.uleb128 0x13
+ 2270 06aa 42000000 		.4byte	.LVL60
+ 2271 06ae F7070000 		.4byte	0x7f7
+ 2272 06b2 0D       		.uleb128 0xd
+ 2273 06b3 9A020000 		.4byte	.LVL82
+ 2274 06b7 E6070000 		.4byte	0x7e6
+ 2275 06bb 0C       		.uleb128 0xc
+ 2276 06bc 01       		.uleb128 0x1
+ 2277 06bd 50       		.byte	0x50
+ 2278 06be 01       		.uleb128 0x1
+ 2279 06bf 30       		.byte	0x30
+ 2280 06c0 00       		.byte	0
+ 2281 06c1 00       		.byte	0
+ 2282 06c2 1B       		.uleb128 0x1b
+ 2283 06c3 EF000000 		.4byte	0xef
+ 2284 06c7 1B       		.uleb128 0x1b
+ 2285 06c8 EF000000 		.4byte	0xef
+ 2286 06cc 15       		.uleb128 0x15
+ 2287 06cd 73040000 		.4byte	.LASF84
+ 2288 06d1 01       		.byte	0x1
+ 2289 06d2 6001     		.2byte	0x160
+ 2290 06d4 00000000 		.4byte	.LFB69
+ 2291 06d8 64000000 		.4byte	.LFE69-.LFB69
+ 2292 06dc 01       		.uleb128 0x1
+ 2293 06dd 9C       		.byte	0x9c
+ 2294 06de 23070000 		.4byte	0x723
+ 2295 06e2 17       		.uleb128 0x17
+ 2296 06e3 84020000 		.4byte	.LASF85
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 48
+
+
+ 2297 06e7 01       		.byte	0x1
+ 2298 06e8 6201     		.2byte	0x162
+ 2299 06ea E4000000 		.4byte	0xe4
+ 2300 06ee 05       		.uleb128 0x5
+ 2301 06ef 03       		.byte	0x3
+ 2302 06f0 28000000 		.4byte	mot_spins.10536
+ 2303 06f4 1A       		.uleb128 0x1a
+ 2304 06f5 CD000000 		.4byte	.LASF64
+ 2305 06f9 01       		.byte	0x1
+ 2306 06fa 6301     		.2byte	0x163
+ 2307 06fc EF000000 		.4byte	0xef
+ 2308 0700 3E030000 		.4byte	.LLST14
+ 2309 0704 0B       		.uleb128 0xb
+ 2310 0705 0A000000 		.4byte	.LVL83
+ 2311 0709 4C080000 		.4byte	0x84c
+ 2312 070d 19070000 		.4byte	0x719
+ 2313 0711 0C       		.uleb128 0xc
+ 2314 0712 01       		.uleb128 0x1
+ 2315 0713 50       		.byte	0x50
+ 2316 0714 03       		.uleb128 0x3
+ 2317 0715 0A       		.byte	0xa
+ 2318 0716 FF3F     		.2byte	0x3fff
+ 2319 0718 00       		.byte	0
+ 2320 0719 13       		.uleb128 0x13
+ 2321 071a 58000000 		.4byte	.LVL84
+ 2322 071e 63040000 		.4byte	0x463
+ 2323 0722 00       		.byte	0
+ 2324 0723 1C       		.uleb128 0x1c
+ 2325 0724 01050000 		.4byte	.LASF86
+ 2326 0728 07       		.byte	0x7
+ 2327 0729 2A06     		.2byte	0x62a
+ 2328 072b 2F070000 		.4byte	0x72f
+ 2329 072f 1D       		.uleb128 0x1d
+ 2330 0730 AD000000 		.4byte	0xad
+ 2331 0734 1E       		.uleb128 0x1e
+ 2332 0735 50040000 		.4byte	.LASF87
+ 2333 0739 08       		.byte	0x8
+ 2334 073a 17       		.byte	0x17
+ 2335 073b 3F070000 		.4byte	0x73f
+ 2336 073f 1D       		.uleb128 0x1d
+ 2337 0740 9B020000 		.4byte	0x29b
+ 2338 0744 1E       		.uleb128 0x1e
+ 2339 0745 48010000 		.4byte	.LASF88
+ 2340 0749 05       		.byte	0x5
+ 2341 074a 18       		.byte	0x18
+ 2342 074b 1D010000 		.4byte	0x11d
+ 2343 074f 1F       		.uleb128 0x1f
+ 2344 0750 C3000000 		.4byte	0xc3
+ 2345 0754 5F070000 		.4byte	0x75f
+ 2346 0758 20       		.uleb128 0x20
+ 2347 0759 0F010000 		.4byte	0x10f
+ 2348 075d 05       		.byte	0x5
+ 2349 075e 00       		.byte	0
+ 2350 075f 21       		.uleb128 0x21
+ 2351 0760 B5020000 		.4byte	.LASF89
+ 2352 0764 01       		.byte	0x1
+ 2353 0765 15       		.byte	0x15
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 49
+
+
+ 2354 0766 4F070000 		.4byte	0x74f
+ 2355 076a 05       		.uleb128 0x5
+ 2356 076b 03       		.byte	0x3
+ 2357 076c 00000000 		.4byte	hall_conv
+ 2358 0770 1F       		.uleb128 0x1f
+ 2359 0771 CE000000 		.4byte	0xce
+ 2360 0775 80070000 		.4byte	0x780
+ 2361 0779 20       		.uleb128 0x20
+ 2362 077a 0F010000 		.4byte	0x10f
+ 2363 077e 7D       		.byte	0x7d
+ 2364 077f 00       		.byte	0
+ 2365 0780 21       		.uleb128 0x21
+ 2366 0781 F8020000 		.4byte	.LASF90
+ 2367 0785 01       		.byte	0x1
+ 2368 0786 18       		.byte	0x18
+ 2369 0787 70070000 		.4byte	0x770
+ 2370 078b 05       		.uleb128 0x5
+ 2371 078c 03       		.byte	0x3
+ 2372 078d 00000000 		.4byte	anglemap
+ 2373 0791 21       		.uleb128 0x21
+ 2374 0792 74010000 		.4byte	.LASF91
+ 2375 0796 01       		.byte	0x1
+ 2376 0797 19       		.byte	0x19
+ 2377 0798 70070000 		.4byte	0x770
+ 2378 079c 05       		.uleb128 0x5
+ 2379 079d 03       		.byte	0x3
+ 2380 079e 00000000 		.4byte	polemap
+ 2381 07a2 21       		.uleb128 0x21
+ 2382 07a3 5B050000 		.4byte	.LASF92
+ 2383 07a7 01       		.byte	0x1
+ 2384 07a8 1A       		.byte	0x1a
+ 2385 07a9 4F070000 		.4byte	0x74f
+ 2386 07ad 05       		.uleb128 0x5
+ 2387 07ae 03       		.byte	0x3
+ 2388 07af 00000000 		.4byte	hallmap_map2
+ 2389 07b3 21       		.uleb128 0x21
+ 2390 07b4 C8030000 		.4byte	.LASF93
+ 2391 07b8 01       		.byte	0x1
+ 2392 07b9 1C       		.byte	0x1c
+ 2393 07ba 4F070000 		.4byte	0x74f
+ 2394 07be 05       		.uleb128 0x5
+ 2395 07bf 03       		.byte	0x3
+ 2396 07c0 00000000 		.4byte	hallmap_map
+ 2397 07c4 21       		.uleb128 0x21
+ 2398 07c5 25020000 		.4byte	.LASF94
+ 2399 07c9 01       		.byte	0x1
+ 2400 07ca 1D       		.byte	0x1d
+ 2401 07cb C3000000 		.4byte	0xc3
+ 2402 07cf 05       		.uleb128 0x5
+ 2403 07d0 03       		.byte	0x3
+ 2404 07d1 00000000 		.4byte	findingpoles
+ 2405 07d5 22       		.uleb128 0x22
+ 2406 07d6 AC010000 		.4byte	.LASF95
+ 2407 07da 09       		.byte	0x9
+ 2408 07db 27       		.byte	0x27
+ 2409 07dc E6070000 		.4byte	0x7e6
+ 2410 07e0 23       		.uleb128 0x23
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 50
+
+
+ 2411 07e1 C3000000 		.4byte	0xc3
+ 2412 07e5 00       		.byte	0
+ 2413 07e6 22       		.uleb128 0x22
+ 2414 07e7 4C000000 		.4byte	.LASF96
+ 2415 07eb 0A       		.byte	0xa
+ 2416 07ec 1C       		.byte	0x1c
+ 2417 07ed F7070000 		.4byte	0x7f7
+ 2418 07f1 23       		.uleb128 0x23
+ 2419 07f2 E4000000 		.4byte	0xe4
+ 2420 07f6 00       		.byte	0
+ 2421 07f7 22       		.uleb128 0x22
+ 2422 07f8 99010000 		.4byte	.LASF97
+ 2423 07fc 0B       		.byte	0xb
+ 2424 07fd 27       		.byte	0x27
+ 2425 07fe 08080000 		.4byte	0x808
+ 2426 0802 23       		.uleb128 0x23
+ 2427 0803 C3000000 		.4byte	0xc3
+ 2428 0807 00       		.byte	0
+ 2429 0808 22       		.uleb128 0x22
+ 2430 0809 15010000 		.4byte	.LASF98
+ 2431 080d 0C       		.byte	0xc
+ 2432 080e 28       		.byte	0x28
+ 2433 080f 19080000 		.4byte	0x819
+ 2434 0813 23       		.uleb128 0x23
+ 2435 0814 C3000000 		.4byte	0xc3
+ 2436 0818 00       		.byte	0
+ 2437 0819 22       		.uleb128 0x22
+ 2438 081a 3E040000 		.4byte	.LASF99
+ 2439 081e 0D       		.byte	0xd
+ 2440 081f 28       		.byte	0x28
+ 2441 0820 2A080000 		.4byte	0x82a
+ 2442 0824 23       		.uleb128 0x23
+ 2443 0825 C3000000 		.4byte	0xc3
+ 2444 0829 00       		.byte	0
+ 2445 082a 22       		.uleb128 0x22
+ 2446 082b 24000000 		.4byte	.LASF100
+ 2447 082f 0E       		.byte	0xe
+ 2448 0830 28       		.byte	0x28
+ 2449 0831 3B080000 		.4byte	0x83b
+ 2450 0835 23       		.uleb128 0x23
+ 2451 0836 C3000000 		.4byte	0xc3
+ 2452 083a 00       		.byte	0
+ 2453 083b 22       		.uleb128 0x22
+ 2454 083c 0E050000 		.4byte	.LASF101
+ 2455 0840 0F       		.byte	0xf
+ 2456 0841 77       		.byte	0x77
+ 2457 0842 4C080000 		.4byte	0x84c
+ 2458 0846 23       		.uleb128 0x23
+ 2459 0847 D9000000 		.4byte	0xd9
+ 2460 084b 00       		.byte	0
+ 2461 084c 24       		.uleb128 0x24
+ 2462 084d DC030000 		.4byte	.LASF102
+ 2463 0851 05       		.byte	0x5
+ 2464 0852 27       		.byte	0x27
+ 2465 0853 CE000000 		.4byte	0xce
+ 2466 0857 23       		.uleb128 0x23
+ 2467 0858 CE000000 		.4byte	0xce
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 51
+
+
+ 2468 085c 00       		.byte	0
+ 2469 085d 00       		.byte	0
+ 2470              		.section	.debug_abbrev,"",%progbits
+ 2471              	.Ldebug_abbrev0:
+ 2472 0000 01       		.uleb128 0x1
+ 2473 0001 11       		.uleb128 0x11
+ 2474 0002 01       		.byte	0x1
+ 2475 0003 25       		.uleb128 0x25
+ 2476 0004 0E       		.uleb128 0xe
+ 2477 0005 13       		.uleb128 0x13
+ 2478 0006 0B       		.uleb128 0xb
+ 2479 0007 03       		.uleb128 0x3
+ 2480 0008 0E       		.uleb128 0xe
+ 2481 0009 1B       		.uleb128 0x1b
+ 2482 000a 0E       		.uleb128 0xe
+ 2483 000b 55       		.uleb128 0x55
+ 2484 000c 17       		.uleb128 0x17
+ 2485 000d 11       		.uleb128 0x11
+ 2486 000e 01       		.uleb128 0x1
+ 2487 000f 10       		.uleb128 0x10
+ 2488 0010 17       		.uleb128 0x17
+ 2489 0011 00       		.byte	0
+ 2490 0012 00       		.byte	0
+ 2491 0013 02       		.uleb128 0x2
+ 2492 0014 24       		.uleb128 0x24
+ 2493 0015 00       		.byte	0
+ 2494 0016 0B       		.uleb128 0xb
+ 2495 0017 0B       		.uleb128 0xb
+ 2496 0018 3E       		.uleb128 0x3e
+ 2497 0019 0B       		.uleb128 0xb
+ 2498 001a 03       		.uleb128 0x3
+ 2499 001b 0E       		.uleb128 0xe
+ 2500 001c 00       		.byte	0
+ 2501 001d 00       		.byte	0
+ 2502 001e 03       		.uleb128 0x3
+ 2503 001f 16       		.uleb128 0x16
+ 2504 0020 00       		.byte	0
+ 2505 0021 03       		.uleb128 0x3
+ 2506 0022 0E       		.uleb128 0xe
+ 2507 0023 3A       		.uleb128 0x3a
+ 2508 0024 0B       		.uleb128 0xb
+ 2509 0025 3B       		.uleb128 0x3b
+ 2510 0026 0B       		.uleb128 0xb
+ 2511 0027 49       		.uleb128 0x49
+ 2512 0028 13       		.uleb128 0x13
+ 2513 0029 00       		.byte	0
+ 2514 002a 00       		.byte	0
+ 2515 002b 04       		.uleb128 0x4
+ 2516 002c 24       		.uleb128 0x24
+ 2517 002d 00       		.byte	0
+ 2518 002e 0B       		.uleb128 0xb
+ 2519 002f 0B       		.uleb128 0xb
+ 2520 0030 3E       		.uleb128 0x3e
+ 2521 0031 0B       		.uleb128 0xb
+ 2522 0032 03       		.uleb128 0x3
+ 2523 0033 08       		.uleb128 0x8
+ 2524 0034 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 52
+
+
+ 2525 0035 00       		.byte	0
+ 2526 0036 05       		.uleb128 0x5
+ 2527 0037 13       		.uleb128 0x13
+ 2528 0038 01       		.byte	0x1
+ 2529 0039 03       		.uleb128 0x3
+ 2530 003a 0E       		.uleb128 0xe
+ 2531 003b 0B       		.uleb128 0xb
+ 2532 003c 0B       		.uleb128 0xb
+ 2533 003d 3A       		.uleb128 0x3a
+ 2534 003e 0B       		.uleb128 0xb
+ 2535 003f 3B       		.uleb128 0x3b
+ 2536 0040 0B       		.uleb128 0xb
+ 2537 0041 01       		.uleb128 0x1
+ 2538 0042 13       		.uleb128 0x13
+ 2539 0043 00       		.byte	0
+ 2540 0044 00       		.byte	0
+ 2541 0045 06       		.uleb128 0x6
+ 2542 0046 0D       		.uleb128 0xd
+ 2543 0047 00       		.byte	0
+ 2544 0048 03       		.uleb128 0x3
+ 2545 0049 0E       		.uleb128 0xe
+ 2546 004a 3A       		.uleb128 0x3a
+ 2547 004b 0B       		.uleb128 0xb
+ 2548 004c 3B       		.uleb128 0x3b
+ 2549 004d 0B       		.uleb128 0xb
+ 2550 004e 49       		.uleb128 0x49
+ 2551 004f 13       		.uleb128 0x13
+ 2552 0050 38       		.uleb128 0x38
+ 2553 0051 0B       		.uleb128 0xb
+ 2554 0052 00       		.byte	0
+ 2555 0053 00       		.byte	0
+ 2556 0054 07       		.uleb128 0x7
+ 2557 0055 0D       		.uleb128 0xd
+ 2558 0056 00       		.byte	0
+ 2559 0057 03       		.uleb128 0x3
+ 2560 0058 08       		.uleb128 0x8
+ 2561 0059 3A       		.uleb128 0x3a
+ 2562 005a 0B       		.uleb128 0xb
+ 2563 005b 3B       		.uleb128 0x3b
+ 2564 005c 0B       		.uleb128 0xb
+ 2565 005d 49       		.uleb128 0x49
+ 2566 005e 13       		.uleb128 0x13
+ 2567 005f 38       		.uleb128 0x38
+ 2568 0060 0B       		.uleb128 0xb
+ 2569 0061 00       		.byte	0
+ 2570 0062 00       		.byte	0
+ 2571 0063 08       		.uleb128 0x8
+ 2572 0064 2E       		.uleb128 0x2e
+ 2573 0065 01       		.byte	0x1
+ 2574 0066 3F       		.uleb128 0x3f
+ 2575 0067 19       		.uleb128 0x19
+ 2576 0068 03       		.uleb128 0x3
+ 2577 0069 0E       		.uleb128 0xe
+ 2578 006a 3A       		.uleb128 0x3a
+ 2579 006b 0B       		.uleb128 0xb
+ 2580 006c 3B       		.uleb128 0x3b
+ 2581 006d 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 53
+
+
+ 2582 006e 27       		.uleb128 0x27
+ 2583 006f 19       		.uleb128 0x19
+ 2584 0070 11       		.uleb128 0x11
+ 2585 0071 01       		.uleb128 0x1
+ 2586 0072 12       		.uleb128 0x12
+ 2587 0073 06       		.uleb128 0x6
+ 2588 0074 40       		.uleb128 0x40
+ 2589 0075 18       		.uleb128 0x18
+ 2590 0076 9742     		.uleb128 0x2117
+ 2591 0078 19       		.uleb128 0x19
+ 2592 0079 01       		.uleb128 0x1
+ 2593 007a 13       		.uleb128 0x13
+ 2594 007b 00       		.byte	0
+ 2595 007c 00       		.byte	0
+ 2596 007d 09       		.uleb128 0x9
+ 2597 007e 05       		.uleb128 0x5
+ 2598 007f 00       		.byte	0
+ 2599 0080 03       		.uleb128 0x3
+ 2600 0081 08       		.uleb128 0x8
+ 2601 0082 3A       		.uleb128 0x3a
+ 2602 0083 0B       		.uleb128 0xb
+ 2603 0084 3B       		.uleb128 0x3b
+ 2604 0085 0B       		.uleb128 0xb
+ 2605 0086 49       		.uleb128 0x49
+ 2606 0087 13       		.uleb128 0x13
+ 2607 0088 02       		.uleb128 0x2
+ 2608 0089 17       		.uleb128 0x17
+ 2609 008a 00       		.byte	0
+ 2610 008b 00       		.byte	0
+ 2611 008c 0A       		.uleb128 0xa
+ 2612 008d 34       		.uleb128 0x34
+ 2613 008e 00       		.byte	0
+ 2614 008f 03       		.uleb128 0x3
+ 2615 0090 0E       		.uleb128 0xe
+ 2616 0091 3A       		.uleb128 0x3a
+ 2617 0092 0B       		.uleb128 0xb
+ 2618 0093 3B       		.uleb128 0x3b
+ 2619 0094 0B       		.uleb128 0xb
+ 2620 0095 49       		.uleb128 0x49
+ 2621 0096 13       		.uleb128 0x13
+ 2622 0097 02       		.uleb128 0x2
+ 2623 0098 17       		.uleb128 0x17
+ 2624 0099 00       		.byte	0
+ 2625 009a 00       		.byte	0
+ 2626 009b 0B       		.uleb128 0xb
+ 2627 009c 898201   		.uleb128 0x4109
+ 2628 009f 01       		.byte	0x1
+ 2629 00a0 11       		.uleb128 0x11
+ 2630 00a1 01       		.uleb128 0x1
+ 2631 00a2 31       		.uleb128 0x31
+ 2632 00a3 13       		.uleb128 0x13
+ 2633 00a4 01       		.uleb128 0x1
+ 2634 00a5 13       		.uleb128 0x13
+ 2635 00a6 00       		.byte	0
+ 2636 00a7 00       		.byte	0
+ 2637 00a8 0C       		.uleb128 0xc
+ 2638 00a9 8A8201   		.uleb128 0x410a
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 54
+
+
+ 2639 00ac 00       		.byte	0
+ 2640 00ad 02       		.uleb128 0x2
+ 2641 00ae 18       		.uleb128 0x18
+ 2642 00af 9142     		.uleb128 0x2111
+ 2643 00b1 18       		.uleb128 0x18
+ 2644 00b2 00       		.byte	0
+ 2645 00b3 00       		.byte	0
+ 2646 00b4 0D       		.uleb128 0xd
+ 2647 00b5 898201   		.uleb128 0x4109
+ 2648 00b8 01       		.byte	0x1
+ 2649 00b9 11       		.uleb128 0x11
+ 2650 00ba 01       		.uleb128 0x1
+ 2651 00bb 31       		.uleb128 0x31
+ 2652 00bc 13       		.uleb128 0x13
+ 2653 00bd 00       		.byte	0
+ 2654 00be 00       		.byte	0
+ 2655 00bf 0E       		.uleb128 0xe
+ 2656 00c0 34       		.uleb128 0x34
+ 2657 00c1 00       		.byte	0
+ 2658 00c2 03       		.uleb128 0x3
+ 2659 00c3 0E       		.uleb128 0xe
+ 2660 00c4 3A       		.uleb128 0x3a
+ 2661 00c5 0B       		.uleb128 0xb
+ 2662 00c6 3B       		.uleb128 0x3b
+ 2663 00c7 0B       		.uleb128 0xb
+ 2664 00c8 49       		.uleb128 0x49
+ 2665 00c9 13       		.uleb128 0x13
+ 2666 00ca 02       		.uleb128 0x2
+ 2667 00cb 18       		.uleb128 0x18
+ 2668 00cc 00       		.byte	0
+ 2669 00cd 00       		.byte	0
+ 2670 00ce 0F       		.uleb128 0xf
+ 2671 00cf 05       		.uleb128 0x5
+ 2672 00d0 00       		.byte	0
+ 2673 00d1 03       		.uleb128 0x3
+ 2674 00d2 0E       		.uleb128 0xe
+ 2675 00d3 3A       		.uleb128 0x3a
+ 2676 00d4 0B       		.uleb128 0xb
+ 2677 00d5 3B       		.uleb128 0x3b
+ 2678 00d6 0B       		.uleb128 0xb
+ 2679 00d7 49       		.uleb128 0x49
+ 2680 00d8 13       		.uleb128 0x13
+ 2681 00d9 02       		.uleb128 0x2
+ 2682 00da 17       		.uleb128 0x17
+ 2683 00db 00       		.byte	0
+ 2684 00dc 00       		.byte	0
+ 2685 00dd 10       		.uleb128 0x10
+ 2686 00de 34       		.uleb128 0x34
+ 2687 00df 00       		.byte	0
+ 2688 00e0 03       		.uleb128 0x3
+ 2689 00e1 0E       		.uleb128 0xe
+ 2690 00e2 3A       		.uleb128 0x3a
+ 2691 00e3 0B       		.uleb128 0xb
+ 2692 00e4 3B       		.uleb128 0x3b
+ 2693 00e5 0B       		.uleb128 0xb
+ 2694 00e6 49       		.uleb128 0x49
+ 2695 00e7 13       		.uleb128 0x13
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 55
+
+
+ 2696 00e8 1C       		.uleb128 0x1c
+ 2697 00e9 0B       		.uleb128 0xb
+ 2698 00ea 00       		.byte	0
+ 2699 00eb 00       		.byte	0
+ 2700 00ec 11       		.uleb128 0x11
+ 2701 00ed 34       		.uleb128 0x34
+ 2702 00ee 00       		.byte	0
+ 2703 00ef 03       		.uleb128 0x3
+ 2704 00f0 0E       		.uleb128 0xe
+ 2705 00f1 3A       		.uleb128 0x3a
+ 2706 00f2 0B       		.uleb128 0xb
+ 2707 00f3 3B       		.uleb128 0x3b
+ 2708 00f4 0B       		.uleb128 0xb
+ 2709 00f5 49       		.uleb128 0x49
+ 2710 00f6 13       		.uleb128 0x13
+ 2711 00f7 00       		.byte	0
+ 2712 00f8 00       		.byte	0
+ 2713 00f9 12       		.uleb128 0x12
+ 2714 00fa 34       		.uleb128 0x34
+ 2715 00fb 00       		.byte	0
+ 2716 00fc 03       		.uleb128 0x3
+ 2717 00fd 08       		.uleb128 0x8
+ 2718 00fe 3A       		.uleb128 0x3a
+ 2719 00ff 0B       		.uleb128 0xb
+ 2720 0100 3B       		.uleb128 0x3b
+ 2721 0101 0B       		.uleb128 0xb
+ 2722 0102 49       		.uleb128 0x49
+ 2723 0103 13       		.uleb128 0x13
+ 2724 0104 02       		.uleb128 0x2
+ 2725 0105 17       		.uleb128 0x17
+ 2726 0106 00       		.byte	0
+ 2727 0107 00       		.byte	0
+ 2728 0108 13       		.uleb128 0x13
+ 2729 0109 898201   		.uleb128 0x4109
+ 2730 010c 00       		.byte	0
+ 2731 010d 11       		.uleb128 0x11
+ 2732 010e 01       		.uleb128 0x1
+ 2733 010f 31       		.uleb128 0x31
+ 2734 0110 13       		.uleb128 0x13
+ 2735 0111 00       		.byte	0
+ 2736 0112 00       		.byte	0
+ 2737 0113 14       		.uleb128 0x14
+ 2738 0114 2E       		.uleb128 0x2e
+ 2739 0115 01       		.byte	0x1
+ 2740 0116 3F       		.uleb128 0x3f
+ 2741 0117 19       		.uleb128 0x19
+ 2742 0118 03       		.uleb128 0x3
+ 2743 0119 0E       		.uleb128 0xe
+ 2744 011a 3A       		.uleb128 0x3a
+ 2745 011b 0B       		.uleb128 0xb
+ 2746 011c 3B       		.uleb128 0x3b
+ 2747 011d 0B       		.uleb128 0xb
+ 2748 011e 11       		.uleb128 0x11
+ 2749 011f 01       		.uleb128 0x1
+ 2750 0120 12       		.uleb128 0x12
+ 2751 0121 06       		.uleb128 0x6
+ 2752 0122 40       		.uleb128 0x40
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 56
+
+
+ 2753 0123 18       		.uleb128 0x18
+ 2754 0124 9742     		.uleb128 0x2117
+ 2755 0126 19       		.uleb128 0x19
+ 2756 0127 01       		.uleb128 0x1
+ 2757 0128 13       		.uleb128 0x13
+ 2758 0129 00       		.byte	0
+ 2759 012a 00       		.byte	0
+ 2760 012b 15       		.uleb128 0x15
+ 2761 012c 2E       		.uleb128 0x2e
+ 2762 012d 01       		.byte	0x1
+ 2763 012e 3F       		.uleb128 0x3f
+ 2764 012f 19       		.uleb128 0x19
+ 2765 0130 03       		.uleb128 0x3
+ 2766 0131 0E       		.uleb128 0xe
+ 2767 0132 3A       		.uleb128 0x3a
+ 2768 0133 0B       		.uleb128 0xb
+ 2769 0134 3B       		.uleb128 0x3b
+ 2770 0135 05       		.uleb128 0x5
+ 2771 0136 27       		.uleb128 0x27
+ 2772 0137 19       		.uleb128 0x19
+ 2773 0138 11       		.uleb128 0x11
+ 2774 0139 01       		.uleb128 0x1
+ 2775 013a 12       		.uleb128 0x12
+ 2776 013b 06       		.uleb128 0x6
+ 2777 013c 40       		.uleb128 0x40
+ 2778 013d 18       		.uleb128 0x18
+ 2779 013e 9742     		.uleb128 0x2117
+ 2780 0140 19       		.uleb128 0x19
+ 2781 0141 01       		.uleb128 0x1
+ 2782 0142 13       		.uleb128 0x13
+ 2783 0143 00       		.byte	0
+ 2784 0144 00       		.byte	0
+ 2785 0145 16       		.uleb128 0x16
+ 2786 0146 05       		.uleb128 0x5
+ 2787 0147 00       		.byte	0
+ 2788 0148 03       		.uleb128 0x3
+ 2789 0149 0E       		.uleb128 0xe
+ 2790 014a 3A       		.uleb128 0x3a
+ 2791 014b 0B       		.uleb128 0xb
+ 2792 014c 3B       		.uleb128 0x3b
+ 2793 014d 05       		.uleb128 0x5
+ 2794 014e 49       		.uleb128 0x49
+ 2795 014f 13       		.uleb128 0x13
+ 2796 0150 02       		.uleb128 0x2
+ 2797 0151 17       		.uleb128 0x17
+ 2798 0152 00       		.byte	0
+ 2799 0153 00       		.byte	0
+ 2800 0154 17       		.uleb128 0x17
+ 2801 0155 34       		.uleb128 0x34
+ 2802 0156 00       		.byte	0
+ 2803 0157 03       		.uleb128 0x3
+ 2804 0158 0E       		.uleb128 0xe
+ 2805 0159 3A       		.uleb128 0x3a
+ 2806 015a 0B       		.uleb128 0xb
+ 2807 015b 3B       		.uleb128 0x3b
+ 2808 015c 05       		.uleb128 0x5
+ 2809 015d 49       		.uleb128 0x49
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 57
+
+
+ 2810 015e 13       		.uleb128 0x13
+ 2811 015f 02       		.uleb128 0x2
+ 2812 0160 18       		.uleb128 0x18
+ 2813 0161 00       		.byte	0
+ 2814 0162 00       		.byte	0
+ 2815 0163 18       		.uleb128 0x18
+ 2816 0164 34       		.uleb128 0x34
+ 2817 0165 00       		.byte	0
+ 2818 0166 03       		.uleb128 0x3
+ 2819 0167 0E       		.uleb128 0xe
+ 2820 0168 3A       		.uleb128 0x3a
+ 2821 0169 0B       		.uleb128 0xb
+ 2822 016a 3B       		.uleb128 0x3b
+ 2823 016b 05       		.uleb128 0x5
+ 2824 016c 49       		.uleb128 0x49
+ 2825 016d 13       		.uleb128 0x13
+ 2826 016e 1C       		.uleb128 0x1c
+ 2827 016f 05       		.uleb128 0x5
+ 2828 0170 00       		.byte	0
+ 2829 0171 00       		.byte	0
+ 2830 0172 19       		.uleb128 0x19
+ 2831 0173 0B       		.uleb128 0xb
+ 2832 0174 01       		.byte	0x1
+ 2833 0175 11       		.uleb128 0x11
+ 2834 0176 01       		.uleb128 0x1
+ 2835 0177 12       		.uleb128 0x12
+ 2836 0178 06       		.uleb128 0x6
+ 2837 0179 01       		.uleb128 0x1
+ 2838 017a 13       		.uleb128 0x13
+ 2839 017b 00       		.byte	0
+ 2840 017c 00       		.byte	0
+ 2841 017d 1A       		.uleb128 0x1a
+ 2842 017e 34       		.uleb128 0x34
+ 2843 017f 00       		.byte	0
+ 2844 0180 03       		.uleb128 0x3
+ 2845 0181 0E       		.uleb128 0xe
+ 2846 0182 3A       		.uleb128 0x3a
+ 2847 0183 0B       		.uleb128 0xb
+ 2848 0184 3B       		.uleb128 0x3b
+ 2849 0185 05       		.uleb128 0x5
+ 2850 0186 49       		.uleb128 0x49
+ 2851 0187 13       		.uleb128 0x13
+ 2852 0188 02       		.uleb128 0x2
+ 2853 0189 17       		.uleb128 0x17
+ 2854 018a 00       		.byte	0
+ 2855 018b 00       		.byte	0
+ 2856 018c 1B       		.uleb128 0x1b
+ 2857 018d 26       		.uleb128 0x26
+ 2858 018e 00       		.byte	0
+ 2859 018f 49       		.uleb128 0x49
+ 2860 0190 13       		.uleb128 0x13
+ 2861 0191 00       		.byte	0
+ 2862 0192 00       		.byte	0
+ 2863 0193 1C       		.uleb128 0x1c
+ 2864 0194 34       		.uleb128 0x34
+ 2865 0195 00       		.byte	0
+ 2866 0196 03       		.uleb128 0x3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 58
+
+
+ 2867 0197 0E       		.uleb128 0xe
+ 2868 0198 3A       		.uleb128 0x3a
+ 2869 0199 0B       		.uleb128 0xb
+ 2870 019a 3B       		.uleb128 0x3b
+ 2871 019b 05       		.uleb128 0x5
+ 2872 019c 49       		.uleb128 0x49
+ 2873 019d 13       		.uleb128 0x13
+ 2874 019e 3F       		.uleb128 0x3f
+ 2875 019f 19       		.uleb128 0x19
+ 2876 01a0 3C       		.uleb128 0x3c
+ 2877 01a1 19       		.uleb128 0x19
+ 2878 01a2 00       		.byte	0
+ 2879 01a3 00       		.byte	0
+ 2880 01a4 1D       		.uleb128 0x1d
+ 2881 01a5 35       		.uleb128 0x35
+ 2882 01a6 00       		.byte	0
+ 2883 01a7 49       		.uleb128 0x49
+ 2884 01a8 13       		.uleb128 0x13
+ 2885 01a9 00       		.byte	0
+ 2886 01aa 00       		.byte	0
+ 2887 01ab 1E       		.uleb128 0x1e
+ 2888 01ac 34       		.uleb128 0x34
+ 2889 01ad 00       		.byte	0
+ 2890 01ae 03       		.uleb128 0x3
+ 2891 01af 0E       		.uleb128 0xe
+ 2892 01b0 3A       		.uleb128 0x3a
+ 2893 01b1 0B       		.uleb128 0xb
+ 2894 01b2 3B       		.uleb128 0x3b
+ 2895 01b3 0B       		.uleb128 0xb
+ 2896 01b4 49       		.uleb128 0x49
+ 2897 01b5 13       		.uleb128 0x13
+ 2898 01b6 3F       		.uleb128 0x3f
+ 2899 01b7 19       		.uleb128 0x19
+ 2900 01b8 3C       		.uleb128 0x3c
+ 2901 01b9 19       		.uleb128 0x19
+ 2902 01ba 00       		.byte	0
+ 2903 01bb 00       		.byte	0
+ 2904 01bc 1F       		.uleb128 0x1f
+ 2905 01bd 01       		.uleb128 0x1
+ 2906 01be 01       		.byte	0x1
+ 2907 01bf 49       		.uleb128 0x49
+ 2908 01c0 13       		.uleb128 0x13
+ 2909 01c1 01       		.uleb128 0x1
+ 2910 01c2 13       		.uleb128 0x13
+ 2911 01c3 00       		.byte	0
+ 2912 01c4 00       		.byte	0
+ 2913 01c5 20       		.uleb128 0x20
+ 2914 01c6 21       		.uleb128 0x21
+ 2915 01c7 00       		.byte	0
+ 2916 01c8 49       		.uleb128 0x49
+ 2917 01c9 13       		.uleb128 0x13
+ 2918 01ca 2F       		.uleb128 0x2f
+ 2919 01cb 0B       		.uleb128 0xb
+ 2920 01cc 00       		.byte	0
+ 2921 01cd 00       		.byte	0
+ 2922 01ce 21       		.uleb128 0x21
+ 2923 01cf 34       		.uleb128 0x34
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 59
+
+
+ 2924 01d0 00       		.byte	0
+ 2925 01d1 03       		.uleb128 0x3
+ 2926 01d2 0E       		.uleb128 0xe
+ 2927 01d3 3A       		.uleb128 0x3a
+ 2928 01d4 0B       		.uleb128 0xb
+ 2929 01d5 3B       		.uleb128 0x3b
+ 2930 01d6 0B       		.uleb128 0xb
+ 2931 01d7 49       		.uleb128 0x49
+ 2932 01d8 13       		.uleb128 0x13
+ 2933 01d9 3F       		.uleb128 0x3f
+ 2934 01da 19       		.uleb128 0x19
+ 2935 01db 02       		.uleb128 0x2
+ 2936 01dc 18       		.uleb128 0x18
+ 2937 01dd 00       		.byte	0
+ 2938 01de 00       		.byte	0
+ 2939 01df 22       		.uleb128 0x22
+ 2940 01e0 2E       		.uleb128 0x2e
+ 2941 01e1 01       		.byte	0x1
+ 2942 01e2 3F       		.uleb128 0x3f
+ 2943 01e3 19       		.uleb128 0x19
+ 2944 01e4 03       		.uleb128 0x3
+ 2945 01e5 0E       		.uleb128 0xe
+ 2946 01e6 3A       		.uleb128 0x3a
+ 2947 01e7 0B       		.uleb128 0xb
+ 2948 01e8 3B       		.uleb128 0x3b
+ 2949 01e9 0B       		.uleb128 0xb
+ 2950 01ea 27       		.uleb128 0x27
+ 2951 01eb 19       		.uleb128 0x19
+ 2952 01ec 3C       		.uleb128 0x3c
+ 2953 01ed 19       		.uleb128 0x19
+ 2954 01ee 01       		.uleb128 0x1
+ 2955 01ef 13       		.uleb128 0x13
+ 2956 01f0 00       		.byte	0
+ 2957 01f1 00       		.byte	0
+ 2958 01f2 23       		.uleb128 0x23
+ 2959 01f3 05       		.uleb128 0x5
+ 2960 01f4 00       		.byte	0
+ 2961 01f5 49       		.uleb128 0x49
+ 2962 01f6 13       		.uleb128 0x13
+ 2963 01f7 00       		.byte	0
+ 2964 01f8 00       		.byte	0
+ 2965 01f9 24       		.uleb128 0x24
+ 2966 01fa 2E       		.uleb128 0x2e
+ 2967 01fb 01       		.byte	0x1
+ 2968 01fc 3F       		.uleb128 0x3f
+ 2969 01fd 19       		.uleb128 0x19
+ 2970 01fe 03       		.uleb128 0x3
+ 2971 01ff 0E       		.uleb128 0xe
+ 2972 0200 3A       		.uleb128 0x3a
+ 2973 0201 0B       		.uleb128 0xb
+ 2974 0202 3B       		.uleb128 0x3b
+ 2975 0203 0B       		.uleb128 0xb
+ 2976 0204 27       		.uleb128 0x27
+ 2977 0205 19       		.uleb128 0x19
+ 2978 0206 49       		.uleb128 0x49
+ 2979 0207 13       		.uleb128 0x13
+ 2980 0208 3C       		.uleb128 0x3c
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 60
+
+
+ 2981 0209 19       		.uleb128 0x19
+ 2982 020a 00       		.byte	0
+ 2983 020b 00       		.byte	0
+ 2984 020c 00       		.byte	0
+ 2985              		.section	.debug_loc,"",%progbits
+ 2986              	.Ldebug_loc0:
+ 2987              	.LLST0:
+ 2988 0000 00000000 		.4byte	.LVL0
+ 2989 0004 06000000 		.4byte	.LVL2
+ 2990 0008 0100     		.2byte	0x1
+ 2991 000a 50       		.byte	0x50
+ 2992 000b 06000000 		.4byte	.LVL2
+ 2993 000f 16000000 		.4byte	.LVL5
+ 2994 0013 0100     		.2byte	0x1
+ 2995 0015 54       		.byte	0x54
+ 2996 0016 16000000 		.4byte	.LVL5
+ 2997 001a 64000000 		.4byte	.LFE63
+ 2998 001e 0400     		.2byte	0x4
+ 2999 0020 F3       		.byte	0xf3
+ 3000 0021 01       		.uleb128 0x1
+ 3001 0022 50       		.byte	0x50
+ 3002 0023 9F       		.byte	0x9f
+ 3003 0024 00000000 		.4byte	0
+ 3004 0028 00000000 		.4byte	0
+ 3005              	.LLST1:
+ 3006 002c 04000000 		.4byte	.LVL1
+ 3007 0030 16000000 		.4byte	.LVL5
+ 3008 0034 0200     		.2byte	0x2
+ 3009 0036 30       		.byte	0x30
+ 3010 0037 9F       		.byte	0x9f
+ 3011 0038 16000000 		.4byte	.LVL5
+ 3012 003c 18000000 		.4byte	.LVL6
+ 3013 0040 0100     		.2byte	0x1
+ 3014 0042 54       		.byte	0x54
+ 3015 0043 1A000000 		.4byte	.LVL7
+ 3016 0047 2A000000 		.4byte	.LVL8
+ 3017 004b 0100     		.2byte	0x1
+ 3018 004d 54       		.byte	0x54
+ 3019 004e 2C000000 		.4byte	.LVL9
+ 3020 0052 64000000 		.4byte	.LFE63
+ 3021 0056 0100     		.2byte	0x1
+ 3022 0058 54       		.byte	0x54
+ 3023 0059 00000000 		.4byte	0
+ 3024 005d 00000000 		.4byte	0
+ 3025              	.LLST2:
+ 3026 0061 04000000 		.4byte	.LVL1
+ 3027 0065 16000000 		.4byte	.LVL5
+ 3028 0069 0200     		.2byte	0x2
+ 3029 006b 30       		.byte	0x30
+ 3030 006c 9F       		.byte	0x9f
+ 3031 006d 30000000 		.4byte	.LVL10
+ 3032 0071 64000000 		.4byte	.LFE63
+ 3033 0075 0100     		.2byte	0x1
+ 3034 0077 55       		.byte	0x55
+ 3035 0078 00000000 		.4byte	0
+ 3036 007c 00000000 		.4byte	0
+ 3037              	.LLST3:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 61
+
+
+ 3038 0080 00000000 		.4byte	.LVL16
+ 3039 0084 06000000 		.4byte	.LVL17
+ 3040 0088 0100     		.2byte	0x1
+ 3041 008a 50       		.byte	0x50
+ 3042 008b 06000000 		.4byte	.LVL17
+ 3043 008f 16000000 		.4byte	.LVL20
+ 3044 0093 0100     		.2byte	0x1
+ 3045 0095 54       		.byte	0x54
+ 3046 0096 16000000 		.4byte	.LVL20
+ 3047 009a 1C000000 		.4byte	.LFE64
+ 3048 009e 0400     		.2byte	0x4
+ 3049 00a0 F3       		.byte	0xf3
+ 3050 00a1 01       		.uleb128 0x1
+ 3051 00a2 50       		.byte	0x50
+ 3052 00a3 9F       		.byte	0x9f
+ 3053 00a4 00000000 		.4byte	0
+ 3054 00a8 00000000 		.4byte	0
+ 3055              	.LLST4:
+ 3056 00ac 00000000 		.4byte	.LVL21
+ 3057 00b0 20000000 		.4byte	.LVL22
+ 3058 00b4 0100     		.2byte	0x1
+ 3059 00b6 50       		.byte	0x50
+ 3060 00b7 20000000 		.4byte	.LVL22
+ 3061 00bb 40000000 		.4byte	.LFE65
+ 3062 00bf 0400     		.2byte	0x4
+ 3063 00c1 F3       		.byte	0xf3
+ 3064 00c2 01       		.uleb128 0x1
+ 3065 00c3 50       		.byte	0x50
+ 3066 00c4 9F       		.byte	0x9f
+ 3067 00c5 00000000 		.4byte	0
+ 3068 00c9 00000000 		.4byte	0
+ 3069              	.LLST5:
+ 3070 00cd 00000000 		.4byte	.LVL23
+ 3071 00d1 06000000 		.4byte	.LVL25
+ 3072 00d5 0100     		.2byte	0x1
+ 3073 00d7 50       		.byte	0x50
+ 3074 00d8 06000000 		.4byte	.LVL25
+ 3075 00dc 98010000 		.4byte	.LVL55
+ 3076 00e0 0100     		.2byte	0x1
+ 3077 00e2 54       		.byte	0x54
+ 3078 00e3 98010000 		.4byte	.LVL55
+ 3079 00e7 A4010000 		.4byte	.LFE66
+ 3080 00eb 0400     		.2byte	0x4
+ 3081 00ed F3       		.byte	0xf3
+ 3082 00ee 01       		.uleb128 0x1
+ 3083 00ef 50       		.byte	0x50
+ 3084 00f0 9F       		.byte	0x9f
+ 3085 00f1 00000000 		.4byte	0
+ 3086 00f5 00000000 		.4byte	0
+ 3087              	.LLST6:
+ 3088 00f9 50000000 		.4byte	.LVL32
+ 3089 00fd 3A010000 		.4byte	.LVL35
+ 3090 0101 0100     		.2byte	0x1
+ 3091 0103 55       		.byte	0x55
+ 3092 0104 3A010000 		.4byte	.LVL35
+ 3093 0108 3C010000 		.4byte	.LVL36
+ 3094 010c 0100     		.2byte	0x1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 62
+
+
+ 3095 010e 51       		.byte	0x51
+ 3096 010f 3C010000 		.4byte	.LVL36
+ 3097 0113 3E010000 		.4byte	.LVL37
+ 3098 0117 0100     		.2byte	0x1
+ 3099 0119 55       		.byte	0x55
+ 3100 011a 3E010000 		.4byte	.LVL37
+ 3101 011e 40010000 		.4byte	.LVL38
+ 3102 0122 0100     		.2byte	0x1
+ 3103 0124 51       		.byte	0x51
+ 3104 0125 40010000 		.4byte	.LVL38
+ 3105 0129 42010000 		.4byte	.LVL39
+ 3106 012d 0100     		.2byte	0x1
+ 3107 012f 55       		.byte	0x55
+ 3108 0130 44010000 		.4byte	.LVL40
+ 3109 0134 46010000 		.4byte	.LVL41
+ 3110 0138 0100     		.2byte	0x1
+ 3111 013a 55       		.byte	0x55
+ 3112 013b 48010000 		.4byte	.LVL42
+ 3113 013f 4A010000 		.4byte	.LVL43
+ 3114 0143 0100     		.2byte	0x1
+ 3115 0145 55       		.byte	0x55
+ 3116 0146 4A010000 		.4byte	.LVL43
+ 3117 014a 4C010000 		.4byte	.LVL44
+ 3118 014e 0100     		.2byte	0x1
+ 3119 0150 51       		.byte	0x51
+ 3120 0151 4C010000 		.4byte	.LVL44
+ 3121 0155 4E010000 		.4byte	.LVL45
+ 3122 0159 0100     		.2byte	0x1
+ 3123 015b 55       		.byte	0x55
+ 3124 015c 50010000 		.4byte	.LVL46
+ 3125 0160 52010000 		.4byte	.LVL47
+ 3126 0164 0100     		.2byte	0x1
+ 3127 0166 55       		.byte	0x55
+ 3128 0167 52010000 		.4byte	.LVL47
+ 3129 016b 54010000 		.4byte	.LVL48
+ 3130 016f 0100     		.2byte	0x1
+ 3131 0171 51       		.byte	0x51
+ 3132 0172 54010000 		.4byte	.LVL48
+ 3133 0176 56010000 		.4byte	.LVL49
+ 3134 017a 0100     		.2byte	0x1
+ 3135 017c 55       		.byte	0x55
+ 3136 017d 56010000 		.4byte	.LVL49
+ 3137 0181 58010000 		.4byte	.LVL50
+ 3138 0185 0100     		.2byte	0x1
+ 3139 0187 51       		.byte	0x51
+ 3140 0188 58010000 		.4byte	.LVL50
+ 3141 018c 5A010000 		.4byte	.LVL51
+ 3142 0190 0100     		.2byte	0x1
+ 3143 0192 55       		.byte	0x55
+ 3144 0193 5C010000 		.4byte	.LVL52
+ 3145 0197 98010000 		.4byte	.LVL55
+ 3146 019b 0100     		.2byte	0x1
+ 3147 019d 55       		.byte	0x55
+ 3148 019e 98010000 		.4byte	.LVL55
+ 3149 01a2 A4010000 		.4byte	.LFE66
+ 3150 01a6 0500     		.2byte	0x5
+ 3151 01a8 03       		.byte	0x3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 63
+
+
+ 3152 01a9 04010000 		.4byte	lastcomindx.10493
+ 3153 01ad 00000000 		.4byte	0
+ 3154 01b1 00000000 		.4byte	0
+ 3155              	.LLST7:
+ 3156 01b5 04000000 		.4byte	.LVL24
+ 3157 01b9 0A000000 		.4byte	.LVL26
+ 3158 01bd 0200     		.2byte	0x2
+ 3159 01bf 30       		.byte	0x30
+ 3160 01c0 9F       		.byte	0x9f
+ 3161 01c1 0A000000 		.4byte	.LVL26
+ 3162 01c5 58000000 		.4byte	.LVL33
+ 3163 01c9 0100     		.2byte	0x1
+ 3164 01cb 51       		.byte	0x51
+ 3165 01cc 00000000 		.4byte	0
+ 3166 01d0 00000000 		.4byte	0
+ 3167              	.LLST8:
+ 3168 01d4 04000000 		.4byte	.LVL24
+ 3169 01d8 0A000000 		.4byte	.LVL26
+ 3170 01dc 0300     		.2byte	0x3
+ 3171 01de 08       		.byte	0x8
+ 3172 01df 7E       		.byte	0x7e
+ 3173 01e0 9F       		.byte	0x9f
+ 3174 01e1 0A000000 		.4byte	.LVL26
+ 3175 01e5 3A000000 		.4byte	.LVL30
+ 3176 01e9 0100     		.2byte	0x1
+ 3177 01eb 50       		.byte	0x50
+ 3178 01ec 3A000000 		.4byte	.LVL30
+ 3179 01f0 42000000 		.4byte	.LVL31
+ 3180 01f4 0100     		.2byte	0x1
+ 3181 01f6 52       		.byte	0x52
+ 3182 01f7 00000000 		.4byte	0
+ 3183 01fb 00000000 		.4byte	0
+ 3184              	.LLST9:
+ 3185 01ff 04000000 		.4byte	.LVL24
+ 3186 0203 0A000000 		.4byte	.LVL26
+ 3187 0207 0200     		.2byte	0x2
+ 3188 0209 30       		.byte	0x30
+ 3189 020a 9F       		.byte	0x9f
+ 3190 020b 18000000 		.4byte	.LVL27
+ 3191 020f 30000000 		.4byte	.LVL29
+ 3192 0213 0100     		.2byte	0x1
+ 3193 0215 55       		.byte	0x55
+ 3194 0216 00000000 		.4byte	0
+ 3195 021a 00000000 		.4byte	0
+ 3196              	.LLST10:
+ 3197 021e 00000000 		.4byte	.LVL57
+ 3198 0222 1A000000 		.4byte	.LVL58
+ 3199 0226 0100     		.2byte	0x1
+ 3200 0228 50       		.byte	0x50
+ 3201 0229 1A000000 		.4byte	.LVL58
+ 3202 022d 62010000 		.4byte	.LVL61
+ 3203 0231 0100     		.2byte	0x1
+ 3204 0233 54       		.byte	0x54
+ 3205 0234 62010000 		.4byte	.LVL61
+ 3206 0238 66010000 		.4byte	.LVL62
+ 3207 023c 0400     		.2byte	0x4
+ 3208 023e F3       		.byte	0xf3
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 64
+
+
+ 3209 023f 01       		.uleb128 0x1
+ 3210 0240 50       		.byte	0x50
+ 3211 0241 9F       		.byte	0x9f
+ 3212 0242 66010000 		.4byte	.LVL62
+ 3213 0246 80010000 		.4byte	.LVL63
+ 3214 024a 0100     		.2byte	0x1
+ 3215 024c 54       		.byte	0x54
+ 3216 024d 80010000 		.4byte	.LVL63
+ 3217 0251 90010000 		.4byte	.LVL64
+ 3218 0255 0100     		.2byte	0x1
+ 3219 0257 50       		.byte	0x50
+ 3220 0258 90010000 		.4byte	.LVL64
+ 3221 025c 90020000 		.4byte	.LVL80
+ 3222 0260 0400     		.2byte	0x4
+ 3223 0262 F3       		.byte	0xf3
+ 3224 0263 01       		.uleb128 0x1
+ 3225 0264 50       		.byte	0x50
+ 3226 0265 9F       		.byte	0x9f
+ 3227 0266 90020000 		.4byte	.LVL80
+ 3228 026a 92020000 		.4byte	.LVL81
+ 3229 026e 0100     		.2byte	0x1
+ 3230 0270 50       		.byte	0x50
+ 3231 0271 92020000 		.4byte	.LVL81
+ 3232 0275 C4020000 		.4byte	.LFE68
+ 3233 0279 0400     		.2byte	0x4
+ 3234 027b F3       		.byte	0xf3
+ 3235 027c 01       		.uleb128 0x1
+ 3236 027d 50       		.byte	0x50
+ 3237 027e 9F       		.byte	0x9f
+ 3238 027f 00000000 		.4byte	0
+ 3239 0283 00000000 		.4byte	0
+ 3240              	.LLST11:
+ 3241 0287 94010000 		.4byte	.LVL65
+ 3242 028b 5C020000 		.4byte	.LVL70
+ 3243 028f 0100     		.2byte	0x1
+ 3244 0291 52       		.byte	0x52
+ 3245 0292 5E020000 		.4byte	.LVL71
+ 3246 0296 6A020000 		.4byte	.LVL74
+ 3247 029a 0100     		.2byte	0x1
+ 3248 029c 52       		.byte	0x52
+ 3249 029d 6A020000 		.4byte	.LVL74
+ 3250 02a1 6C020000 		.4byte	.LVL75
+ 3251 02a5 0100     		.2byte	0x1
+ 3252 02a7 51       		.byte	0x51
+ 3253 02a8 6C020000 		.4byte	.LVL75
+ 3254 02ac 82020000 		.4byte	.LVL76
+ 3255 02b0 0100     		.2byte	0x1
+ 3256 02b2 52       		.byte	0x52
+ 3257 02b3 84020000 		.4byte	.LVL77
+ 3258 02b7 90020000 		.4byte	.LVL80
+ 3259 02bb 0100     		.2byte	0x1
+ 3260 02bd 52       		.byte	0x52
+ 3261 02be 00000000 		.4byte	0
+ 3262 02c2 00000000 		.4byte	0
+ 3263              	.LLST12:
+ 3264 02c6 94010000 		.4byte	.LVL65
+ 3265 02ca 46020000 		.4byte	.LVL69
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 65
+
+
+ 3266 02ce 0200     		.2byte	0x2
+ 3267 02d0 30       		.byte	0x30
+ 3268 02d1 9F       		.byte	0x9f
+ 3269 02d2 46020000 		.4byte	.LVL69
+ 3270 02d6 60020000 		.4byte	.LVL72
+ 3271 02da 0100     		.2byte	0x1
+ 3272 02dc 53       		.byte	0x53
+ 3273 02dd 60020000 		.4byte	.LVL72
+ 3274 02e1 62020000 		.4byte	.LVL73
+ 3275 02e5 0100     		.2byte	0x1
+ 3276 02e7 54       		.byte	0x54
+ 3277 02e8 62020000 		.4byte	.LVL73
+ 3278 02ec 86020000 		.4byte	.LVL78
+ 3279 02f0 0100     		.2byte	0x1
+ 3280 02f2 53       		.byte	0x53
+ 3281 02f3 86020000 		.4byte	.LVL78
+ 3282 02f7 88020000 		.4byte	.LVL79
+ 3283 02fb 0100     		.2byte	0x1
+ 3284 02fd 54       		.byte	0x54
+ 3285 02fe 88020000 		.4byte	.LVL79
+ 3286 0302 90020000 		.4byte	.LVL80
+ 3287 0306 0100     		.2byte	0x1
+ 3288 0308 53       		.byte	0x53
+ 3289 0309 00000000 		.4byte	0
+ 3290 030d 00000000 		.4byte	0
+ 3291              	.LLST13:
+ 3292 0311 AA010000 		.4byte	.LVL66
+ 3293 0315 28020000 		.4byte	.LVL67
+ 3294 0319 0100     		.2byte	0x1
+ 3295 031b 53       		.byte	0x53
+ 3296 031c 28020000 		.4byte	.LVL67
+ 3297 0320 3E020000 		.4byte	.LVL68
+ 3298 0324 0300     		.2byte	0x3
+ 3299 0326 73       		.byte	0x73
+ 3300 0327 7B       		.sleb128 -5
+ 3301 0328 9F       		.byte	0x9f
+ 3302 0329 3E020000 		.4byte	.LVL68
+ 3303 032d 90020000 		.4byte	.LVL80
+ 3304 0331 0300     		.2byte	0x3
+ 3305 0333 75       		.byte	0x75
+ 3306 0334 7C       		.sleb128 -4
+ 3307 0335 9F       		.byte	0x9f
+ 3308 0336 00000000 		.4byte	0
+ 3309 033a 00000000 		.4byte	0
+ 3310              	.LLST14:
+ 3311 033e 0A000000 		.4byte	.LVL83
+ 3312 0342 57000000 		.4byte	.LVL84-1
+ 3313 0346 0100     		.2byte	0x1
+ 3314 0348 50       		.byte	0x50
+ 3315 0349 00000000 		.4byte	0
+ 3316 034d 00000000 		.4byte	0
+ 3317              		.section	.debug_aranges,"",%progbits
+ 3318 0000 4C000000 		.4byte	0x4c
+ 3319 0004 0200     		.2byte	0x2
+ 3320 0006 00000000 		.4byte	.Ldebug_info0
+ 3321 000a 04       		.byte	0x4
+ 3322 000b 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 66
+
+
+ 3323 000c 0000     		.2byte	0
+ 3324 000e 0000     		.2byte	0
+ 3325 0010 00000000 		.4byte	.LFB63
+ 3326 0014 64000000 		.4byte	.LFE63-.LFB63
+ 3327 0018 00000000 		.4byte	.LFB64
+ 3328 001c 1C000000 		.4byte	.LFE64-.LFB64
+ 3329 0020 00000000 		.4byte	.LFB65
+ 3330 0024 40000000 		.4byte	.LFE65-.LFB65
+ 3331 0028 00000000 		.4byte	.LFB66
+ 3332 002c A4010000 		.4byte	.LFE66-.LFB66
+ 3333 0030 00000000 		.4byte	.LFB67
+ 3334 0034 98000000 		.4byte	.LFE67-.LFB67
+ 3335 0038 00000000 		.4byte	.LFB68
+ 3336 003c C4020000 		.4byte	.LFE68-.LFB68
+ 3337 0040 00000000 		.4byte	.LFB69
+ 3338 0044 64000000 		.4byte	.LFE69-.LFB69
+ 3339 0048 00000000 		.4byte	0
+ 3340 004c 00000000 		.4byte	0
+ 3341              		.section	.debug_ranges,"",%progbits
+ 3342              	.Ldebug_ranges0:
+ 3343 0000 00000000 		.4byte	.LFB63
+ 3344 0004 64000000 		.4byte	.LFE63
+ 3345 0008 00000000 		.4byte	.LFB64
+ 3346 000c 1C000000 		.4byte	.LFE64
+ 3347 0010 00000000 		.4byte	.LFB65
+ 3348 0014 40000000 		.4byte	.LFE65
+ 3349 0018 00000000 		.4byte	.LFB66
+ 3350 001c A4010000 		.4byte	.LFE66
+ 3351 0020 00000000 		.4byte	.LFB67
+ 3352 0024 98000000 		.4byte	.LFE67
+ 3353 0028 00000000 		.4byte	.LFB68
+ 3354 002c C4020000 		.4byte	.LFE68
+ 3355 0030 00000000 		.4byte	.LFB69
+ 3356 0034 64000000 		.4byte	.LFE69
+ 3357 0038 00000000 		.4byte	0
+ 3358 003c 00000000 		.4byte	0
+ 3359              		.section	.debug_line,"",%progbits
+ 3360              	.Ldebug_line0:
+ 3361 0000 6E030000 		.section	.debug_str,"MS",%progbits,1
+ 3361      02000D02 
+ 3361      00000201 
+ 3361      FB0E0D00 
+ 3361      01010101 
+ 3362              	.LASF61:
+ 3363 0000 6C617374 		.ascii	"lastcomindx\000"
+ 3363      636F6D69 
+ 3363      6E647800 
+ 3364              	.LASF8:
+ 3365 000c 6C6F6E67 		.ascii	"long unsigned int\000"
+ 3365      20756E73 
+ 3365      69676E65 
+ 3365      6420696E 
+ 3365      7400
+ 3366              	.LASF77:
+ 3367 001e 6C73616D 		.ascii	"lsamp\000"
+ 3367      7000
+ 3368              	.LASF100:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 67
+
+
+ 3369 0024 4C45445F 		.ascii	"LED_B_Write\000"
+ 3369      425F5772 
+ 3369      69746500 
+ 3370              	.LASF59:
+ 3371 0030 616E676C 		.ascii	"angle\000"
+ 3371      6500
+ 3372              	.LASF73:
+ 3373 0036 6D696E63 		.ascii	"mincomangindx\000"
+ 3373      6F6D616E 
+ 3373      67696E64 
+ 3373      7800
+ 3374              	.LASF32:
+ 3375 0044 6761696E 		.ascii	"gains_s\000"
+ 3375      735F7300 
+ 3376              	.LASF96:
+ 3377 004c 6D6F746F 		.ascii	"motor_open_speed_1\000"
+ 3377      725F6F70 
+ 3377      656E5F73 
+ 3377      70656564 
+ 3377      5F3100
+ 3378              	.LASF35:
+ 3379 005f 61637475 		.ascii	"actual_val\000"
+ 3379      616C5F76 
+ 3379      616C00
+ 3380              	.LASF2:
+ 3381 006a 73686F72 		.ascii	"short int\000"
+ 3381      7420696E 
+ 3381      7400
+ 3382              	.LASF41:
+ 3383 0074 706F735F 		.ascii	"pos_ctrl_s\000"
+ 3383      6374726C 
+ 3383      5F7300
+ 3384              	.LASF25:
+ 3385 007f 73697A65 		.ascii	"sizetype\000"
+ 3385      74797065 
+ 3385      00
+ 3386              	.LASF74:
+ 3387 0088 73746570 		.ascii	"stepperiod\000"
+ 3387      70657269 
+ 3387      6F6400
+ 3388              	.LASF63:
+ 3389 0093 636F6D69 		.ascii	"comindx\000"
+ 3389      6E647800 
+ 3390              	.LASF52:
+ 3391 009b 68616C6C 		.ascii	"hall_code_0\000"
+ 3391      5F636F64 
+ 3391      655F3000 
+ 3392              	.LASF44:
+ 3393 00a7 706F7366 		.ascii	"posf\000"
+ 3393      00
+ 3394              	.LASF80:
+ 3395 00ac 68616E67 		.ascii	"hang\000"
+ 3395      00
+ 3396              	.LASF27:
+ 3397 00b1 616E676C 		.ascii	"angle_raw\000"
+ 3397      655F7261 
+ 3397      7700
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 68
+
+
+ 3398              	.LASF4:
+ 3399 00bb 5F5F7569 		.ascii	"__uint16_t\000"
+ 3399      6E743136 
+ 3399      5F7400
+ 3400              	.LASF23:
+ 3401 00c6 646F7562 		.ascii	"double\000"
+ 3401      6C6500
+ 3402              	.LASF64:
+ 3403 00cd 74656D70 		.ascii	"tempangle\000"
+ 3403      616E676C 
+ 3403      6500
+ 3404              	.LASF16:
+ 3405 00d7 696E7436 		.ascii	"int64_t\000"
+ 3405      345F7400 
+ 3406              	.LASF105:
+ 3407 00df 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 3407      6C657853 
+ 3407      45415F61 
+ 3407      6C783837 
+ 3407      6772645C 
+ 3408              	.LASF49:
+ 3409 010d 63757272 		.ascii	"current\000"
+ 3409      656E7400 
+ 3410              	.LASF98:
+ 3411 0115 4C45445F 		.ascii	"LED_R_Write\000"
+ 3411      525F5772 
+ 3411      69746500 
+ 3412              	.LASF70:
+ 3413 0121 63757261 		.ascii	"curangle\000"
+ 3413      6E676C65 
+ 3413      00
+ 3414              	.LASF51:
+ 3415 012a 696D7065 		.ascii	"impedance\000"
+ 3415      64616E63 
+ 3415      6500
+ 3416              	.LASF13:
+ 3417 0134 75696E74 		.ascii	"uint8_t\000"
+ 3417      385F7400 
+ 3418              	.LASF20:
+ 3419 013c 696E7431 		.ascii	"int16\000"
+ 3419      3600
+ 3420              	.LASF17:
+ 3421 0142 75696E74 		.ascii	"uint8\000"
+ 3421      3800
+ 3422              	.LASF88:
+ 3423 0148 61733530 		.ascii	"as5047\000"
+ 3423      343700
+ 3424              	.LASF56:
+ 3425 014f 6D6F746F 		.ascii	"motor_stepper_test_runtime\000"
+ 3425      725F7374 
+ 3425      65707065 
+ 3425      725F7465 
+ 3425      73745F72 
+ 3426              	.LASF57:
+ 3427 016a 64656C61 		.ascii	"delay_cnt\000"
+ 3427      795F636E 
+ 3427      7400
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 69
+
+
+ 3428              	.LASF91:
+ 3429 0174 706F6C65 		.ascii	"polemap\000"
+ 3429      6D617000 
+ 3430              	.LASF31:
+ 3431 017c 61733530 		.ascii	"as504x_s\000"
+ 3431      34785F73 
+ 3431      00
+ 3432              	.LASF22:
+ 3433 0185 666C6F61 		.ascii	"float\000"
+ 3433      7400
+ 3434              	.LASF10:
+ 3435 018b 6C6F6E67 		.ascii	"long long int\000"
+ 3435      206C6F6E 
+ 3435      6720696E 
+ 3435      7400
+ 3436              	.LASF97:
+ 3437 0199 56697274 		.ascii	"Virtual_Hall_Write\000"
+ 3437      75616C5F 
+ 3437      48616C6C 
+ 3437      5F577269 
+ 3437      746500
+ 3438              	.LASF95:
+ 3439 01ac 436F6173 		.ascii	"Coast_Brake_Write\000"
+ 3439      745F4272 
+ 3439      616B655F 
+ 3439      57726974 
+ 3439      6500
+ 3440              	.LASF66:
+ 3441 01be 6F666673 		.ascii	"offsetcount\000"
+ 3441      6574636F 
+ 3441      756E7400 
+ 3442              	.LASF29:
+ 3443 01ca 616E676C 		.ascii	"angle_ctrl\000"
+ 3443      655F6374 
+ 3443      726C00
+ 3444              	.LASF7:
+ 3445 01d5 6C6F6E67 		.ascii	"long int\000"
+ 3445      20696E74 
+ 3445      00
+ 3446              	.LASF9:
+ 3447 01de 5F5F696E 		.ascii	"__int64_t\000"
+ 3447      7436345F 
+ 3447      7400
+ 3448              	.LASF45:
+ 3449 01e8 7370646D 		.ascii	"spdm\000"
+ 3449      00
+ 3450              	.LASF65:
+ 3451 01ed 6F666673 		.ascii	"offset\000"
+ 3451      657400
+ 3452              	.LASF58:
+ 3453 01f4 6D6F746F 		.ascii	"motor_spi_block_commutation\000"
+ 3453      725F7370 
+ 3453      695F626C 
+ 3453      6F636B5F 
+ 3453      636F6D6D 
+ 3454              	.LASF67:
+ 3455 0210 73776974 		.ascii	"switchmode\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 70
+
+
+ 3455      63686D6F 
+ 3455      646500
+ 3456              	.LASF3:
+ 3457 021b 5F5F7569 		.ascii	"__uint8_t\000"
+ 3457      6E74385F 
+ 3457      7400
+ 3458              	.LASF94:
+ 3459 0225 66696E64 		.ascii	"findingpoles\000"
+ 3459      696E6770 
+ 3459      6F6C6573 
+ 3459      00
+ 3460              	.LASF76:
+ 3461 0232 6163746E 		.ascii	"actnumsamples\000"
+ 3461      756D7361 
+ 3461      6D706C65 
+ 3461      7300
+ 3462              	.LASF33:
+ 3463 0240 67656E5F 		.ascii	"gen_ctrl_s\000"
+ 3463      6374726C 
+ 3463      5F7300
+ 3464              	.LASF50:
+ 3465 024b 706F7369 		.ascii	"position\000"
+ 3465      74696F6E 
+ 3465      00
+ 3466              	.LASF26:
+ 3467 0254 6C6F6E67 		.ascii	"long double\000"
+ 3467      20646F75 
+ 3467      626C6500 
+ 3468              	.LASF39:
+ 3469 0260 6572726F 		.ascii	"error_sum\000"
+ 3469      725F7375 
+ 3469      6D00
+ 3470              	.LASF71:
+ 3471 026a 706F6C65 		.ascii	"polecounter\000"
+ 3471      636F756E 
+ 3471      74657200 
+ 3472              	.LASF1:
+ 3473 0276 756E7369 		.ascii	"unsigned char\000"
+ 3473      676E6564 
+ 3473      20636861 
+ 3473      7200
+ 3474              	.LASF85:
+ 3475 0284 6D6F745F 		.ascii	"mot_spins\000"
+ 3475      7370696E 
+ 3475      7300
+ 3476              	.LASF54:
+ 3477 028e 6D6F746F 		.ascii	"motor_stepper_test_blocking_1\000"
+ 3477      725F7374 
+ 3477      65707065 
+ 3477      725F7465 
+ 3477      73745F62 
+ 3478              	.LASF68:
+ 3479 02ac 636F6D6D 		.ascii	"comm_spd\000"
+ 3479      5F737064 
+ 3479      00
+ 3480              	.LASF89:
+ 3481 02b5 68616C6C 		.ascii	"hall_conv\000"
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 71
+
+
+ 3481      5F636F6E 
+ 3481      7600
+ 3482              	.LASF0:
+ 3483 02bf 7369676E 		.ascii	"signed char\000"
+ 3483      65642063 
+ 3483      68617200 
+ 3484              	.LASF11:
+ 3485 02cb 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 3485      206C6F6E 
+ 3485      6720756E 
+ 3485      7369676E 
+ 3485      65642069 
+ 3486              	.LASF12:
+ 3487 02e2 756E7369 		.ascii	"unsigned int\000"
+ 3487      676E6564 
+ 3487      20696E74 
+ 3487      00
+ 3488              	.LASF14:
+ 3489 02ef 75696E74 		.ascii	"uint16_t\000"
+ 3489      31365F74 
+ 3489      00
+ 3490              	.LASF90:
+ 3491 02f8 616E676C 		.ascii	"anglemap\000"
+ 3491      656D6170 
+ 3491      00
+ 3492              	.LASF38:
+ 3493 0301 6572726F 		.ascii	"error_prev\000"
+ 3493      725F7072 
+ 3493      657600
+ 3494              	.LASF34:
+ 3495 030c 6761696E 		.ascii	"gain\000"
+ 3495      00
+ 3496              	.LASF5:
+ 3497 0311 73686F72 		.ascii	"short unsigned int\000"
+ 3497      7420756E 
+ 3497      7369676E 
+ 3497      65642069 
+ 3497      6E7400
+ 3498              	.LASF28:
+ 3499 0324 616E676C 		.ascii	"angle_comp\000"
+ 3499      655F636F 
+ 3499      6D7000
+ 3500              	.LASF78:
+ 3501 032f 6873616D 		.ascii	"hsamp\000"
+ 3501      7000
+ 3502              	.LASF24:
+ 3503 0335 63686172 		.ascii	"char\000"
+ 3503      00
+ 3504              	.LASF103:
+ 3505 033a 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 3505      4320342E 
+ 3505      392E3320 
+ 3505      32303135 
+ 3505      30333033 
+ 3506 036d 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 3506      20726576 
+ 3506      6973696F 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 72
+
+
+ 3506      6E203232 
+ 3506      31323230 
+ 3507 03a0 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 3507      66756E63 
+ 3507      74696F6E 
+ 3507      2D736563 
+ 3507      74696F6E 
+ 3508              	.LASF93:
+ 3509 03c8 68616C6C 		.ascii	"hallmap_map\000"
+ 3509      6D61705F 
+ 3509      6D617000 
+ 3510              	.LASF15:
+ 3511 03d4 696E7433 		.ascii	"int32_t\000"
+ 3511      325F7400 
+ 3512              	.LASF102:
+ 3513 03dc 61733530 		.ascii	"as5047_read_single\000"
+ 3513      34375F72 
+ 3513      6561645F 
+ 3513      73696E67 
+ 3513      6C6500
+ 3514              	.LASF62:
+ 3515 03ef 64656164 		.ascii	"deadband\000"
+ 3515      62616E64 
+ 3515      00
+ 3516              	.LASF46:
+ 3517 03f8 6374726C 		.ascii	"ctrl_s\000"
+ 3517      5F7300
+ 3518              	.LASF48:
+ 3519 03ff 67656E65 		.ascii	"generic\000"
+ 3519      72696300 
+ 3520              	.LASF42:
+ 3521 0407 73657470 		.ascii	"setp\000"
+ 3521      00
+ 3522              	.LASF18:
+ 3523 040c 75696E74 		.ascii	"uint16\000"
+ 3523      313600
+ 3524              	.LASF55:
+ 3525 0413 6D6F746F 		.ascii	"motor_stepper_test_init\000"
+ 3525      725F7374 
+ 3525      65707065 
+ 3525      725F7465 
+ 3525      73745F69 
+ 3526              	.LASF19:
+ 3527 042b 75696E74 		.ascii	"uint32\000"
+ 3527      333200
+ 3528              	.LASF47:
+ 3529 0432 61637469 		.ascii	"active_ctrl\000"
+ 3529      76655F63 
+ 3529      74726C00 
+ 3530              	.LASF99:
+ 3531 043e 4C45445F 		.ascii	"LED_G_Write\000"
+ 3531      475F5772 
+ 3531      69746500 
+ 3532              	.LASF21:
+ 3533 044a 696E7433 		.ascii	"int32\000"
+ 3533      3200
+ 3534              	.LASF87:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 73
+
+
+ 3535 0450 6374726C 		.ascii	"ctrl\000"
+ 3535      00
+ 3536              	.LASF60:
+ 3537 0455 6C617374 		.ascii	"lastangle\000"
+ 3537      616E676C 
+ 3537      6500
+ 3538              	.LASF53:
+ 3539 045f 68616C6C 		.ascii	"hall_code\000"
+ 3539      5F636F64 
+ 3539      6500
+ 3540              	.LASF6:
+ 3541 0469 5F5F696E 		.ascii	"__int32_t\000"
+ 3541      7433325F 
+ 3541      7400
+ 3542              	.LASF84:
+ 3543 0473 73656E73 		.ascii	"sensor_commut_1\000"
+ 3543      6F725F63 
+ 3543      6F6D6D75 
+ 3543      745F3100 
+ 3544              	.LASF72:
+ 3545 0483 6D696E63 		.ascii	"mincomang\000"
+ 3545      6F6D616E 
+ 3545      6700
+ 3546              	.LASF82:
+ 3547 048d 616E676C 		.ascii	"anglemapindx\000"
+ 3547      656D6170 
+ 3547      696E6478 
+ 3547      00
+ 3548              	.LASF69:
+ 3549 049a 6D6F746F 		.ascii	"motor_spi_findpoles\000"
+ 3549      725F7370 
+ 3549      695F6669 
+ 3549      6E64706F 
+ 3549      6C657300 
+ 3550              	.LASF106:
+ 3551 04ae 6D6F746F 		.ascii	"motor_spi_block_commutation_triangletest\000"
+ 3551      725F7370 
+ 3551      695F626C 
+ 3551      6F636B5F 
+ 3551      636F6D6D 
+ 3552              	.LASF37:
+ 3553 04d7 6572726F 		.ascii	"error\000"
+ 3553      7200
+ 3554              	.LASF36:
+ 3555 04dd 73657470 		.ascii	"setpoint_val\000"
+ 3555      6F696E74 
+ 3555      5F76616C 
+ 3555      00
+ 3556              	.LASF30:
+ 3557 04ea 616E676C 		.ascii	"angle_cont\000"
+ 3557      655F636F 
+ 3557      6E7400
+ 3558              	.LASF81:
+ 3559 04f5 706F6C65 		.ascii	"polemapindx\000"
+ 3559      6D617069 
+ 3559      6E647800 
+ 3560              	.LASF86:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\cce9W0Dk.s 			page 74
+
+
+ 3561 0501 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 3561      52784275 
+ 3561      66666572 
+ 3561      00
+ 3562              	.LASF101:
+ 3563 050e 43794465 		.ascii	"CyDelay\000"
+ 3563      6C617900 
+ 3564              	.LASF75:
+ 3565 0516 6E756D61 		.ascii	"numavgsamples\000"
+ 3565      76677361 
+ 3565      6D706C65 
+ 3565      7300
+ 3566              	.LASF40:
+ 3567 0524 6572726F 		.ascii	"error_dif\000"
+ 3567      725F6469 
+ 3567      6600
+ 3568              	.LASF83:
+ 3569 052e 68616C6C 		.ascii	"hallmapindx\000"
+ 3569      6D617069 
+ 3569      6E647800 
+ 3570              	.LASF43:
+ 3571 053a 706F7369 		.ascii	"posi\000"
+ 3571      00
+ 3572              	.LASF104:
+ 3573 053f 2E2E5C73 		.ascii	"..\\src\\sensor_commut.c\000"
+ 3573      72635C73 
+ 3573      656E736F 
+ 3573      725F636F 
+ 3573      6D6D7574 
+ 3574              	.LASF79:
+ 3575 0556 6C616E67 		.ascii	"lang\000"
+ 3575      00
+ 3576              	.LASF92:
+ 3577 055b 68616C6C 		.ascii	"hallmap_map2\000"
+ 3577      6D61705F 
+ 3577      6D617032 
+ 3577      00
+ 3578              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br

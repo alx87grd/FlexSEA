@@ -1,0 +1,2418 @@
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"flexsea_comm.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.section	.text.unpack_payload,"ax",%progbits
+  19              		.align	2
+  20              		.thumb
+  21              		.thumb_func
+  22              		.type	unpack_payload, %function
+  23              	unpack_payload:
+  24              	.LFB3:
+  25              		.file 1 "..\\..\\flexsea-comm\\src\\flexsea_comm.c"
+   1:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+   2:..\..\flexsea-comm\src/flexsea_comm.c **** // MIT Media Lab - Biomechatronics
+   3:..\..\flexsea-comm\src/flexsea_comm.c **** // Jean-Francois (Jeff) Duval
+   4:..\..\flexsea-comm\src/flexsea_comm.c **** // jfduval@media.mit.edu
+   5:..\..\flexsea-comm\src/flexsea_comm.c **** // 03/2016
+   6:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+   7:..\..\flexsea-comm\src/flexsea_comm.c **** // flexsea_comm: Data-Link layer of the FlexSEA protocol
+   8:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+   9:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  10:..\..\flexsea-comm\src/flexsea_comm.c **** #ifdef __cplusplus
+  11:..\..\flexsea-comm\src/flexsea_comm.c **** extern "C" {
+  12:..\..\flexsea-comm\src/flexsea_comm.c **** #endif
+  13:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  14:..\..\flexsea-comm\src/flexsea_comm.c **** //FlexSEA comm. prototype:
+  15:..\..\flexsea-comm\src/flexsea_comm.c **** //=======================
+  16:..\..\flexsea-comm\src/flexsea_comm.c **** //[HEADER][# of BYTES][DATA...][CHECKSUM][FOOTER]
+  17:..\..\flexsea-comm\src/flexsea_comm.c **** //=> Number of bytes includes the ESCAPE bytes
+  18:..\..\flexsea-comm\src/flexsea_comm.c **** //=> Checksum is done on the payload (data + ESCAPEs) and on the BYTES byte.
+  19:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  20:..\..\flexsea-comm\src/flexsea_comm.c **** //To transmit a message:
+  21:..\..\flexsea-comm\src/flexsea_comm.c **** //======================
+  22:..\..\flexsea-comm\src/flexsea_comm.c **** // 1) Place the payload in an array (no header, no footer: pure data)
+  23:..\..\flexsea-comm\src/flexsea_comm.c **** // 2) Call comm_gen_str(your_data_array, number_of_bytes)
+  24:..\..\flexsea-comm\src/flexsea_comm.c **** // 2b) It will return the index of the last byte of the message (add 1 for the length)
+  25:..\..\flexsea-comm\src/flexsea_comm.c **** // 2c) The message is in comm_str[]
+  26:..\..\flexsea-comm\src/flexsea_comm.c **** // 3) Send comm_str[] (x_puts(comm_str, msg_length));
+  27:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  28:..\..\flexsea-comm\src/flexsea_comm.c **** //To receive a message:
+  29:..\..\flexsea-comm\src/flexsea_comm.c **** //=====================
+  30:..\..\flexsea-comm\src/flexsea_comm.c **** // 1) Assuming that you have dealt with all the previous messages, call comm_str_payload();
+  31:..\..\flexsea-comm\src/flexsea_comm.c **** //    to fill the buffer with zeros
+  32:..\..\flexsea-comm\src/flexsea_comm.c **** // 2) Every time you receive a byte update the buffer: comm_update_rx_buffer(your_new_byte);
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 2
+
+
+  33:..\..\flexsea-comm\src/flexsea_comm.c **** // 3) Call payload_str_available_in_buffer = comm_decode_str(). If you get >= 1, read the
+  34:..\..\flexsea-comm\src/flexsea_comm.c **** //    comm_str_payload buffer and do something with the data!
+  35:..\..\flexsea-comm\src/flexsea_comm.c **** // 4) At this point you might want to flush the read payload from rx_buf
+  36:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  37:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+  38:..\..\flexsea-comm\src/flexsea_comm.c **** // Include(s)
+  39:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+  40:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  41:..\..\flexsea-comm\src/flexsea_comm.c **** #include "../inc/flexsea.h"
+  42:..\..\flexsea-comm\src/flexsea_comm.c **** #include "flexsea_board.h"
+  43:..\..\flexsea-comm\src/flexsea_comm.c **** #include "flexsea_system.h"
+  44:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  45:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+  46:..\..\flexsea-comm\src/flexsea_comm.c **** // Variable(s)
+  47:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+  48:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  49:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t comm_str_tmp[COMM_STR_BUF_LEN];
+  50:..\..\flexsea-comm\src/flexsea_comm.c **** #ifdef ENABLE_FLEXSEA_BUF_1
+  51:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t comm_str_1[COMM_STR_BUF_LEN];
+  52:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t rx_command_1[PAYLOAD_BUFFERS][PACKAGED_PAYLOAD_LEN];
+  53:..\..\flexsea-comm\src/flexsea_comm.c **** #endif	//ENABLE_FLEXSEA_BUF_1
+  54:..\..\flexsea-comm\src/flexsea_comm.c **** #ifdef ENABLE_FLEXSEA_BUF_2
+  55:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t comm_str_2[COMM_STR_BUF_LEN];
+  56:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t rx_command_2[PAYLOAD_BUFFERS][PACKAGED_PAYLOAD_LEN];
+  57:..\..\flexsea-comm\src/flexsea_comm.c **** #endif	//ENABLE_FLEXSEA_BUF_2
+  58:..\..\flexsea-comm\src/flexsea_comm.c **** #ifdef ENABLE_FLEXSEA_BUF_3
+  59:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t comm_str_3[COMM_STR_BUF_LEN];
+  60:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t rx_command_3[PAYLOAD_BUFFERS][PACKAGED_PAYLOAD_LEN];
+  61:..\..\flexsea-comm\src/flexsea_comm.c **** #endif	//ENABLE_FLEXSEA_BUF_3
+  62:..\..\flexsea-comm\src/flexsea_comm.c **** #ifdef ENABLE_FLEXSEA_BUF_4
+  63:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t comm_str_4[COMM_STR_BUF_LEN];
+  64:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t rx_command_4[PAYLOAD_BUFFERS][PACKAGED_PAYLOAD_LEN];
+  65:..\..\flexsea-comm\src/flexsea_comm.c **** #endif	//ENABLE_FLEXSEA_BUF_4
+  66:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  67:..\..\flexsea-comm\src/flexsea_comm.c **** uint32_t cmd_valid = 0;
+  68:..\..\flexsea-comm\src/flexsea_comm.c **** uint32_t cmd_bad_checksum = 0;
+  69:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  70:..\..\flexsea-comm\src/flexsea_comm.c **** //ToDo: this is project specific! Eliminate or use generic names!
+  71:..\..\flexsea-comm\src/flexsea_comm.c **** struct slave_comm_s slaves_485_1, slaves_485_2;
+  72:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  73:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+  74:..\..\flexsea-comm\src/flexsea_comm.c **** // Private Function Prototype(s):
+  75:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+  76:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  77:..\..\flexsea-comm\src/flexsea_comm.c **** static uint8_t unpack_payload(uint8_t *buf, uint8_t rx_cmd[][PACKAGED_PAYLOAD_LEN]);
+  78:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  79:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+  80:..\..\flexsea-comm\src/flexsea_comm.c **** // Public Function(s)
+  81:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+  82:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  83:..\..\flexsea-comm\src/flexsea_comm.c **** //Takes payload, adds ESCAPES, checksum, header, ...
+  84:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
+  85:..\..\flexsea-comm\src/flexsea_comm.c **** {
+  86:..\..\flexsea-comm\src/flexsea_comm.c ****     unsigned int i = 0, escapes = 0, idx = 0, total_bytes = 0;
+  87:..\..\flexsea-comm\src/flexsea_comm.c ****     unsigned char checksum = 0;
+  88:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  89:..\..\flexsea-comm\src/flexsea_comm.c ****     //Fill comm_str with zeros
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 3
+
+
+  90:..\..\flexsea-comm\src/flexsea_comm.c ****     for(i = 0; i < COMM_STR_BUF_LEN; i++)
+  91:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+  92:..\..\flexsea-comm\src/flexsea_comm.c ****     	cstr[i] = 0xAA; //'0';
+  93:..\..\flexsea-comm\src/flexsea_comm.c ****     }
+  94:..\..\flexsea-comm\src/flexsea_comm.c ****     DEBUG_COMM_PRINTF("comm_str: %s\n", cstr);
+  95:..\..\flexsea-comm\src/flexsea_comm.c **** 
+  96:..\..\flexsea-comm\src/flexsea_comm.c ****     //Fill comm_str with payload and add ESCAPE characters
+  97:..\..\flexsea-comm\src/flexsea_comm.c ****     escapes = 0;
+  98:..\..\flexsea-comm\src/flexsea_comm.c ****     idx = 2;
+  99:..\..\flexsea-comm\src/flexsea_comm.c ****     for(i = 0; i < bytes; i++)
+ 100:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 101:..\..\flexsea-comm\src/flexsea_comm.c ****         if ((payload[i] == HEADER) || (payload[i] == FOOTER) || (payload[i] == ESCAPE))
+ 102:..\..\flexsea-comm\src/flexsea_comm.c ****         {
+ 103:..\..\flexsea-comm\src/flexsea_comm.c ****             escapes = escapes + 1;
+ 104:..\..\flexsea-comm\src/flexsea_comm.c ****             cstr[idx] = ESCAPE;
+ 105:..\..\flexsea-comm\src/flexsea_comm.c ****             cstr[idx+1] = payload[i];
+ 106:..\..\flexsea-comm\src/flexsea_comm.c ****             idx = idx + 1;
+ 107:..\..\flexsea-comm\src/flexsea_comm.c ****         }
+ 108:..\..\flexsea-comm\src/flexsea_comm.c ****         else
+ 109:..\..\flexsea-comm\src/flexsea_comm.c ****         {
+ 110:..\..\flexsea-comm\src/flexsea_comm.c ****         	cstr[idx] = payload[i];
+ 111:..\..\flexsea-comm\src/flexsea_comm.c ****         }
+ 112:..\..\flexsea-comm\src/flexsea_comm.c ****         idx++;
+ 113:..\..\flexsea-comm\src/flexsea_comm.c ****     }
+ 114:..\..\flexsea-comm\src/flexsea_comm.c ****     DEBUG_COMM_PRINTF("comm_str: %s\n", cstr);
+ 115:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 116:..\..\flexsea-comm\src/flexsea_comm.c ****     total_bytes = bytes + escapes;
+ 117:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 118:..\..\flexsea-comm\src/flexsea_comm.c ****     DEBUG_COMM_PRINTF("total_bytes: %i\n", total_bytes);
+ 119:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 120:..\..\flexsea-comm\src/flexsea_comm.c ****     //Checksum:
+ 121:..\..\flexsea-comm\src/flexsea_comm.c ****     checksum = 0;
+ 122:..\..\flexsea-comm\src/flexsea_comm.c ****     for (i = 0; i < total_bytes; i++)
+ 123:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 124:..\..\flexsea-comm\src/flexsea_comm.c ****     	//DEBUG_COMM_PRINTF("cs b[%i] = %c\n", i, cstr[2+i]);
+ 125:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 126:..\..\flexsea-comm\src/flexsea_comm.c ****         checksum = checksum + cstr[2+i];
+ 127:..\..\flexsea-comm\src/flexsea_comm.c ****     }
+ 128:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 129:..\..\flexsea-comm\src/flexsea_comm.c ****     DEBUG_COMM_PRINTF("checksum: %i\n", checksum);
+ 130:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 131:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 132:..\..\flexsea-comm\src/flexsea_comm.c ****     //Build comm_str:
+ 133:..\..\flexsea-comm\src/flexsea_comm.c ****     cstr[0] = HEADER;
+ 134:..\..\flexsea-comm\src/flexsea_comm.c ****     cstr[1] = total_bytes;
+ 135:..\..\flexsea-comm\src/flexsea_comm.c ****     cstr[2 + total_bytes] = checksum;
+ 136:..\..\flexsea-comm\src/flexsea_comm.c ****     cstr[3 + total_bytes] = FOOTER;
+ 137:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 138:..\..\flexsea-comm\src/flexsea_comm.c ****     //Return the length of the valid data
+ 139:..\..\flexsea-comm\src/flexsea_comm.c ****     return (3 + total_bytes);
+ 140:..\..\flexsea-comm\src/flexsea_comm.c **** }
+ 141:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 142:..\..\flexsea-comm\src/flexsea_comm.c **** //To avoid sharing buffers in multiple files we use specific functions:
+ 143:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 144:..\..\flexsea-comm\src/flexsea_comm.c **** #ifdef ENABLE_FLEXSEA_BUF_1
+ 145:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t unpack_payload_1(void)
+ 146:..\..\flexsea-comm\src/flexsea_comm.c **** {
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 4
+
+
+ 147:..\..\flexsea-comm\src/flexsea_comm.c **** 	return unpack_payload(rx_buf_1, rx_command_1);
+ 148:..\..\flexsea-comm\src/flexsea_comm.c **** }
+ 149:..\..\flexsea-comm\src/flexsea_comm.c **** #endif	//ENABLE_FLEXSEA_BUF_1
+ 150:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 151:..\..\flexsea-comm\src/flexsea_comm.c **** #ifdef ENABLE_FLEXSEA_BUF_2
+ 152:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t unpack_payload_2(void)
+ 153:..\..\flexsea-comm\src/flexsea_comm.c **** {
+ 154:..\..\flexsea-comm\src/flexsea_comm.c **** 	return unpack_payload(rx_buf_2, rx_command_2);
+ 155:..\..\flexsea-comm\src/flexsea_comm.c **** }
+ 156:..\..\flexsea-comm\src/flexsea_comm.c **** #endif	//ENABLE_FLEXSEA_BUF_2
+ 157:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 158:..\..\flexsea-comm\src/flexsea_comm.c **** #ifdef ENABLE_FLEXSEA_BUF_3
+ 159:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t unpack_payload_3(void)
+ 160:..\..\flexsea-comm\src/flexsea_comm.c **** {
+ 161:..\..\flexsea-comm\src/flexsea_comm.c **** 	return unpack_payload(rx_buf_3, rx_command_3);
+ 162:..\..\flexsea-comm\src/flexsea_comm.c **** }
+ 163:..\..\flexsea-comm\src/flexsea_comm.c **** #endif	//ENABLE_FLEXSEA_BUF_3
+ 164:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 165:..\..\flexsea-comm\src/flexsea_comm.c **** #ifdef ENABLE_FLEXSEA_BUF_4
+ 166:..\..\flexsea-comm\src/flexsea_comm.c **** uint8_t unpack_payload_4(void)
+ 167:..\..\flexsea-comm\src/flexsea_comm.c **** {
+ 168:..\..\flexsea-comm\src/flexsea_comm.c **** 	return unpack_payload(rx_buf_4, rx_command_4);
+ 169:..\..\flexsea-comm\src/flexsea_comm.c **** }
+ 170:..\..\flexsea-comm\src/flexsea_comm.c **** #endif	//ENABLE_FLEXSEA_BUF_4
+ 171:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 172:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+ 173:..\..\flexsea-comm\src/flexsea_comm.c **** // Private Function(s)
+ 174:..\..\flexsea-comm\src/flexsea_comm.c **** //****************************************************************************
+ 175:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 176:..\..\flexsea-comm\src/flexsea_comm.c **** //New version of comm_decode_str
+ 177:..\..\flexsea-comm\src/flexsea_comm.c **** //Take a buffer as an argument, returns the number of decoded payload packets
+ 178:..\..\flexsea-comm\src/flexsea_comm.c **** static uint8_t unpack_payload(uint8_t *buf, uint8_t rx_cmd[][PACKAGED_PAYLOAD_LEN])
+ 179:..\..\flexsea-comm\src/flexsea_comm.c **** {
+  26              		.loc 1 179 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 104
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+  32              		.cfi_def_cfa_offset 24
+  33              		.cfi_offset 4, -24
+  34              		.cfi_offset 5, -20
+  35              		.cfi_offset 6, -16
+  36              		.cfi_offset 7, -12
+  37              		.cfi_offset 8, -8
+  38              		.cfi_offset 14, -4
+  39 0004 9AB0     		sub	sp, sp, #104
+  40              		.cfi_def_cfa_offset 128
+  41 0006 0646     		mov	r6, r0
+  42              	.LVL1:
+ 180:..\..\flexsea-comm\src/flexsea_comm.c ****     uint32_t i = 0, j = 0, k = 0, idx = 0, h = 0;
+ 181:..\..\flexsea-comm\src/flexsea_comm.c ****     uint32_t bytes = 0, possible_footer = 0, possible_footer_pos = 0;
+ 182:..\..\flexsea-comm\src/flexsea_comm.c ****     uint8_t checksum = 0, skip = 0, payload_strings = 0;
+  43              		.loc 1 182 0
+  44 0008 0020     		movs	r0, #0
+  45              	.LVL2:
+ 183:..\..\flexsea-comm\src/flexsea_comm.c ****     uint8_t rx_buf_tmp[RX_BUF_LEN];
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 5
+
+
+ 184:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 185:..\..\flexsea-comm\src/flexsea_comm.c ****     for(i = 0; i < (RX_BUF_LEN - 2); i++)
+  46              		.loc 1 185 0
+  47 000a 8446     		mov	ip, r0
+  48 000c 6DE0     		b	.L2
+  49              	.LVL3:
+  50              	.L17:
+ 186:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 187:..\..\flexsea-comm\src/flexsea_comm.c ****         if(buf[i] == HEADER)
+  51              		.loc 1 187 0
+  52 000e 16F80C30 		ldrb	r3, [r6, ip]	@ zero_extendqisi2
+  53 0012 ED2B     		cmp	r3, #237
+  54 0014 67D1     		bne	.L3
+ 188:..\..\flexsea-comm\src/flexsea_comm.c ****         {
+ 189:..\..\flexsea-comm\src/flexsea_comm.c ****             //We found a header
+ 190:..\..\flexsea-comm\src/flexsea_comm.c ****         	DEBUG_PRINTF("===\nFound header\n");
+ 191:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 192:..\..\flexsea-comm\src/flexsea_comm.c ****             bytes = buf[i+1];
+  55              		.loc 1 192 0
+  56 0016 06EB0C03 		add	r3, r6, ip
+  57 001a 5F78     		ldrb	r7, [r3, #1]	@ zero_extendqisi2
+  58              	.LVL4:
+ 193:..\..\flexsea-comm\src/flexsea_comm.c ****             DEBUG_PRINTF("bytes = %i\n", bytes);
+ 194:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 195:..\..\flexsea-comm\src/flexsea_comm.c ****             possible_footer_pos = i+3+bytes;
+  59              		.loc 1 195 0
+  60 001c 0CEB070E 		add	lr, ip, r7
+  61 0020 0EF1030E 		add	lr, lr, #3
+  62              	.LVL5:
+ 196:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 197:..\..\flexsea-comm\src/flexsea_comm.c ****             DEBUG_PRINTF("pos foot pos: %i\n", possible_footer_pos);
+ 198:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 199:..\..\flexsea-comm\src/flexsea_comm.c ****             if(possible_footer_pos <= RX_BUF_LEN)
+  63              		.loc 1 199 0
+  64 0024 BEF1640F 		cmp	lr, #100
+  65 0028 5DD8     		bhi	.L3
+ 200:..\..\flexsea-comm\src/flexsea_comm.c ****             {
+ 201:..\..\flexsea-comm\src/flexsea_comm.c ****                 //We have enough bytes for a full string
+ 202:..\..\flexsea-comm\src/flexsea_comm.c ****             	DEBUG_PRINTF("Enough data\n");
+ 203:..\..\flexsea-comm\src/flexsea_comm.c ****                 possible_footer = buf[possible_footer_pos];
+  66              		.loc 1 203 0
+  67 002a 16F80E30 		ldrb	r3, [r6, lr]	@ zero_extendqisi2
+  68              	.LVL6:
+ 204:..\..\flexsea-comm\src/flexsea_comm.c ****                 if(possible_footer == FOOTER)
+  69              		.loc 1 204 0
+  70 002e EE2B     		cmp	r3, #238
+  71 0030 59D1     		bne	.L3
+  72 0032 07E0     		b	.L18
+  73              	.LVL7:
+  74              	.L5:
+ 205:..\..\flexsea-comm\src/flexsea_comm.c ****                 {
+ 206:..\..\flexsea-comm\src/flexsea_comm.c ****                     //Correctly framed string
+ 207:..\..\flexsea-comm\src/flexsea_comm.c ****                 	DEBUG_PRINTF("Correctly framed\n");
+ 208:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 209:..\..\flexsea-comm\src/flexsea_comm.c ****                     k = 0;
+ 210:..\..\flexsea-comm\src/flexsea_comm.c ****                     for(j = i; j <= possible_footer_pos; j++)
+ 211:..\..\flexsea-comm\src/flexsea_comm.c ****                     {
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 6
+
+
+ 212:..\..\flexsea-comm\src/flexsea_comm.c ****                         //Copy string in temp buffer
+ 213:..\..\flexsea-comm\src/flexsea_comm.c ****                         rx_buf_tmp[k] = buf[j];
+  75              		.loc 1 213 0 discriminator 3
+  76 0034 F55C     		ldrb	r5, [r6, r3]	@ zero_extendqisi2
+  77 0036 1AAC     		add	r4, sp, #104
+  78 0038 1444     		add	r4, r4, r2
+  79 003a 04F8645C 		strb	r5, [r4, #-100]
+ 214:..\..\flexsea-comm\src/flexsea_comm.c ****                         k++;
+  80              		.loc 1 214 0 discriminator 3
+  81 003e 0132     		adds	r2, r2, #1
+  82              	.LVL8:
+ 210:..\..\flexsea-comm\src/flexsea_comm.c ****                     {
+  83              		.loc 1 210 0 discriminator 3
+  84 0040 0133     		adds	r3, r3, #1
+  85              	.LVL9:
+  86 0042 01E0     		b	.L4
+  87              	.LVL10:
+  88              	.L18:
+  89 0044 6346     		mov	r3, ip
+  90              	.LVL11:
+  91 0046 0022     		movs	r2, #0
+  92              	.L4:
+  93              	.LVL12:
+ 210:..\..\flexsea-comm\src/flexsea_comm.c ****                     {
+  94              		.loc 1 210 0 is_stmt 0 discriminator 1
+  95 0048 7345     		cmp	r3, lr
+  96 004a F3D9     		bls	.L5
+  97 004c 0023     		movs	r3, #0
+  98              	.LVL13:
+  99 004e 1A46     		mov	r2, r3
+ 100              	.LVL14:
+ 101 0050 06E0     		b	.L6
+ 102              	.LVL15:
+ 103              	.L7:
+ 215:..\..\flexsea-comm\src/flexsea_comm.c ****                     }
+ 216:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 217:..\..\flexsea-comm\src/flexsea_comm.c ****                     DEBUG_PRINTF("rx_buf_tmp: %s\n",rx_buf_tmp);
+ 218:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 219:..\..\flexsea-comm\src/flexsea_comm.c ****                     //Is the checksum OK?
+ 220:..\..\flexsea-comm\src/flexsea_comm.c ****                     checksum = 0;
+ 221:..\..\flexsea-comm\src/flexsea_comm.c ****                     for (k = 0; k < bytes; k++)
+ 222:..\..\flexsea-comm\src/flexsea_comm.c ****                     {
+ 223:..\..\flexsea-comm\src/flexsea_comm.c ****                     	//DEBUG_PRINTF("cs b[%i] = %c\n", k, rx_buf_tmp[2+k]);
+ 224:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 225:..\..\flexsea-comm\src/flexsea_comm.c ****                         checksum = checksum + rx_buf_tmp[2+k];
+ 104              		.loc 1 225 0 is_stmt 1 discriminator 3
+ 105 0052 1AAC     		add	r4, sp, #104
+ 106 0054 1444     		add	r4, r4, r2
+ 107 0056 14F8624C 		ldrb	r4, [r4, #-98]	@ zero_extendqisi2
+ 108 005a 2344     		add	r3, r3, r4
+ 109              	.LVL16:
+ 110 005c DBB2     		uxtb	r3, r3
+ 111              	.LVL17:
+ 221:..\..\flexsea-comm\src/flexsea_comm.c ****                     {
+ 112              		.loc 1 221 0 discriminator 3
+ 113 005e 0132     		adds	r2, r2, #1
+ 114              	.LVL18:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 7
+
+
+ 115              	.L6:
+ 221:..\..\flexsea-comm\src/flexsea_comm.c ****                     {
+ 116              		.loc 1 221 0 is_stmt 0 discriminator 1
+ 117 0060 BA42     		cmp	r2, r7
+ 118 0062 F6D3     		bcc	.L7
+ 226:..\..\flexsea-comm\src/flexsea_comm.c ****                     }
+ 227:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 228:..\..\flexsea-comm\src/flexsea_comm.c ****                     DEBUG_PRINTF("Computed checksum: %i\n", checksum);
+ 229:..\..\flexsea-comm\src/flexsea_comm.c ****                     DEBUG_PRINTF("Compared to: %i\n", rx_buf_tmp[2+bytes]);
+ 230:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 231:..\..\flexsea-comm\src/flexsea_comm.c ****                     if(checksum == rx_buf_tmp[2+bytes])
+ 119              		.loc 1 231 0 is_stmt 1
+ 120 0064 0237     		adds	r7, r7, #2
+ 121              	.LVL19:
+ 122 0066 1AAA     		add	r2, sp, #104
+ 123              	.LVL20:
+ 124 0068 3A44     		add	r2, r2, r7
+ 125 006a 12F8642C 		ldrb	r2, [r2, #-100]	@ zero_extendqisi2
+ 126 006e 9A42     		cmp	r2, r3
+ 127 0070 1CD0     		beq	.L19
+ 128 0072 6346     		mov	r3, ip
+ 129              	.LVL21:
+ 130 0074 31E0     		b	.L9
+ 131              	.LVL22:
+ 132              	.L13:
+ 232:..\..\flexsea-comm\src/flexsea_comm.c ****                     {
+ 233:..\..\flexsea-comm\src/flexsea_comm.c ****                     	DEBUG_PRINTF("Checksum matches\n");
+ 234:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 235:..\..\flexsea-comm\src/flexsea_comm.c ****                         //Now we de-escap and de-frame to get the payload
+ 236:..\..\flexsea-comm\src/flexsea_comm.c ****                         idx = 0;
+ 237:..\..\flexsea-comm\src/flexsea_comm.c ****                         skip = 0;
+ 238:..\..\flexsea-comm\src/flexsea_comm.c ****                         for(k = 2; k < (unsigned int)(2+bytes); k++)
+ 239:..\..\flexsea-comm\src/flexsea_comm.c ****                         {
+ 240:..\..\flexsea-comm\src/flexsea_comm.c ****                             if(((rx_buf_tmp[k] == HEADER) || (rx_buf_tmp[k] == FOOTER) || (rx_buf_t
+ 133              		.loc 1 240 0
+ 134 0076 1AAB     		add	r3, sp, #104
+ 135 0078 1344     		add	r3, r3, r2
+ 136 007a 13F8644C 		ldrb	r4, [r3, #-100]	@ zero_extendqisi2
+ 137 007e 04F11303 		add	r3, r4, #19
+ 138 0082 DBB2     		uxtb	r3, r3
+ 139 0084 012B     		cmp	r3, #1
+ 140 0086 01D9     		bls	.L10
+ 141              		.loc 1 240 0 is_stmt 0 discriminator 2
+ 142 0088 E92C     		cmp	r4, #233
+ 143 008a 02D1     		bne	.L11
+ 144              	.L10:
+ 145              		.loc 1 240 0 discriminator 3
+ 146 008c B8F1000F 		cmp	r8, #0
+ 147 0090 08D0     		beq	.L20
+ 148              	.L11:
+ 149              	.LVL23:
+ 241:..\..\flexsea-comm\src/flexsea_comm.c ****                             {
+ 242:..\..\flexsea-comm\src/flexsea_comm.c ****                             	DEBUG_PRINTF("Skipped 1 ESC\n");
+ 243:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 244:..\..\flexsea-comm\src/flexsea_comm.c ****                                 skip = 1;
+ 245:..\..\flexsea-comm\src/flexsea_comm.c ****                             }
+ 246:..\..\flexsea-comm\src/flexsea_comm.c ****                             else
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 8
+
+
+ 247:..\..\flexsea-comm\src/flexsea_comm.c ****                             {
+ 248:..\..\flexsea-comm\src/flexsea_comm.c ****                                 skip = 0;
+ 249:..\..\flexsea-comm\src/flexsea_comm.c ****                                 rx_cmd[payload_strings][idx] = rx_buf_tmp[k];
+ 150              		.loc 1 249 0 is_stmt 1
+ 151 0092 00EB4003 		add	r3, r0, r0, lsl #1
+ 152 0096 1B01     		lsls	r3, r3, #4
+ 153 0098 0B44     		add	r3, r3, r1
+ 154 009a 5C55     		strb	r4, [r3, r5]
+ 250:..\..\flexsea-comm\src/flexsea_comm.c ****                                 idx++;
+ 155              		.loc 1 250 0
+ 156 009c 0135     		adds	r5, r5, #1
+ 157              	.LVL24:
+ 248:..\..\flexsea-comm\src/flexsea_comm.c ****                                 rx_cmd[payload_strings][idx] = rx_buf_tmp[k];
+ 158              		.loc 1 248 0
+ 159 009e 4FF00008 		mov	r8, #0
+ 160 00a2 01E0     		b	.L12
+ 161              	.LVL25:
+ 162              	.L20:
+ 244:..\..\flexsea-comm\src/flexsea_comm.c ****                             }
+ 163              		.loc 1 244 0
+ 164 00a4 4FF00108 		mov	r8, #1
+ 165              	.LVL26:
+ 166              	.L12:
+ 238:..\..\flexsea-comm\src/flexsea_comm.c ****                         {
+ 167              		.loc 1 238 0 discriminator 2
+ 168 00a8 0132     		adds	r2, r2, #1
+ 169              	.LVL27:
+ 170 00aa 03E0     		b	.L8
+ 171              	.LVL28:
+ 172              	.L19:
+ 173 00ac 4FF00008 		mov	r8, #0
+ 174 00b0 4546     		mov	r5, r8
+ 175 00b2 0222     		movs	r2, #2
+ 176              	.LVL29:
+ 177              	.L8:
+ 238:..\..\flexsea-comm\src/flexsea_comm.c ****                         {
+ 178              		.loc 1 238 0 is_stmt 0 discriminator 1
+ 179 00b4 BA42     		cmp	r2, r7
+ 180 00b6 DED3     		bcc	.L13
+ 251:..\..\flexsea-comm\src/flexsea_comm.c ****                             }
+ 252:..\..\flexsea-comm\src/flexsea_comm.c ****                         }
+ 253:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 254:..\..\flexsea-comm\src/flexsea_comm.c ****                         //At this point we have extracted a valid string
+ 255:..\..\flexsea-comm\src/flexsea_comm.c ****                         payload_strings++;
+ 181              		.loc 1 255 0 is_stmt 1
+ 182 00b8 0130     		adds	r0, r0, #1
+ 183              	.LVL30:
+ 184 00ba C0B2     		uxtb	r0, r0
+ 185              	.LVL31:
+ 256:..\..\flexsea-comm\src/flexsea_comm.c **** 						cmd_valid++;
+ 186              		.loc 1 256 0
+ 187 00bc 0E4A     		ldr	r2, .L22
+ 188              	.LVL32:
+ 189 00be 1368     		ldr	r3, [r2]
+ 190 00c0 0133     		adds	r3, r3, #1
+ 191 00c2 1360     		str	r3, [r2]
+ 192              	.LVL33:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 9
+
+
+ 257:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 258:..\..\flexsea-comm\src/flexsea_comm.c ****                         //Remove the string to avoid double detection
+ 259:..\..\flexsea-comm\src/flexsea_comm.c ****                         for(h = i; h <= possible_footer_pos; h++)
+ 193              		.loc 1 259 0
+ 194 00c4 6346     		mov	r3, ip
+ 195 00c6 02E0     		b	.L14
+ 196              	.LVL34:
+ 197              	.L15:
+ 260:..\..\flexsea-comm\src/flexsea_comm.c ****                         {
+ 261:..\..\flexsea-comm\src/flexsea_comm.c ****                             buf[h] = 0;
+ 198              		.loc 1 261 0 discriminator 3
+ 199 00c8 0022     		movs	r2, #0
+ 200 00ca F254     		strb	r2, [r6, r3]
+ 259:..\..\flexsea-comm\src/flexsea_comm.c ****                         {
+ 201              		.loc 1 259 0 discriminator 3
+ 202 00cc 0133     		adds	r3, r3, #1
+ 203              	.LVL35:
+ 204              	.L14:
+ 259:..\..\flexsea-comm\src/flexsea_comm.c ****                         {
+ 205              		.loc 1 259 0 is_stmt 0 discriminator 1
+ 206 00ce 7345     		cmp	r3, lr
+ 207 00d0 FAD9     		bls	.L15
+ 208 00d2 08E0     		b	.L3
+ 209              	.LVL36:
+ 210              	.L16:
+ 262:..\..\flexsea-comm\src/flexsea_comm.c ****                         }
+ 263:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 264:..\..\flexsea-comm\src/flexsea_comm.c ****                         DEBUG_PRINTF("payload: %s\n",rx_cmd[payload_strings-1]);
+ 265:..\..\flexsea-comm\src/flexsea_comm.c ****                     }
+ 266:..\..\flexsea-comm\src/flexsea_comm.c ****                     else
+ 267:..\..\flexsea-comm\src/flexsea_comm.c ****                     {
+ 268:..\..\flexsea-comm\src/flexsea_comm.c ****                     	DEBUG_PRINTF("Wrong checksum\n");
+ 269:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 270:..\..\flexsea-comm\src/flexsea_comm.c **** 						//Remove the string to avoid double detection
+ 271:..\..\flexsea-comm\src/flexsea_comm.c ****                         for(h = i; h <= possible_footer_pos; h++)
+ 272:..\..\flexsea-comm\src/flexsea_comm.c ****                         {
+ 273:..\..\flexsea-comm\src/flexsea_comm.c ****                             buf[h] = 0;
+ 211              		.loc 1 273 0 is_stmt 1 discriminator 3
+ 212 00d4 0022     		movs	r2, #0
+ 213 00d6 F254     		strb	r2, [r6, r3]
+ 271:..\..\flexsea-comm\src/flexsea_comm.c ****                         {
+ 214              		.loc 1 271 0 discriminator 3
+ 215 00d8 0133     		adds	r3, r3, #1
+ 216              	.LVL37:
+ 217              	.L9:
+ 271:..\..\flexsea-comm\src/flexsea_comm.c ****                         {
+ 218              		.loc 1 271 0 is_stmt 0 discriminator 1
+ 219 00da 7345     		cmp	r3, lr
+ 220 00dc FAD9     		bls	.L16
+ 274:..\..\flexsea-comm\src/flexsea_comm.c ****                         }
+ 275:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 276:..\..\flexsea-comm\src/flexsea_comm.c **** 						cmd_bad_checksum++;
+ 221              		.loc 1 276 0 is_stmt 1
+ 222 00de 064A     		ldr	r2, .L22
+ 223 00e0 5368     		ldr	r3, [r2, #4]
+ 224              	.LVL38:
+ 225 00e2 0133     		adds	r3, r3, #1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 10
+
+
+ 226 00e4 5360     		str	r3, [r2, #4]
+ 227              	.LVL39:
+ 228              	.L3:
+ 185:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 229              		.loc 1 185 0 discriminator 2
+ 230 00e6 0CF1010C 		add	ip, ip, #1
+ 231              	.LVL40:
+ 232              	.L2:
+ 185:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 233              		.loc 1 185 0 is_stmt 0 discriminator 1
+ 234 00ea BCF1610F 		cmp	ip, #97
+ 235 00ee 8ED9     		bls	.L17
+ 277:..\..\flexsea-comm\src/flexsea_comm.c ****                     }
+ 278:..\..\flexsea-comm\src/flexsea_comm.c ****                 }
+ 279:..\..\flexsea-comm\src/flexsea_comm.c ****                 else
+ 280:..\..\flexsea-comm\src/flexsea_comm.c ****                 {
+ 281:..\..\flexsea-comm\src/flexsea_comm.c ****                 	DEBUG_PRINTF("Scrap\n");
+ 282:..\..\flexsea-comm\src/flexsea_comm.c ****                 }
+ 283:..\..\flexsea-comm\src/flexsea_comm.c ****             }
+ 284:..\..\flexsea-comm\src/flexsea_comm.c ****             else
+ 285:..\..\flexsea-comm\src/flexsea_comm.c ****             {
+ 286:..\..\flexsea-comm\src/flexsea_comm.c ****             	DEBUG_PRINTF("Not enough data (too short)\n");
+ 287:..\..\flexsea-comm\src/flexsea_comm.c ****             }
+ 288:..\..\flexsea-comm\src/flexsea_comm.c ****         }
+ 289:..\..\flexsea-comm\src/flexsea_comm.c ****     }
+ 290:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 291:..\..\flexsea-comm\src/flexsea_comm.c ****     //Returns the number of decoded strings
+ 292:..\..\flexsea-comm\src/flexsea_comm.c ****     return payload_strings;
+ 293:..\..\flexsea-comm\src/flexsea_comm.c **** }
+ 236              		.loc 1 293 0 is_stmt 1
+ 237 00f0 1AB0     		add	sp, sp, #104
+ 238              		.cfi_def_cfa_offset 24
+ 239              		@ sp needed
+ 240 00f2 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 241              	.LVL41:
+ 242              	.L23:
+ 243 00f6 00BF     		.align	2
+ 244              	.L22:
+ 245 00f8 00000000 		.word	.LANCHOR0
+ 246              		.cfi_endproc
+ 247              	.LFE3:
+ 248              		.size	unpack_payload, .-unpack_payload
+ 249              		.section	.text.comm_gen_str,"ax",%progbits
+ 250              		.align	2
+ 251              		.global	comm_gen_str
+ 252              		.thumb
+ 253              		.thumb_func
+ 254              		.type	comm_gen_str, %function
+ 255              	comm_gen_str:
+ 256              	.LFB0:
+  85:..\..\flexsea-comm\src/flexsea_comm.c ****     unsigned int i = 0, escapes = 0, idx = 0, total_bytes = 0;
+ 257              		.loc 1 85 0
+ 258              		.cfi_startproc
+ 259              		@ args = 0, pretend = 0, frame = 0
+ 260              		@ frame_needed = 0, uses_anonymous_args = 0
+ 261              	.LVL42:
+ 262 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 11
+
+
+ 263              		.cfi_def_cfa_offset 20
+ 264              		.cfi_offset 4, -20
+ 265              		.cfi_offset 5, -16
+ 266              		.cfi_offset 6, -12
+ 267              		.cfi_offset 7, -8
+ 268              		.cfi_offset 14, -4
+ 269              	.LVL43:
+  90:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 270              		.loc 1 90 0
+ 271 0002 0023     		movs	r3, #0
+ 272 0004 02E0     		b	.L25
+ 273              	.LVL44:
+ 274              	.L26:
+  92:..\..\flexsea-comm\src/flexsea_comm.c ****     }
+ 275              		.loc 1 92 0 discriminator 3
+ 276 0006 AA24     		movs	r4, #170
+ 277 0008 CC54     		strb	r4, [r1, r3]
+  90:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 278              		.loc 1 90 0 discriminator 3
+ 279 000a 0133     		adds	r3, r3, #1
+ 280              	.LVL45:
+ 281              	.L25:
+  90:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 282              		.loc 1 90 0 is_stmt 0 discriminator 1
+ 283 000c 2F2B     		cmp	r3, #47
+ 284 000e FAD9     		bls	.L26
+ 285 0010 0224     		movs	r4, #2
+ 286 0012 0027     		movs	r7, #0
+ 287 0014 3B46     		mov	r3, r7
+ 288              	.LVL46:
+ 289 0016 14E0     		b	.L27
+ 290              	.LVL47:
+ 291              	.L31:
+ 101:..\..\flexsea-comm\src/flexsea_comm.c ****         {
+ 292              		.loc 1 101 0 is_stmt 1
+ 293 0018 00EB030E 		add	lr, r0, r3
+ 294 001c C65C     		ldrb	r6, [r0, r3]	@ zero_extendqisi2
+ 295 001e 06F11305 		add	r5, r6, #19
+ 296 0022 EDB2     		uxtb	r5, r5
+ 297 0024 012D     		cmp	r5, #1
+ 298 0026 01D9     		bls	.L28
+ 101:..\..\flexsea-comm\src/flexsea_comm.c ****         {
+ 299              		.loc 1 101 0 is_stmt 0 discriminator 1
+ 300 0028 E92E     		cmp	r6, #233
+ 301 002a 07D1     		bne	.L29
+ 302              	.L28:
+ 103:..\..\flexsea-comm\src/flexsea_comm.c ****             cstr[idx] = ESCAPE;
+ 303              		.loc 1 103 0 is_stmt 1
+ 304 002c 0137     		adds	r7, r7, #1
+ 305              	.LVL48:
+ 104:..\..\flexsea-comm\src/flexsea_comm.c ****             cstr[idx+1] = payload[i];
+ 306              		.loc 1 104 0
+ 307 002e E925     		movs	r5, #233
+ 308 0030 0D55     		strb	r5, [r1, r4]
+ 105:..\..\flexsea-comm\src/flexsea_comm.c ****             idx = idx + 1;
+ 309              		.loc 1 105 0
+ 310 0032 0134     		adds	r4, r4, #1
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 12
+
+
+ 311              	.LVL49:
+ 312 0034 9EF80050 		ldrb	r5, [lr]	@ zero_extendqisi2
+ 313 0038 0D55     		strb	r5, [r1, r4]
+ 314              	.LVL50:
+ 106:..\..\flexsea-comm\src/flexsea_comm.c ****         }
+ 315              		.loc 1 106 0
+ 316 003a 00E0     		b	.L30
+ 317              	.L29:
+ 110:..\..\flexsea-comm\src/flexsea_comm.c ****         }
+ 318              		.loc 1 110 0
+ 319 003c 0E55     		strb	r6, [r1, r4]
+ 320              	.L30:
+ 112:..\..\flexsea-comm\src/flexsea_comm.c ****     }
+ 321              		.loc 1 112 0 discriminator 2
+ 322 003e 0134     		adds	r4, r4, #1
+ 323              	.LVL51:
+  99:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 324              		.loc 1 99 0 discriminator 2
+ 325 0040 0133     		adds	r3, r3, #1
+ 326              	.LVL52:
+ 327              	.L27:
+  99:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 328              		.loc 1 99 0 is_stmt 0 discriminator 1
+ 329 0042 9A42     		cmp	r2, r3
+ 330 0044 E8D8     		bhi	.L31
+ 116:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 331              		.loc 1 116 0 is_stmt 1
+ 332 0046 D419     		adds	r4, r2, r7
+ 333              	.LVL53:
+ 121:..\..\flexsea-comm\src/flexsea_comm.c ****     for (i = 0; i < total_bytes; i++)
+ 334              		.loc 1 121 0
+ 335 0048 0023     		movs	r3, #0
+ 122:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 336              		.loc 1 122 0
+ 337 004a 1A46     		mov	r2, r3
+ 338              	.LVL54:
+ 339 004c 04E0     		b	.L32
+ 340              	.LVL55:
+ 341              	.L33:
+ 126:..\..\flexsea-comm\src/flexsea_comm.c ****     }
+ 342              		.loc 1 126 0 discriminator 3
+ 343 004e 8818     		adds	r0, r1, r2
+ 344 0050 8078     		ldrb	r0, [r0, #2]	@ zero_extendqisi2
+ 345 0052 0344     		add	r3, r3, r0
+ 346              	.LVL56:
+ 347 0054 DBB2     		uxtb	r3, r3
+ 348              	.LVL57:
+ 122:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 349              		.loc 1 122 0 discriminator 3
+ 350 0056 0132     		adds	r2, r2, #1
+ 351              	.LVL58:
+ 352              	.L32:
+ 122:..\..\flexsea-comm\src/flexsea_comm.c ****     {
+ 353              		.loc 1 122 0 is_stmt 0 discriminator 1
+ 354 0058 A242     		cmp	r2, r4
+ 355 005a F8D3     		bcc	.L33
+ 133:..\..\flexsea-comm\src/flexsea_comm.c ****     cstr[1] = total_bytes;
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 13
+
+
+ 356              		.loc 1 133 0 is_stmt 1
+ 357 005c ED22     		movs	r2, #237
+ 358              	.LVL59:
+ 359 005e 0A70     		strb	r2, [r1]
+ 134:..\..\flexsea-comm\src/flexsea_comm.c ****     cstr[2 + total_bytes] = checksum;
+ 360              		.loc 1 134 0
+ 361 0060 E0B2     		uxtb	r0, r4
+ 362 0062 4870     		strb	r0, [r1, #1]
+ 135:..\..\flexsea-comm\src/flexsea_comm.c ****     cstr[3 + total_bytes] = FOOTER;
+ 363              		.loc 1 135 0
+ 364 0064 A21C     		adds	r2, r4, #2
+ 365 0066 8B54     		strb	r3, [r1, r2]
+ 136:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 366              		.loc 1 136 0
+ 367 0068 0334     		adds	r4, r4, #3
+ 368              	.LVL60:
+ 369 006a EE23     		movs	r3, #238
+ 370              	.LVL61:
+ 371 006c 0B55     		strb	r3, [r1, r4]
+ 139:..\..\flexsea-comm\src/flexsea_comm.c **** }
+ 372              		.loc 1 139 0
+ 373 006e 0330     		adds	r0, r0, #3
+ 140:..\..\flexsea-comm\src/flexsea_comm.c **** 
+ 374              		.loc 1 140 0
+ 375 0070 C0B2     		uxtb	r0, r0
+ 376 0072 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 377              		.cfi_endproc
+ 378              	.LFE0:
+ 379              		.size	comm_gen_str, .-comm_gen_str
+ 380              		.section	.text.unpack_payload_1,"ax",%progbits
+ 381              		.align	2
+ 382              		.global	unpack_payload_1
+ 383              		.thumb
+ 384              		.thumb_func
+ 385              		.type	unpack_payload_1, %function
+ 386              	unpack_payload_1:
+ 387              	.LFB1:
+ 146:..\..\flexsea-comm\src/flexsea_comm.c **** 	return unpack_payload(rx_buf_1, rx_command_1);
+ 388              		.loc 1 146 0
+ 389              		.cfi_startproc
+ 390              		@ args = 0, pretend = 0, frame = 0
+ 391              		@ frame_needed = 0, uses_anonymous_args = 0
+ 392 0000 08B5     		push	{r3, lr}
+ 393              		.cfi_def_cfa_offset 8
+ 394              		.cfi_offset 3, -8
+ 395              		.cfi_offset 14, -4
+ 147:..\..\flexsea-comm\src/flexsea_comm.c **** }
+ 396              		.loc 1 147 0
+ 397 0002 0248     		ldr	r0, .L37
+ 398 0004 0249     		ldr	r1, .L37+4
+ 399 0006 FFF7FEFF 		bl	unpack_payload
+ 400              	.LVL62:
+ 148:..\..\flexsea-comm\src/flexsea_comm.c **** #endif	//ENABLE_FLEXSEA_BUF_1
+ 401              		.loc 1 148 0
+ 402 000a 08BD     		pop	{r3, pc}
+ 403              	.L38:
+ 404              		.align	2
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 14
+
+
+ 405              	.L37:
+ 406 000c 00000000 		.word	rx_buf_1
+ 407 0010 00000000 		.word	rx_command_1
+ 408              		.cfi_endproc
+ 409              	.LFE1:
+ 410              		.size	unpack_payload_1, .-unpack_payload_1
+ 411              		.section	.text.unpack_payload_2,"ax",%progbits
+ 412              		.align	2
+ 413              		.global	unpack_payload_2
+ 414              		.thumb
+ 415              		.thumb_func
+ 416              		.type	unpack_payload_2, %function
+ 417              	unpack_payload_2:
+ 418              	.LFB2:
+ 153:..\..\flexsea-comm\src/flexsea_comm.c **** 	return unpack_payload(rx_buf_2, rx_command_2);
+ 419              		.loc 1 153 0
+ 420              		.cfi_startproc
+ 421              		@ args = 0, pretend = 0, frame = 0
+ 422              		@ frame_needed = 0, uses_anonymous_args = 0
+ 423 0000 08B5     		push	{r3, lr}
+ 424              		.cfi_def_cfa_offset 8
+ 425              		.cfi_offset 3, -8
+ 426              		.cfi_offset 14, -4
+ 154:..\..\flexsea-comm\src/flexsea_comm.c **** }
+ 427              		.loc 1 154 0
+ 428 0002 0248     		ldr	r0, .L41
+ 429 0004 0249     		ldr	r1, .L41+4
+ 430 0006 FFF7FEFF 		bl	unpack_payload
+ 431              	.LVL63:
+ 155:..\..\flexsea-comm\src/flexsea_comm.c **** #endif	//ENABLE_FLEXSEA_BUF_2
+ 432              		.loc 1 155 0
+ 433 000a 08BD     		pop	{r3, pc}
+ 434              	.L42:
+ 435              		.align	2
+ 436              	.L41:
+ 437 000c 00000000 		.word	rx_buf_2
+ 438 0010 00000000 		.word	rx_command_2
+ 439              		.cfi_endproc
+ 440              	.LFE2:
+ 441              		.size	unpack_payload_2, .-unpack_payload_2
+ 442              		.comm	slaves_485_2,108,4
+ 443              		.comm	slaves_485_1,108,4
+ 444              		.global	cmd_bad_checksum
+ 445              		.global	cmd_valid
+ 446              		.comm	rx_command_2,192,4
+ 447              		.comm	comm_str_2,48,4
+ 448              		.comm	rx_command_1,192,4
+ 449              		.comm	comm_str_1,48,4
+ 450              		.comm	comm_str_tmp,48,4
+ 451              		.bss
+ 452              		.align	2
+ 453              		.set	.LANCHOR0,. + 0
+ 454              		.type	cmd_valid, %object
+ 455              		.size	cmd_valid, 4
+ 456              	cmd_valid:
+ 457 0000 00000000 		.space	4
+ 458              		.type	cmd_bad_checksum, %object
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 15
+
+
+ 459              		.size	cmd_bad_checksum, 4
+ 460              	cmd_bad_checksum:
+ 461 0004 00000000 		.space	4
+ 462              		.text
+ 463              	.Letext0:
+ 464              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 465              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\3.3\\psoc creator\\import\\gnu\\arm\\4.9.
+ 466              		.file 4 "..\\..\\flexsea-comm\\src\\../inc/flexsea_comm.h"
+ 467              		.file 5 "..\\..\\flexsea-comm\\src\\../inc/flexsea_buffers.h"
+ 468              		.section	.debug_info,"",%progbits
+ 469              	.Ldebug_info0:
+ 470 0000 FF030000 		.4byte	0x3ff
+ 471 0004 0400     		.2byte	0x4
+ 472 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 473 000a 04       		.byte	0x4
+ 474 000b 01       		.uleb128 0x1
+ 475 000c E4010000 		.4byte	.LASF51
+ 476 0010 01       		.byte	0x1
+ 477 0011 25000000 		.4byte	.LASF52
+ 478 0015 76000000 		.4byte	.LASF53
+ 479 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 480 001d 00000000 		.4byte	0
+ 481 0021 00000000 		.4byte	.Ldebug_line0
+ 482 0025 02       		.uleb128 0x2
+ 483 0026 01       		.byte	0x1
+ 484 0027 06       		.byte	0x6
+ 485 0028 89010000 		.4byte	.LASF0
+ 486 002c 03       		.uleb128 0x3
+ 487 002d 58010000 		.4byte	.LASF5
+ 488 0031 02       		.byte	0x2
+ 489 0032 1D       		.byte	0x1d
+ 490 0033 37000000 		.4byte	0x37
+ 491 0037 02       		.uleb128 0x2
+ 492 0038 01       		.byte	0x1
+ 493 0039 08       		.byte	0x8
+ 494 003a 7B010000 		.4byte	.LASF1
+ 495 003e 02       		.uleb128 0x2
+ 496 003f 02       		.byte	0x2
+ 497 0040 05       		.byte	0x5
+ 498 0041 05000000 		.4byte	.LASF2
+ 499 0045 02       		.uleb128 0x2
+ 500 0046 02       		.byte	0x2
+ 501 0047 07       		.byte	0x7
+ 502 0048 D1010000 		.4byte	.LASF3
+ 503 004c 02       		.uleb128 0x2
+ 504 004d 04       		.byte	0x4
+ 505 004e 05       		.byte	0x5
+ 506 004f 42010000 		.4byte	.LASF4
+ 507 0053 03       		.uleb128 0x3
+ 508 0054 50000000 		.4byte	.LASF6
+ 509 0058 02       		.byte	0x2
+ 510 0059 41       		.byte	0x41
+ 511 005a 5E000000 		.4byte	0x5e
+ 512 005e 02       		.uleb128 0x2
+ 513 005f 04       		.byte	0x4
+ 514 0060 07       		.byte	0x7
+ 515 0061 C3020000 		.4byte	.LASF7
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 16
+
+
+ 516 0065 02       		.uleb128 0x2
+ 517 0066 08       		.byte	0x8
+ 518 0067 05       		.byte	0x5
+ 519 0068 12010000 		.4byte	.LASF8
+ 520 006c 02       		.uleb128 0x2
+ 521 006d 08       		.byte	0x8
+ 522 006e 07       		.byte	0x7
+ 523 006f 95010000 		.4byte	.LASF9
+ 524 0073 04       		.uleb128 0x4
+ 525 0074 04       		.byte	0x4
+ 526 0075 05       		.byte	0x5
+ 527 0076 696E7400 		.ascii	"int\000"
+ 528 007a 02       		.uleb128 0x2
+ 529 007b 04       		.byte	0x4
+ 530 007c 07       		.byte	0x7
+ 531 007d B5010000 		.4byte	.LASF10
+ 532 0081 03       		.uleb128 0x3
+ 533 0082 B5000000 		.4byte	.LASF11
+ 534 0086 03       		.byte	0x3
+ 535 0087 15       		.byte	0x15
+ 536 0088 2C000000 		.4byte	0x2c
+ 537 008c 03       		.uleb128 0x3
+ 538 008d AC010000 		.4byte	.LASF12
+ 539 0091 03       		.byte	0x3
+ 540 0092 2D       		.byte	0x2d
+ 541 0093 53000000 		.4byte	0x53
+ 542 0097 02       		.uleb128 0x2
+ 543 0098 04       		.byte	0x4
+ 544 0099 07       		.byte	0x7
+ 545 009a 1C000000 		.4byte	.LASF13
+ 546 009e 05       		.uleb128 0x5
+ 547 009f EB020000 		.4byte	.LASF17
+ 548 00a3 34       		.byte	0x34
+ 549 00a4 04       		.byte	0x4
+ 550 00a5 62       		.byte	0x62
+ 551 00a6 E7000000 		.4byte	0xe7
+ 552 00aa 06       		.uleb128 0x6
+ 553 00ab 13030000 		.4byte	.LASF14
+ 554 00af 04       		.byte	0x4
+ 555 00b0 64       		.byte	0x64
+ 556 00b1 81000000 		.4byte	0x81
+ 557 00b5 00       		.byte	0
+ 558 00b6 07       		.uleb128 0x7
+ 559 00b7 73747200 		.ascii	"str\000"
+ 560 00bb 04       		.byte	0x4
+ 561 00bc 65       		.byte	0x65
+ 562 00bd E7000000 		.4byte	0xe7
+ 563 00c1 01       		.byte	0x1
+ 564 00c2 06       		.uleb128 0x6
+ 565 00c3 74010000 		.4byte	.LASF15
+ 566 00c7 04       		.byte	0x4
+ 567 00c8 66       		.byte	0x66
+ 568 00c9 81000000 		.4byte	0x81
+ 569 00cd 31       		.byte	0x31
+ 570 00ce 07       		.uleb128 0x7
+ 571 00cf 636D6400 		.ascii	"cmd\000"
+ 572 00d3 04       		.byte	0x4
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 17
+
+
+ 573 00d4 67       		.byte	0x67
+ 574 00d5 81000000 		.4byte	0x81
+ 575 00d9 32       		.byte	0x32
+ 576 00da 06       		.uleb128 0x6
+ 577 00db 8C020000 		.4byte	.LASF16
+ 578 00df 04       		.byte	0x4
+ 579 00e0 68       		.byte	0x68
+ 580 00e1 81000000 		.4byte	0x81
+ 581 00e5 33       		.byte	0x33
+ 582 00e6 00       		.byte	0
+ 583 00e7 08       		.uleb128 0x8
+ 584 00e8 81000000 		.4byte	0x81
+ 585 00ec F7000000 		.4byte	0xf7
+ 586 00f0 09       		.uleb128 0x9
+ 587 00f1 97000000 		.4byte	0x97
+ 588 00f5 2F       		.byte	0x2f
+ 589 00f6 00       		.byte	0
+ 590 00f7 05       		.uleb128 0x5
+ 591 00f8 62010000 		.4byte	.LASF18
+ 592 00fc 6C       		.byte	0x6c
+ 593 00fd 04       		.byte	0x4
+ 594 00fe 6B       		.byte	0x6b
+ 595 00ff 4C010000 		.4byte	0x14c
+ 596 0103 06       		.uleb128 0x6
+ 597 0104 5B000000 		.4byte	.LASF19
+ 598 0108 04       		.byte	0x4
+ 599 0109 6D       		.byte	0x6d
+ 600 010a 81000000 		.4byte	0x81
+ 601 010e 00       		.byte	0
+ 602 010f 06       		.uleb128 0x6
+ 603 0110 BE020000 		.4byte	.LASF20
+ 604 0114 04       		.byte	0x4
+ 605 0115 6E       		.byte	0x6e
+ 606 0116 81000000 		.4byte	0x81
+ 607 011a 01       		.byte	0x1
+ 608 011b 06       		.uleb128 0x6
+ 609 011c 20030000 		.4byte	.LASF21
+ 610 0120 04       		.byte	0x4
+ 611 0121 6F       		.byte	0x6f
+ 612 0122 81000000 		.4byte	0x81
+ 613 0126 02       		.byte	0x2
+ 614 0127 06       		.uleb128 0x6
+ 615 0128 20010000 		.4byte	.LASF22
+ 616 012c 04       		.byte	0x4
+ 617 012d 70       		.byte	0x70
+ 618 012e 81000000 		.4byte	0x81
+ 619 0132 03       		.byte	0x3
+ 620 0133 06       		.uleb128 0x6
+ 621 0134 4B000000 		.4byte	.LASF23
+ 622 0138 04       		.byte	0x4
+ 623 0139 75       		.byte	0x75
+ 624 013a 9E000000 		.4byte	0x9e
+ 625 013e 04       		.byte	0x4
+ 626 013f 06       		.uleb128 0x6
+ 627 0140 B3020000 		.4byte	.LASF24
+ 628 0144 04       		.byte	0x4
+ 629 0145 76       		.byte	0x76
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 18
+
+
+ 630 0146 9E000000 		.4byte	0x9e
+ 631 014a 38       		.byte	0x38
+ 632 014b 00       		.byte	0
+ 633 014c 0A       		.uleb128 0xa
+ 634 014d C2010000 		.4byte	.LASF54
+ 635 0151 01       		.byte	0x1
+ 636 0152 B2       		.byte	0xb2
+ 637 0153 81000000 		.4byte	0x81
+ 638 0157 00000000 		.4byte	.LFB3
+ 639 015b FC000000 		.4byte	.LFE3-.LFB3
+ 640 015f 01       		.uleb128 0x1
+ 641 0160 9C       		.byte	0x9c
+ 642 0161 2E020000 		.4byte	0x22e
+ 643 0165 0B       		.uleb128 0xb
+ 644 0166 62756600 		.ascii	"buf\000"
+ 645 016a 01       		.byte	0x1
+ 646 016b B2       		.byte	0xb2
+ 647 016c 2E020000 		.4byte	0x22e
+ 648 0170 00000000 		.4byte	.LLST0
+ 649 0174 0C       		.uleb128 0xc
+ 650 0175 E4020000 		.4byte	.LASF25
+ 651 0179 01       		.byte	0x1
+ 652 017a B2       		.byte	0xb2
+ 653 017b 34020000 		.4byte	0x234
+ 654 017f 01       		.uleb128 0x1
+ 655 0180 51       		.byte	0x51
+ 656 0181 0D       		.uleb128 0xd
+ 657 0182 6900     		.ascii	"i\000"
+ 658 0184 01       		.byte	0x1
+ 659 0185 B4       		.byte	0xb4
+ 660 0186 8C000000 		.4byte	0x8c
+ 661 018a 2C000000 		.4byte	.LLST1
+ 662 018e 0D       		.uleb128 0xd
+ 663 018f 6A00     		.ascii	"j\000"
+ 664 0191 01       		.byte	0x1
+ 665 0192 B4       		.byte	0xb4
+ 666 0193 8C000000 		.4byte	0x8c
+ 667 0197 4B000000 		.4byte	.LLST2
+ 668 019b 0D       		.uleb128 0xd
+ 669 019c 6B00     		.ascii	"k\000"
+ 670 019e 01       		.byte	0x1
+ 671 019f B4       		.byte	0xb4
+ 672 01a0 8C000000 		.4byte	0x8c
+ 673 01a4 75000000 		.4byte	.LLST3
+ 674 01a8 0D       		.uleb128 0xd
+ 675 01a9 69647800 		.ascii	"idx\000"
+ 676 01ad 01       		.byte	0x1
+ 677 01ae B4       		.byte	0xb4
+ 678 01af 8C000000 		.4byte	0x8c
+ 679 01b3 C0000000 		.4byte	.LLST4
+ 680 01b7 0D       		.uleb128 0xd
+ 681 01b8 6800     		.ascii	"h\000"
+ 682 01ba 01       		.byte	0x1
+ 683 01bb B4       		.byte	0xb4
+ 684 01bc 8C000000 		.4byte	0x8c
+ 685 01c0 EA000000 		.4byte	.LLST5
+ 686 01c4 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 19
+
+
+ 687 01c5 D5020000 		.4byte	.LASF26
+ 688 01c9 01       		.byte	0x1
+ 689 01ca B5       		.byte	0xb5
+ 690 01cb 8C000000 		.4byte	0x8c
+ 691 01cf 14010000 		.4byte	.LLST6
+ 692 01d3 0E       		.uleb128 0xe
+ 693 01d4 E8000000 		.4byte	.LASF27
+ 694 01d8 01       		.byte	0x1
+ 695 01d9 B5       		.byte	0xb5
+ 696 01da 8C000000 		.4byte	0x8c
+ 697 01de 40010000 		.4byte	.LLST7
+ 698 01e2 0E       		.uleb128 0xe
+ 699 01e3 9F020000 		.4byte	.LASF28
+ 700 01e7 01       		.byte	0x1
+ 701 01e8 B5       		.byte	0xb5
+ 702 01e9 8C000000 		.4byte	0x8c
+ 703 01ed B3010000 		.4byte	.LLST8
+ 704 01f1 0E       		.uleb128 0xe
+ 705 01f2 FD020000 		.4byte	.LASF29
+ 706 01f6 01       		.byte	0x1
+ 707 01f7 B6       		.byte	0xb6
+ 708 01f8 81000000 		.4byte	0x81
+ 709 01fc D2010000 		.4byte	.LLST9
+ 710 0200 0E       		.uleb128 0xe
+ 711 0201 00000000 		.4byte	.LASF30
+ 712 0205 01       		.byte	0x1
+ 713 0206 B6       		.byte	0xb6
+ 714 0207 81000000 		.4byte	0x81
+ 715 020b 07020000 		.4byte	.LLST10
+ 716 020f 0E       		.uleb128 0xe
+ 717 0210 72020000 		.4byte	.LASF31
+ 718 0214 01       		.byte	0x1
+ 719 0215 B6       		.byte	0xb6
+ 720 0216 81000000 		.4byte	0x81
+ 721 021a 48020000 		.4byte	.LLST11
+ 722 021e 0F       		.uleb128 0xf
+ 723 021f 37010000 		.4byte	.LASF32
+ 724 0223 01       		.byte	0x1
+ 725 0224 B7       		.byte	0xb7
+ 726 0225 3A020000 		.4byte	0x23a
+ 727 0229 03       		.uleb128 0x3
+ 728 022a 91       		.byte	0x91
+ 729 022b 847F     		.sleb128 -124
+ 730 022d 00       		.byte	0
+ 731 022e 10       		.uleb128 0x10
+ 732 022f 04       		.byte	0x4
+ 733 0230 81000000 		.4byte	0x81
+ 734 0234 10       		.uleb128 0x10
+ 735 0235 04       		.byte	0x4
+ 736 0236 E7000000 		.4byte	0xe7
+ 737 023a 08       		.uleb128 0x8
+ 738 023b 81000000 		.4byte	0x81
+ 739 023f 4A020000 		.4byte	0x24a
+ 740 0243 09       		.uleb128 0x9
+ 741 0244 97000000 		.4byte	0x97
+ 742 0248 63       		.byte	0x63
+ 743 0249 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 20
+
+
+ 744 024a 11       		.uleb128 0x11
+ 745 024b F8000000 		.4byte	.LASF37
+ 746 024f 01       		.byte	0x1
+ 747 0250 54       		.byte	0x54
+ 748 0251 81000000 		.4byte	0x81
+ 749 0255 00000000 		.4byte	.LFB0
+ 750 0259 74000000 		.4byte	.LFE0-.LFB0
+ 751 025d 01       		.uleb128 0x1
+ 752 025e 9C       		.byte	0x9c
+ 753 025f D8020000 		.4byte	0x2d8
+ 754 0263 12       		.uleb128 0x12
+ 755 0264 18030000 		.4byte	.LASF33
+ 756 0268 01       		.byte	0x1
+ 757 0269 54       		.byte	0x54
+ 758 026a 2E020000 		.4byte	0x22e
+ 759 026e 72020000 		.4byte	.LLST12
+ 760 0272 0C       		.uleb128 0xc
+ 761 0273 6F010000 		.4byte	.LASF34
+ 762 0277 01       		.byte	0x1
+ 763 0278 54       		.byte	0x54
+ 764 0279 2E020000 		.4byte	0x22e
+ 765 027d 01       		.uleb128 0x1
+ 766 027e 51       		.byte	0x51
+ 767 027f 12       		.uleb128 0x12
+ 768 0280 D5020000 		.4byte	.LASF26
+ 769 0284 01       		.byte	0x1
+ 770 0285 54       		.byte	0x54
+ 771 0286 81000000 		.4byte	0x81
+ 772 028a 93020000 		.4byte	.LLST13
+ 773 028e 0D       		.uleb128 0xd
+ 774 028f 6900     		.ascii	"i\000"
+ 775 0291 01       		.byte	0x1
+ 776 0292 56       		.byte	0x56
+ 777 0293 7A000000 		.4byte	0x7a
+ 778 0297 B4020000 		.4byte	.LLST14
+ 779 029b 0E       		.uleb128 0xe
+ 780 029c F5020000 		.4byte	.LASF35
+ 781 02a0 01       		.byte	0x1
+ 782 02a1 56       		.byte	0x56
+ 783 02a2 7A000000 		.4byte	0x7a
+ 784 02a6 F5020000 		.4byte	.LLST15
+ 785 02aa 0D       		.uleb128 0xd
+ 786 02ab 69647800 		.ascii	"idx\000"
+ 787 02af 01       		.byte	0x1
+ 788 02b0 56       		.byte	0x56
+ 789 02b1 7A000000 		.4byte	0x7a
+ 790 02b5 14030000 		.4byte	.LLST16
+ 791 02b9 0E       		.uleb128 0xe
+ 792 02ba 93020000 		.4byte	.LASF36
+ 793 02be 01       		.byte	0x1
+ 794 02bf 56       		.byte	0x56
+ 795 02c0 7A000000 		.4byte	0x7a
+ 796 02c4 4B030000 		.4byte	.LLST17
+ 797 02c8 0E       		.uleb128 0xe
+ 798 02c9 FD020000 		.4byte	.LASF29
+ 799 02cd 01       		.byte	0x1
+ 800 02ce 57       		.byte	0x57
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 21
+
+
+ 801 02cf 37000000 		.4byte	0x37
+ 802 02d3 77030000 		.4byte	.LLST18
+ 803 02d7 00       		.byte	0
+ 804 02d8 11       		.uleb128 0x11
+ 805 02d9 C6000000 		.4byte	.LASF38
+ 806 02dd 01       		.byte	0x1
+ 807 02de 91       		.byte	0x91
+ 808 02df 81000000 		.4byte	0x81
+ 809 02e3 00000000 		.4byte	.LFB1
+ 810 02e7 14000000 		.4byte	.LFE1-.LFB1
+ 811 02eb 01       		.uleb128 0x1
+ 812 02ec 9C       		.byte	0x9c
+ 813 02ed 05030000 		.4byte	0x305
+ 814 02f1 13       		.uleb128 0x13
+ 815 02f2 0A000000 		.4byte	.LVL62
+ 816 02f6 4C010000 		.4byte	0x14c
+ 817 02fa 14       		.uleb128 0x14
+ 818 02fb 01       		.uleb128 0x1
+ 819 02fc 51       		.byte	0x51
+ 820 02fd 05       		.uleb128 0x5
+ 821 02fe 03       		.byte	0x3
+ 822 02ff 00000000 		.4byte	rx_command_1
+ 823 0303 00       		.byte	0
+ 824 0304 00       		.byte	0
+ 825 0305 11       		.uleb128 0x11
+ 826 0306 D7000000 		.4byte	.LASF39
+ 827 030a 01       		.byte	0x1
+ 828 030b 98       		.byte	0x98
+ 829 030c 81000000 		.4byte	0x81
+ 830 0310 00000000 		.4byte	.LFB2
+ 831 0314 14000000 		.4byte	.LFE2-.LFB2
+ 832 0318 01       		.uleb128 0x1
+ 833 0319 9C       		.byte	0x9c
+ 834 031a 32030000 		.4byte	0x332
+ 835 031e 13       		.uleb128 0x13
+ 836 031f 0A000000 		.4byte	.LVL63
+ 837 0323 4C010000 		.4byte	0x14c
+ 838 0327 14       		.uleb128 0x14
+ 839 0328 01       		.uleb128 0x1
+ 840 0329 51       		.byte	0x51
+ 841 032a 05       		.uleb128 0x5
+ 842 032b 03       		.byte	0x3
+ 843 032c 00000000 		.4byte	rx_command_2
+ 844 0330 00       		.byte	0
+ 845 0331 00       		.byte	0
+ 846 0332 08       		.uleb128 0x8
+ 847 0333 81000000 		.4byte	0x81
+ 848 0337 3D030000 		.4byte	0x33d
+ 849 033b 15       		.uleb128 0x15
+ 850 033c 00       		.byte	0
+ 851 033d 16       		.uleb128 0x16
+ 852 033e BD000000 		.4byte	.LASF40
+ 853 0342 05       		.byte	0x5
+ 854 0343 1E       		.byte	0x1e
+ 855 0344 32030000 		.4byte	0x332
+ 856 0348 16       		.uleb128 0x16
+ 857 0349 DB020000 		.4byte	.LASF41
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 22
+
+
+ 858 034d 05       		.byte	0x5
+ 859 034e 21       		.byte	0x21
+ 860 034f 32030000 		.4byte	0x332
+ 861 0353 17       		.uleb128 0x17
+ 862 0354 06030000 		.4byte	.LASF42
+ 863 0358 01       		.byte	0x1
+ 864 0359 31       		.byte	0x31
+ 865 035a E7000000 		.4byte	0xe7
+ 866 035e 05       		.uleb128 0x5
+ 867 035f 03       		.byte	0x3
+ 868 0360 00000000 		.4byte	comm_str_tmp
+ 869 0364 17       		.uleb128 0x17
+ 870 0365 60000000 		.4byte	.LASF43
+ 871 0369 01       		.byte	0x1
+ 872 036a 33       		.byte	0x33
+ 873 036b E7000000 		.4byte	0xe7
+ 874 036f 05       		.uleb128 0x5
+ 875 0370 03       		.byte	0x3
+ 876 0371 00000000 		.4byte	comm_str_1
+ 877 0375 08       		.uleb128 0x8
+ 878 0376 81000000 		.4byte	0x81
+ 879 037a 8B030000 		.4byte	0x38b
+ 880 037e 09       		.uleb128 0x9
+ 881 037f 97000000 		.4byte	0x97
+ 882 0383 03       		.byte	0x3
+ 883 0384 09       		.uleb128 0x9
+ 884 0385 97000000 		.4byte	0x97
+ 885 0389 2F       		.byte	0x2f
+ 886 038a 00       		.byte	0
+ 887 038b 17       		.uleb128 0x17
+ 888 038c 05010000 		.4byte	.LASF44
+ 889 0390 01       		.byte	0x1
+ 890 0391 34       		.byte	0x34
+ 891 0392 75030000 		.4byte	0x375
+ 892 0396 05       		.uleb128 0x5
+ 893 0397 03       		.byte	0x3
+ 894 0398 00000000 		.4byte	rx_command_1
+ 895 039c 17       		.uleb128 0x17
+ 896 039d 6B000000 		.4byte	.LASF45
+ 897 03a1 01       		.byte	0x1
+ 898 03a2 37       		.byte	0x37
+ 899 03a3 E7000000 		.4byte	0xe7
+ 900 03a7 05       		.uleb128 0x5
+ 901 03a8 03       		.byte	0x3
+ 902 03a9 00000000 		.4byte	comm_str_2
+ 903 03ad 17       		.uleb128 0x17
+ 904 03ae 2A010000 		.4byte	.LASF46
+ 905 03b2 01       		.byte	0x1
+ 906 03b3 38       		.byte	0x38
+ 907 03b4 75030000 		.4byte	0x375
+ 908 03b8 05       		.uleb128 0x5
+ 909 03b9 03       		.byte	0x3
+ 910 03ba 00000000 		.4byte	rx_command_2
+ 911 03be 17       		.uleb128 0x17
+ 912 03bf 0F000000 		.4byte	.LASF47
+ 913 03c3 01       		.byte	0x1
+ 914 03c4 47       		.byte	0x47
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 23
+
+
+ 915 03c5 F7000000 		.4byte	0xf7
+ 916 03c9 05       		.uleb128 0x5
+ 917 03ca 03       		.byte	0x3
+ 918 03cb 00000000 		.4byte	slaves_485_1
+ 919 03cf 17       		.uleb128 0x17
+ 920 03d0 4B010000 		.4byte	.LASF48
+ 921 03d4 01       		.byte	0x1
+ 922 03d5 47       		.byte	0x47
+ 923 03d6 F7000000 		.4byte	0xf7
+ 924 03da 05       		.uleb128 0x5
+ 925 03db 03       		.byte	0x3
+ 926 03dc 00000000 		.4byte	slaves_485_2
+ 927 03e0 17       		.uleb128 0x17
+ 928 03e1 82020000 		.4byte	.LASF49
+ 929 03e5 01       		.byte	0x1
+ 930 03e6 43       		.byte	0x43
+ 931 03e7 8C000000 		.4byte	0x8c
+ 932 03eb 05       		.uleb128 0x5
+ 933 03ec 03       		.byte	0x3
+ 934 03ed 00000000 		.4byte	cmd_valid
+ 935 03f1 17       		.uleb128 0x17
+ 936 03f2 A4000000 		.4byte	.LASF50
+ 937 03f6 01       		.byte	0x1
+ 938 03f7 44       		.byte	0x44
+ 939 03f8 8C000000 		.4byte	0x8c
+ 940 03fc 05       		.uleb128 0x5
+ 941 03fd 03       		.byte	0x3
+ 942 03fe 00000000 		.4byte	cmd_bad_checksum
+ 943 0402 00       		.byte	0
+ 944              		.section	.debug_abbrev,"",%progbits
+ 945              	.Ldebug_abbrev0:
+ 946 0000 01       		.uleb128 0x1
+ 947 0001 11       		.uleb128 0x11
+ 948 0002 01       		.byte	0x1
+ 949 0003 25       		.uleb128 0x25
+ 950 0004 0E       		.uleb128 0xe
+ 951 0005 13       		.uleb128 0x13
+ 952 0006 0B       		.uleb128 0xb
+ 953 0007 03       		.uleb128 0x3
+ 954 0008 0E       		.uleb128 0xe
+ 955 0009 1B       		.uleb128 0x1b
+ 956 000a 0E       		.uleb128 0xe
+ 957 000b 55       		.uleb128 0x55
+ 958 000c 17       		.uleb128 0x17
+ 959 000d 11       		.uleb128 0x11
+ 960 000e 01       		.uleb128 0x1
+ 961 000f 10       		.uleb128 0x10
+ 962 0010 17       		.uleb128 0x17
+ 963 0011 00       		.byte	0
+ 964 0012 00       		.byte	0
+ 965 0013 02       		.uleb128 0x2
+ 966 0014 24       		.uleb128 0x24
+ 967 0015 00       		.byte	0
+ 968 0016 0B       		.uleb128 0xb
+ 969 0017 0B       		.uleb128 0xb
+ 970 0018 3E       		.uleb128 0x3e
+ 971 0019 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 24
+
+
+ 972 001a 03       		.uleb128 0x3
+ 973 001b 0E       		.uleb128 0xe
+ 974 001c 00       		.byte	0
+ 975 001d 00       		.byte	0
+ 976 001e 03       		.uleb128 0x3
+ 977 001f 16       		.uleb128 0x16
+ 978 0020 00       		.byte	0
+ 979 0021 03       		.uleb128 0x3
+ 980 0022 0E       		.uleb128 0xe
+ 981 0023 3A       		.uleb128 0x3a
+ 982 0024 0B       		.uleb128 0xb
+ 983 0025 3B       		.uleb128 0x3b
+ 984 0026 0B       		.uleb128 0xb
+ 985 0027 49       		.uleb128 0x49
+ 986 0028 13       		.uleb128 0x13
+ 987 0029 00       		.byte	0
+ 988 002a 00       		.byte	0
+ 989 002b 04       		.uleb128 0x4
+ 990 002c 24       		.uleb128 0x24
+ 991 002d 00       		.byte	0
+ 992 002e 0B       		.uleb128 0xb
+ 993 002f 0B       		.uleb128 0xb
+ 994 0030 3E       		.uleb128 0x3e
+ 995 0031 0B       		.uleb128 0xb
+ 996 0032 03       		.uleb128 0x3
+ 997 0033 08       		.uleb128 0x8
+ 998 0034 00       		.byte	0
+ 999 0035 00       		.byte	0
+ 1000 0036 05       		.uleb128 0x5
+ 1001 0037 13       		.uleb128 0x13
+ 1002 0038 01       		.byte	0x1
+ 1003 0039 03       		.uleb128 0x3
+ 1004 003a 0E       		.uleb128 0xe
+ 1005 003b 0B       		.uleb128 0xb
+ 1006 003c 0B       		.uleb128 0xb
+ 1007 003d 3A       		.uleb128 0x3a
+ 1008 003e 0B       		.uleb128 0xb
+ 1009 003f 3B       		.uleb128 0x3b
+ 1010 0040 0B       		.uleb128 0xb
+ 1011 0041 01       		.uleb128 0x1
+ 1012 0042 13       		.uleb128 0x13
+ 1013 0043 00       		.byte	0
+ 1014 0044 00       		.byte	0
+ 1015 0045 06       		.uleb128 0x6
+ 1016 0046 0D       		.uleb128 0xd
+ 1017 0047 00       		.byte	0
+ 1018 0048 03       		.uleb128 0x3
+ 1019 0049 0E       		.uleb128 0xe
+ 1020 004a 3A       		.uleb128 0x3a
+ 1021 004b 0B       		.uleb128 0xb
+ 1022 004c 3B       		.uleb128 0x3b
+ 1023 004d 0B       		.uleb128 0xb
+ 1024 004e 49       		.uleb128 0x49
+ 1025 004f 13       		.uleb128 0x13
+ 1026 0050 38       		.uleb128 0x38
+ 1027 0051 0B       		.uleb128 0xb
+ 1028 0052 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 25
+
+
+ 1029 0053 00       		.byte	0
+ 1030 0054 07       		.uleb128 0x7
+ 1031 0055 0D       		.uleb128 0xd
+ 1032 0056 00       		.byte	0
+ 1033 0057 03       		.uleb128 0x3
+ 1034 0058 08       		.uleb128 0x8
+ 1035 0059 3A       		.uleb128 0x3a
+ 1036 005a 0B       		.uleb128 0xb
+ 1037 005b 3B       		.uleb128 0x3b
+ 1038 005c 0B       		.uleb128 0xb
+ 1039 005d 49       		.uleb128 0x49
+ 1040 005e 13       		.uleb128 0x13
+ 1041 005f 38       		.uleb128 0x38
+ 1042 0060 0B       		.uleb128 0xb
+ 1043 0061 00       		.byte	0
+ 1044 0062 00       		.byte	0
+ 1045 0063 08       		.uleb128 0x8
+ 1046 0064 01       		.uleb128 0x1
+ 1047 0065 01       		.byte	0x1
+ 1048 0066 49       		.uleb128 0x49
+ 1049 0067 13       		.uleb128 0x13
+ 1050 0068 01       		.uleb128 0x1
+ 1051 0069 13       		.uleb128 0x13
+ 1052 006a 00       		.byte	0
+ 1053 006b 00       		.byte	0
+ 1054 006c 09       		.uleb128 0x9
+ 1055 006d 21       		.uleb128 0x21
+ 1056 006e 00       		.byte	0
+ 1057 006f 49       		.uleb128 0x49
+ 1058 0070 13       		.uleb128 0x13
+ 1059 0071 2F       		.uleb128 0x2f
+ 1060 0072 0B       		.uleb128 0xb
+ 1061 0073 00       		.byte	0
+ 1062 0074 00       		.byte	0
+ 1063 0075 0A       		.uleb128 0xa
+ 1064 0076 2E       		.uleb128 0x2e
+ 1065 0077 01       		.byte	0x1
+ 1066 0078 03       		.uleb128 0x3
+ 1067 0079 0E       		.uleb128 0xe
+ 1068 007a 3A       		.uleb128 0x3a
+ 1069 007b 0B       		.uleb128 0xb
+ 1070 007c 3B       		.uleb128 0x3b
+ 1071 007d 0B       		.uleb128 0xb
+ 1072 007e 27       		.uleb128 0x27
+ 1073 007f 19       		.uleb128 0x19
+ 1074 0080 49       		.uleb128 0x49
+ 1075 0081 13       		.uleb128 0x13
+ 1076 0082 11       		.uleb128 0x11
+ 1077 0083 01       		.uleb128 0x1
+ 1078 0084 12       		.uleb128 0x12
+ 1079 0085 06       		.uleb128 0x6
+ 1080 0086 40       		.uleb128 0x40
+ 1081 0087 18       		.uleb128 0x18
+ 1082 0088 9742     		.uleb128 0x2117
+ 1083 008a 19       		.uleb128 0x19
+ 1084 008b 01       		.uleb128 0x1
+ 1085 008c 13       		.uleb128 0x13
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 26
+
+
+ 1086 008d 00       		.byte	0
+ 1087 008e 00       		.byte	0
+ 1088 008f 0B       		.uleb128 0xb
+ 1089 0090 05       		.uleb128 0x5
+ 1090 0091 00       		.byte	0
+ 1091 0092 03       		.uleb128 0x3
+ 1092 0093 08       		.uleb128 0x8
+ 1093 0094 3A       		.uleb128 0x3a
+ 1094 0095 0B       		.uleb128 0xb
+ 1095 0096 3B       		.uleb128 0x3b
+ 1096 0097 0B       		.uleb128 0xb
+ 1097 0098 49       		.uleb128 0x49
+ 1098 0099 13       		.uleb128 0x13
+ 1099 009a 02       		.uleb128 0x2
+ 1100 009b 17       		.uleb128 0x17
+ 1101 009c 00       		.byte	0
+ 1102 009d 00       		.byte	0
+ 1103 009e 0C       		.uleb128 0xc
+ 1104 009f 05       		.uleb128 0x5
+ 1105 00a0 00       		.byte	0
+ 1106 00a1 03       		.uleb128 0x3
+ 1107 00a2 0E       		.uleb128 0xe
+ 1108 00a3 3A       		.uleb128 0x3a
+ 1109 00a4 0B       		.uleb128 0xb
+ 1110 00a5 3B       		.uleb128 0x3b
+ 1111 00a6 0B       		.uleb128 0xb
+ 1112 00a7 49       		.uleb128 0x49
+ 1113 00a8 13       		.uleb128 0x13
+ 1114 00a9 02       		.uleb128 0x2
+ 1115 00aa 18       		.uleb128 0x18
+ 1116 00ab 00       		.byte	0
+ 1117 00ac 00       		.byte	0
+ 1118 00ad 0D       		.uleb128 0xd
+ 1119 00ae 34       		.uleb128 0x34
+ 1120 00af 00       		.byte	0
+ 1121 00b0 03       		.uleb128 0x3
+ 1122 00b1 08       		.uleb128 0x8
+ 1123 00b2 3A       		.uleb128 0x3a
+ 1124 00b3 0B       		.uleb128 0xb
+ 1125 00b4 3B       		.uleb128 0x3b
+ 1126 00b5 0B       		.uleb128 0xb
+ 1127 00b6 49       		.uleb128 0x49
+ 1128 00b7 13       		.uleb128 0x13
+ 1129 00b8 02       		.uleb128 0x2
+ 1130 00b9 17       		.uleb128 0x17
+ 1131 00ba 00       		.byte	0
+ 1132 00bb 00       		.byte	0
+ 1133 00bc 0E       		.uleb128 0xe
+ 1134 00bd 34       		.uleb128 0x34
+ 1135 00be 00       		.byte	0
+ 1136 00bf 03       		.uleb128 0x3
+ 1137 00c0 0E       		.uleb128 0xe
+ 1138 00c1 3A       		.uleb128 0x3a
+ 1139 00c2 0B       		.uleb128 0xb
+ 1140 00c3 3B       		.uleb128 0x3b
+ 1141 00c4 0B       		.uleb128 0xb
+ 1142 00c5 49       		.uleb128 0x49
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 27
+
+
+ 1143 00c6 13       		.uleb128 0x13
+ 1144 00c7 02       		.uleb128 0x2
+ 1145 00c8 17       		.uleb128 0x17
+ 1146 00c9 00       		.byte	0
+ 1147 00ca 00       		.byte	0
+ 1148 00cb 0F       		.uleb128 0xf
+ 1149 00cc 34       		.uleb128 0x34
+ 1150 00cd 00       		.byte	0
+ 1151 00ce 03       		.uleb128 0x3
+ 1152 00cf 0E       		.uleb128 0xe
+ 1153 00d0 3A       		.uleb128 0x3a
+ 1154 00d1 0B       		.uleb128 0xb
+ 1155 00d2 3B       		.uleb128 0x3b
+ 1156 00d3 0B       		.uleb128 0xb
+ 1157 00d4 49       		.uleb128 0x49
+ 1158 00d5 13       		.uleb128 0x13
+ 1159 00d6 02       		.uleb128 0x2
+ 1160 00d7 18       		.uleb128 0x18
+ 1161 00d8 00       		.byte	0
+ 1162 00d9 00       		.byte	0
+ 1163 00da 10       		.uleb128 0x10
+ 1164 00db 0F       		.uleb128 0xf
+ 1165 00dc 00       		.byte	0
+ 1166 00dd 0B       		.uleb128 0xb
+ 1167 00de 0B       		.uleb128 0xb
+ 1168 00df 49       		.uleb128 0x49
+ 1169 00e0 13       		.uleb128 0x13
+ 1170 00e1 00       		.byte	0
+ 1171 00e2 00       		.byte	0
+ 1172 00e3 11       		.uleb128 0x11
+ 1173 00e4 2E       		.uleb128 0x2e
+ 1174 00e5 01       		.byte	0x1
+ 1175 00e6 3F       		.uleb128 0x3f
+ 1176 00e7 19       		.uleb128 0x19
+ 1177 00e8 03       		.uleb128 0x3
+ 1178 00e9 0E       		.uleb128 0xe
+ 1179 00ea 3A       		.uleb128 0x3a
+ 1180 00eb 0B       		.uleb128 0xb
+ 1181 00ec 3B       		.uleb128 0x3b
+ 1182 00ed 0B       		.uleb128 0xb
+ 1183 00ee 27       		.uleb128 0x27
+ 1184 00ef 19       		.uleb128 0x19
+ 1185 00f0 49       		.uleb128 0x49
+ 1186 00f1 13       		.uleb128 0x13
+ 1187 00f2 11       		.uleb128 0x11
+ 1188 00f3 01       		.uleb128 0x1
+ 1189 00f4 12       		.uleb128 0x12
+ 1190 00f5 06       		.uleb128 0x6
+ 1191 00f6 40       		.uleb128 0x40
+ 1192 00f7 18       		.uleb128 0x18
+ 1193 00f8 9742     		.uleb128 0x2117
+ 1194 00fa 19       		.uleb128 0x19
+ 1195 00fb 01       		.uleb128 0x1
+ 1196 00fc 13       		.uleb128 0x13
+ 1197 00fd 00       		.byte	0
+ 1198 00fe 00       		.byte	0
+ 1199 00ff 12       		.uleb128 0x12
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 28
+
+
+ 1200 0100 05       		.uleb128 0x5
+ 1201 0101 00       		.byte	0
+ 1202 0102 03       		.uleb128 0x3
+ 1203 0103 0E       		.uleb128 0xe
+ 1204 0104 3A       		.uleb128 0x3a
+ 1205 0105 0B       		.uleb128 0xb
+ 1206 0106 3B       		.uleb128 0x3b
+ 1207 0107 0B       		.uleb128 0xb
+ 1208 0108 49       		.uleb128 0x49
+ 1209 0109 13       		.uleb128 0x13
+ 1210 010a 02       		.uleb128 0x2
+ 1211 010b 17       		.uleb128 0x17
+ 1212 010c 00       		.byte	0
+ 1213 010d 00       		.byte	0
+ 1214 010e 13       		.uleb128 0x13
+ 1215 010f 898201   		.uleb128 0x4109
+ 1216 0112 01       		.byte	0x1
+ 1217 0113 11       		.uleb128 0x11
+ 1218 0114 01       		.uleb128 0x1
+ 1219 0115 31       		.uleb128 0x31
+ 1220 0116 13       		.uleb128 0x13
+ 1221 0117 00       		.byte	0
+ 1222 0118 00       		.byte	0
+ 1223 0119 14       		.uleb128 0x14
+ 1224 011a 8A8201   		.uleb128 0x410a
+ 1225 011d 00       		.byte	0
+ 1226 011e 02       		.uleb128 0x2
+ 1227 011f 18       		.uleb128 0x18
+ 1228 0120 9142     		.uleb128 0x2111
+ 1229 0122 18       		.uleb128 0x18
+ 1230 0123 00       		.byte	0
+ 1231 0124 00       		.byte	0
+ 1232 0125 15       		.uleb128 0x15
+ 1233 0126 21       		.uleb128 0x21
+ 1234 0127 00       		.byte	0
+ 1235 0128 00       		.byte	0
+ 1236 0129 00       		.byte	0
+ 1237 012a 16       		.uleb128 0x16
+ 1238 012b 34       		.uleb128 0x34
+ 1239 012c 00       		.byte	0
+ 1240 012d 03       		.uleb128 0x3
+ 1241 012e 0E       		.uleb128 0xe
+ 1242 012f 3A       		.uleb128 0x3a
+ 1243 0130 0B       		.uleb128 0xb
+ 1244 0131 3B       		.uleb128 0x3b
+ 1245 0132 0B       		.uleb128 0xb
+ 1246 0133 49       		.uleb128 0x49
+ 1247 0134 13       		.uleb128 0x13
+ 1248 0135 3F       		.uleb128 0x3f
+ 1249 0136 19       		.uleb128 0x19
+ 1250 0137 3C       		.uleb128 0x3c
+ 1251 0138 19       		.uleb128 0x19
+ 1252 0139 00       		.byte	0
+ 1253 013a 00       		.byte	0
+ 1254 013b 17       		.uleb128 0x17
+ 1255 013c 34       		.uleb128 0x34
+ 1256 013d 00       		.byte	0
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 29
+
+
+ 1257 013e 03       		.uleb128 0x3
+ 1258 013f 0E       		.uleb128 0xe
+ 1259 0140 3A       		.uleb128 0x3a
+ 1260 0141 0B       		.uleb128 0xb
+ 1261 0142 3B       		.uleb128 0x3b
+ 1262 0143 0B       		.uleb128 0xb
+ 1263 0144 49       		.uleb128 0x49
+ 1264 0145 13       		.uleb128 0x13
+ 1265 0146 3F       		.uleb128 0x3f
+ 1266 0147 19       		.uleb128 0x19
+ 1267 0148 02       		.uleb128 0x2
+ 1268 0149 18       		.uleb128 0x18
+ 1269 014a 00       		.byte	0
+ 1270 014b 00       		.byte	0
+ 1271 014c 00       		.byte	0
+ 1272              		.section	.debug_loc,"",%progbits
+ 1273              	.Ldebug_loc0:
+ 1274              	.LLST0:
+ 1275 0000 00000000 		.4byte	.LVL0
+ 1276 0004 0A000000 		.4byte	.LVL2
+ 1277 0008 0100     		.2byte	0x1
+ 1278 000a 50       		.byte	0x50
+ 1279 000b 0A000000 		.4byte	.LVL2
+ 1280 000f F6000000 		.4byte	.LVL41
+ 1281 0013 0100     		.2byte	0x1
+ 1282 0015 56       		.byte	0x56
+ 1283 0016 F6000000 		.4byte	.LVL41
+ 1284 001a FC000000 		.4byte	.LFE3
+ 1285 001e 0400     		.2byte	0x4
+ 1286 0020 F3       		.byte	0xf3
+ 1287 0021 01       		.uleb128 0x1
+ 1288 0022 50       		.byte	0x50
+ 1289 0023 9F       		.byte	0x9f
+ 1290 0024 00000000 		.4byte	0
+ 1291 0028 00000000 		.4byte	0
+ 1292              	.LLST1:
+ 1293 002c 08000000 		.4byte	.LVL1
+ 1294 0030 0E000000 		.4byte	.LVL3
+ 1295 0034 0200     		.2byte	0x2
+ 1296 0036 30       		.byte	0x30
+ 1297 0037 9F       		.byte	0x9f
+ 1298 0038 0E000000 		.4byte	.LVL3
+ 1299 003c FC000000 		.4byte	.LFE3
+ 1300 0040 0100     		.2byte	0x1
+ 1301 0042 5C       		.byte	0x5c
+ 1302 0043 00000000 		.4byte	0
+ 1303 0047 00000000 		.4byte	0
+ 1304              	.LLST2:
+ 1305 004b 08000000 		.4byte	.LVL1
+ 1306 004f 0E000000 		.4byte	.LVL3
+ 1307 0053 0200     		.2byte	0x2
+ 1308 0055 30       		.byte	0x30
+ 1309 0056 9F       		.byte	0x9f
+ 1310 0057 34000000 		.4byte	.LVL7
+ 1311 005b 44000000 		.4byte	.LVL10
+ 1312 005f 0100     		.2byte	0x1
+ 1313 0061 53       		.byte	0x53
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 30
+
+
+ 1314 0062 48000000 		.4byte	.LVL12
+ 1315 0066 4E000000 		.4byte	.LVL13
+ 1316 006a 0100     		.2byte	0x1
+ 1317 006c 53       		.byte	0x53
+ 1318 006d 00000000 		.4byte	0
+ 1319 0071 00000000 		.4byte	0
+ 1320              	.LLST3:
+ 1321 0075 08000000 		.4byte	.LVL1
+ 1322 0079 0E000000 		.4byte	.LVL3
+ 1323 007d 0200     		.2byte	0x2
+ 1324 007f 30       		.byte	0x30
+ 1325 0080 9F       		.byte	0x9f
+ 1326 0081 34000000 		.4byte	.LVL7
+ 1327 0085 44000000 		.4byte	.LVL10
+ 1328 0089 0100     		.2byte	0x1
+ 1329 008b 52       		.byte	0x52
+ 1330 008c 48000000 		.4byte	.LVL12
+ 1331 0090 50000000 		.4byte	.LVL14
+ 1332 0094 0100     		.2byte	0x1
+ 1333 0096 52       		.byte	0x52
+ 1334 0097 52000000 		.4byte	.LVL15
+ 1335 009b 68000000 		.4byte	.LVL20
+ 1336 009f 0100     		.2byte	0x1
+ 1337 00a1 52       		.byte	0x52
+ 1338 00a2 76000000 		.4byte	.LVL22
+ 1339 00a6 AC000000 		.4byte	.LVL28
+ 1340 00aa 0100     		.2byte	0x1
+ 1341 00ac 52       		.byte	0x52
+ 1342 00ad B4000000 		.4byte	.LVL29
+ 1343 00b1 BE000000 		.4byte	.LVL32
+ 1344 00b5 0100     		.2byte	0x1
+ 1345 00b7 52       		.byte	0x52
+ 1346 00b8 00000000 		.4byte	0
+ 1347 00bc 00000000 		.4byte	0
+ 1348              	.LLST4:
+ 1349 00c0 08000000 		.4byte	.LVL1
+ 1350 00c4 0E000000 		.4byte	.LVL3
+ 1351 00c8 0200     		.2byte	0x2
+ 1352 00ca 30       		.byte	0x30
+ 1353 00cb 9F       		.byte	0x9f
+ 1354 00cc 76000000 		.4byte	.LVL22
+ 1355 00d0 AC000000 		.4byte	.LVL28
+ 1356 00d4 0100     		.2byte	0x1
+ 1357 00d6 55       		.byte	0x55
+ 1358 00d7 B4000000 		.4byte	.LVL29
+ 1359 00db D4000000 		.4byte	.LVL36
+ 1360 00df 0100     		.2byte	0x1
+ 1361 00e1 55       		.byte	0x55
+ 1362 00e2 00000000 		.4byte	0
+ 1363 00e6 00000000 		.4byte	0
+ 1364              	.LLST5:
+ 1365 00ea 08000000 		.4byte	.LVL1
+ 1366 00ee 0E000000 		.4byte	.LVL3
+ 1367 00f2 0200     		.2byte	0x2
+ 1368 00f4 30       		.byte	0x30
+ 1369 00f5 9F       		.byte	0x9f
+ 1370 00f6 C4000000 		.4byte	.LVL33
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 31
+
+
+ 1371 00fa C8000000 		.4byte	.LVL34
+ 1372 00fe 0100     		.2byte	0x1
+ 1373 0100 5C       		.byte	0x5c
+ 1374 0101 C8000000 		.4byte	.LVL34
+ 1375 0105 E2000000 		.4byte	.LVL38
+ 1376 0109 0100     		.2byte	0x1
+ 1377 010b 53       		.byte	0x53
+ 1378 010c 00000000 		.4byte	0
+ 1379 0110 00000000 		.4byte	0
+ 1380              	.LLST6:
+ 1381 0114 08000000 		.4byte	.LVL1
+ 1382 0118 0E000000 		.4byte	.LVL3
+ 1383 011c 0200     		.2byte	0x2
+ 1384 011e 30       		.byte	0x30
+ 1385 011f 9F       		.byte	0x9f
+ 1386 0120 1C000000 		.4byte	.LVL4
+ 1387 0124 66000000 		.4byte	.LVL19
+ 1388 0128 0100     		.2byte	0x1
+ 1389 012a 57       		.byte	0x57
+ 1390 012b 66000000 		.4byte	.LVL19
+ 1391 012f E6000000 		.4byte	.LVL39
+ 1392 0133 0300     		.2byte	0x3
+ 1393 0135 77       		.byte	0x77
+ 1394 0136 7E       		.sleb128 -2
+ 1395 0137 9F       		.byte	0x9f
+ 1396 0138 00000000 		.4byte	0
+ 1397 013c 00000000 		.4byte	0
+ 1398              	.LLST7:
+ 1399 0140 08000000 		.4byte	.LVL1
+ 1400 0144 0E000000 		.4byte	.LVL3
+ 1401 0148 0200     		.2byte	0x2
+ 1402 014a 30       		.byte	0x30
+ 1403 014b 9F       		.byte	0x9f
+ 1404 014c 2E000000 		.4byte	.LVL6
+ 1405 0150 34000000 		.4byte	.LVL7
+ 1406 0154 0600     		.2byte	0x6
+ 1407 0156 73       		.byte	0x73
+ 1408 0157 00       		.sleb128 0
+ 1409 0158 08       		.byte	0x8
+ 1410 0159 FF       		.byte	0xff
+ 1411 015a 1A       		.byte	0x1a
+ 1412 015b 9F       		.byte	0x9f
+ 1413 015c 34000000 		.4byte	.LVL7
+ 1414 0160 44000000 		.4byte	.LVL10
+ 1415 0164 0B00     		.2byte	0xb
+ 1416 0166 76       		.byte	0x76
+ 1417 0167 00       		.sleb128 0
+ 1418 0168 7E       		.byte	0x7e
+ 1419 0169 00       		.sleb128 0
+ 1420 016a 22       		.byte	0x22
+ 1421 016b 94       		.byte	0x94
+ 1422 016c 01       		.byte	0x1
+ 1423 016d 08       		.byte	0x8
+ 1424 016e FF       		.byte	0xff
+ 1425 016f 1A       		.byte	0x1a
+ 1426 0170 9F       		.byte	0x9f
+ 1427 0171 44000000 		.4byte	.LVL10
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 32
+
+
+ 1428 0175 46000000 		.4byte	.LVL11
+ 1429 0179 0600     		.2byte	0x6
+ 1430 017b 73       		.byte	0x73
+ 1431 017c 00       		.sleb128 0
+ 1432 017d 08       		.byte	0x8
+ 1433 017e FF       		.byte	0xff
+ 1434 017f 1A       		.byte	0x1a
+ 1435 0180 9F       		.byte	0x9f
+ 1436 0181 46000000 		.4byte	.LVL11
+ 1437 0185 76000000 		.4byte	.LVL22
+ 1438 0189 0B00     		.2byte	0xb
+ 1439 018b 76       		.byte	0x76
+ 1440 018c 00       		.sleb128 0
+ 1441 018d 7E       		.byte	0x7e
+ 1442 018e 00       		.sleb128 0
+ 1443 018f 22       		.byte	0x22
+ 1444 0190 94       		.byte	0x94
+ 1445 0191 01       		.byte	0x1
+ 1446 0192 08       		.byte	0x8
+ 1447 0193 FF       		.byte	0xff
+ 1448 0194 1A       		.byte	0x1a
+ 1449 0195 9F       		.byte	0x9f
+ 1450 0196 AC000000 		.4byte	.LVL28
+ 1451 019a B4000000 		.4byte	.LVL29
+ 1452 019e 0B00     		.2byte	0xb
+ 1453 01a0 76       		.byte	0x76
+ 1454 01a1 00       		.sleb128 0
+ 1455 01a2 7E       		.byte	0x7e
+ 1456 01a3 00       		.sleb128 0
+ 1457 01a4 22       		.byte	0x22
+ 1458 01a5 94       		.byte	0x94
+ 1459 01a6 01       		.byte	0x1
+ 1460 01a7 08       		.byte	0x8
+ 1461 01a8 FF       		.byte	0xff
+ 1462 01a9 1A       		.byte	0x1a
+ 1463 01aa 9F       		.byte	0x9f
+ 1464 01ab 00000000 		.4byte	0
+ 1465 01af 00000000 		.4byte	0
+ 1466              	.LLST8:
+ 1467 01b3 08000000 		.4byte	.LVL1
+ 1468 01b7 0E000000 		.4byte	.LVL3
+ 1469 01bb 0200     		.2byte	0x2
+ 1470 01bd 30       		.byte	0x30
+ 1471 01be 9F       		.byte	0x9f
+ 1472 01bf 24000000 		.4byte	.LVL5
+ 1473 01c3 E6000000 		.4byte	.LVL39
+ 1474 01c7 0100     		.2byte	0x1
+ 1475 01c9 5E       		.byte	0x5e
+ 1476 01ca 00000000 		.4byte	0
+ 1477 01ce 00000000 		.4byte	0
+ 1478              	.LLST9:
+ 1479 01d2 08000000 		.4byte	.LVL1
+ 1480 01d6 0E000000 		.4byte	.LVL3
+ 1481 01da 0200     		.2byte	0x2
+ 1482 01dc 30       		.byte	0x30
+ 1483 01dd 9F       		.byte	0x9f
+ 1484 01de 52000000 		.4byte	.LVL15
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 33
+
+
+ 1485 01e2 5C000000 		.4byte	.LVL16
+ 1486 01e6 0100     		.2byte	0x1
+ 1487 01e8 53       		.byte	0x53
+ 1488 01e9 5E000000 		.4byte	.LVL17
+ 1489 01ed 74000000 		.4byte	.LVL21
+ 1490 01f1 0100     		.2byte	0x1
+ 1491 01f3 53       		.byte	0x53
+ 1492 01f4 AC000000 		.4byte	.LVL28
+ 1493 01f8 B4000000 		.4byte	.LVL29
+ 1494 01fc 0100     		.2byte	0x1
+ 1495 01fe 53       		.byte	0x53
+ 1496 01ff 00000000 		.4byte	0
+ 1497 0203 00000000 		.4byte	0
+ 1498              	.LLST10:
+ 1499 0207 08000000 		.4byte	.LVL1
+ 1500 020b 0E000000 		.4byte	.LVL3
+ 1501 020f 0200     		.2byte	0x2
+ 1502 0211 30       		.byte	0x30
+ 1503 0212 9F       		.byte	0x9f
+ 1504 0213 76000000 		.4byte	.LVL22
+ 1505 0217 92000000 		.4byte	.LVL23
+ 1506 021b 0100     		.2byte	0x1
+ 1507 021d 58       		.byte	0x58
+ 1508 021e 92000000 		.4byte	.LVL23
+ 1509 0222 A4000000 		.4byte	.LVL25
+ 1510 0226 0200     		.2byte	0x2
+ 1511 0228 30       		.byte	0x30
+ 1512 0229 9F       		.byte	0x9f
+ 1513 022a A4000000 		.4byte	.LVL25
+ 1514 022e AC000000 		.4byte	.LVL28
+ 1515 0232 0100     		.2byte	0x1
+ 1516 0234 58       		.byte	0x58
+ 1517 0235 B4000000 		.4byte	.LVL29
+ 1518 0239 D4000000 		.4byte	.LVL36
+ 1519 023d 0100     		.2byte	0x1
+ 1520 023f 58       		.byte	0x58
+ 1521 0240 00000000 		.4byte	0
+ 1522 0244 00000000 		.4byte	0
+ 1523              	.LLST11:
+ 1524 0248 08000000 		.4byte	.LVL1
+ 1525 024c 0E000000 		.4byte	.LVL3
+ 1526 0250 0200     		.2byte	0x2
+ 1527 0252 30       		.byte	0x30
+ 1528 0253 9F       		.byte	0x9f
+ 1529 0254 0E000000 		.4byte	.LVL3
+ 1530 0258 BA000000 		.4byte	.LVL30
+ 1531 025c 0100     		.2byte	0x1
+ 1532 025e 50       		.byte	0x50
+ 1533 025f BC000000 		.4byte	.LVL31
+ 1534 0263 FC000000 		.4byte	.LFE3
+ 1535 0267 0100     		.2byte	0x1
+ 1536 0269 50       		.byte	0x50
+ 1537 026a 00000000 		.4byte	0
+ 1538 026e 00000000 		.4byte	0
+ 1539              	.LLST12:
+ 1540 0272 00000000 		.4byte	.LVL42
+ 1541 0276 4E000000 		.4byte	.LVL55
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 34
+
+
+ 1542 027a 0100     		.2byte	0x1
+ 1543 027c 50       		.byte	0x50
+ 1544 027d 4E000000 		.4byte	.LVL55
+ 1545 0281 74000000 		.4byte	.LFE0
+ 1546 0285 0400     		.2byte	0x4
+ 1547 0287 F3       		.byte	0xf3
+ 1548 0288 01       		.uleb128 0x1
+ 1549 0289 50       		.byte	0x50
+ 1550 028a 9F       		.byte	0x9f
+ 1551 028b 00000000 		.4byte	0
+ 1552 028f 00000000 		.4byte	0
+ 1553              	.LLST13:
+ 1554 0293 00000000 		.4byte	.LVL42
+ 1555 0297 4C000000 		.4byte	.LVL54
+ 1556 029b 0100     		.2byte	0x1
+ 1557 029d 52       		.byte	0x52
+ 1558 029e 4C000000 		.4byte	.LVL54
+ 1559 02a2 74000000 		.4byte	.LFE0
+ 1560 02a6 0400     		.2byte	0x4
+ 1561 02a8 F3       		.byte	0xf3
+ 1562 02a9 01       		.uleb128 0x1
+ 1563 02aa 52       		.byte	0x52
+ 1564 02ab 9F       		.byte	0x9f
+ 1565 02ac 00000000 		.4byte	0
+ 1566 02b0 00000000 		.4byte	0
+ 1567              	.LLST14:
+ 1568 02b4 02000000 		.4byte	.LVL43
+ 1569 02b8 06000000 		.4byte	.LVL44
+ 1570 02bc 0200     		.2byte	0x2
+ 1571 02be 30       		.byte	0x30
+ 1572 02bf 9F       		.byte	0x9f
+ 1573 02c0 06000000 		.4byte	.LVL44
+ 1574 02c4 16000000 		.4byte	.LVL46
+ 1575 02c8 0100     		.2byte	0x1
+ 1576 02ca 53       		.byte	0x53
+ 1577 02cb 18000000 		.4byte	.LVL47
+ 1578 02cf 48000000 		.4byte	.LVL53
+ 1579 02d3 0100     		.2byte	0x1
+ 1580 02d5 53       		.byte	0x53
+ 1581 02d6 48000000 		.4byte	.LVL53
+ 1582 02da 4E000000 		.4byte	.LVL55
+ 1583 02de 0200     		.2byte	0x2
+ 1584 02e0 30       		.byte	0x30
+ 1585 02e1 9F       		.byte	0x9f
+ 1586 02e2 4E000000 		.4byte	.LVL55
+ 1587 02e6 5E000000 		.4byte	.LVL59
+ 1588 02ea 0100     		.2byte	0x1
+ 1589 02ec 52       		.byte	0x52
+ 1590 02ed 00000000 		.4byte	0
+ 1591 02f1 00000000 		.4byte	0
+ 1592              	.LLST15:
+ 1593 02f5 02000000 		.4byte	.LVL43
+ 1594 02f9 18000000 		.4byte	.LVL47
+ 1595 02fd 0200     		.2byte	0x2
+ 1596 02ff 30       		.byte	0x30
+ 1597 0300 9F       		.byte	0x9f
+ 1598 0301 18000000 		.4byte	.LVL47
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 35
+
+
+ 1599 0305 74000000 		.4byte	.LFE0
+ 1600 0309 0100     		.2byte	0x1
+ 1601 030b 57       		.byte	0x57
+ 1602 030c 00000000 		.4byte	0
+ 1603 0310 00000000 		.4byte	0
+ 1604              	.LLST16:
+ 1605 0314 02000000 		.4byte	.LVL43
+ 1606 0318 18000000 		.4byte	.LVL47
+ 1607 031c 0200     		.2byte	0x2
+ 1608 031e 30       		.byte	0x30
+ 1609 031f 9F       		.byte	0x9f
+ 1610 0320 18000000 		.4byte	.LVL47
+ 1611 0324 34000000 		.4byte	.LVL49
+ 1612 0328 0100     		.2byte	0x1
+ 1613 032a 54       		.byte	0x54
+ 1614 032b 34000000 		.4byte	.LVL49
+ 1615 032f 3A000000 		.4byte	.LVL50
+ 1616 0333 0300     		.2byte	0x3
+ 1617 0335 74       		.byte	0x74
+ 1618 0336 7F       		.sleb128 -1
+ 1619 0337 9F       		.byte	0x9f
+ 1620 0338 3A000000 		.4byte	.LVL50
+ 1621 033c 48000000 		.4byte	.LVL53
+ 1622 0340 0100     		.2byte	0x1
+ 1623 0342 54       		.byte	0x54
+ 1624 0343 00000000 		.4byte	0
+ 1625 0347 00000000 		.4byte	0
+ 1626              	.LLST17:
+ 1627 034b 02000000 		.4byte	.LVL43
+ 1628 034f 48000000 		.4byte	.LVL53
+ 1629 0353 0200     		.2byte	0x2
+ 1630 0355 30       		.byte	0x30
+ 1631 0356 9F       		.byte	0x9f
+ 1632 0357 48000000 		.4byte	.LVL53
+ 1633 035b 6A000000 		.4byte	.LVL60
+ 1634 035f 0100     		.2byte	0x1
+ 1635 0361 54       		.byte	0x54
+ 1636 0362 6A000000 		.4byte	.LVL60
+ 1637 0366 74000000 		.4byte	.LFE0
+ 1638 036a 0300     		.2byte	0x3
+ 1639 036c 74       		.byte	0x74
+ 1640 036d 7D       		.sleb128 -3
+ 1641 036e 9F       		.byte	0x9f
+ 1642 036f 00000000 		.4byte	0
+ 1643 0373 00000000 		.4byte	0
+ 1644              	.LLST18:
+ 1645 0377 02000000 		.4byte	.LVL43
+ 1646 037b 4E000000 		.4byte	.LVL55
+ 1647 037f 0200     		.2byte	0x2
+ 1648 0381 30       		.byte	0x30
+ 1649 0382 9F       		.byte	0x9f
+ 1650 0383 4E000000 		.4byte	.LVL55
+ 1651 0387 54000000 		.4byte	.LVL56
+ 1652 038b 0100     		.2byte	0x1
+ 1653 038d 53       		.byte	0x53
+ 1654 038e 56000000 		.4byte	.LVL57
+ 1655 0392 6C000000 		.4byte	.LVL61
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 36
+
+
+ 1656 0396 0100     		.2byte	0x1
+ 1657 0398 53       		.byte	0x53
+ 1658 0399 6C000000 		.4byte	.LVL61
+ 1659 039d 74000000 		.4byte	.LFE0
+ 1660 03a1 0500     		.2byte	0x5
+ 1661 03a3 71       		.byte	0x71
+ 1662 03a4 00       		.sleb128 0
+ 1663 03a5 72       		.byte	0x72
+ 1664 03a6 00       		.sleb128 0
+ 1665 03a7 22       		.byte	0x22
+ 1666 03a8 00000000 		.4byte	0
+ 1667 03ac 00000000 		.4byte	0
+ 1668              		.section	.debug_aranges,"",%progbits
+ 1669 0000 34000000 		.4byte	0x34
+ 1670 0004 0200     		.2byte	0x2
+ 1671 0006 00000000 		.4byte	.Ldebug_info0
+ 1672 000a 04       		.byte	0x4
+ 1673 000b 00       		.byte	0
+ 1674 000c 0000     		.2byte	0
+ 1675 000e 0000     		.2byte	0
+ 1676 0010 00000000 		.4byte	.LFB3
+ 1677 0014 FC000000 		.4byte	.LFE3-.LFB3
+ 1678 0018 00000000 		.4byte	.LFB0
+ 1679 001c 74000000 		.4byte	.LFE0-.LFB0
+ 1680 0020 00000000 		.4byte	.LFB1
+ 1681 0024 14000000 		.4byte	.LFE1-.LFB1
+ 1682 0028 00000000 		.4byte	.LFB2
+ 1683 002c 14000000 		.4byte	.LFE2-.LFB2
+ 1684 0030 00000000 		.4byte	0
+ 1685 0034 00000000 		.4byte	0
+ 1686              		.section	.debug_ranges,"",%progbits
+ 1687              	.Ldebug_ranges0:
+ 1688 0000 00000000 		.4byte	.LFB3
+ 1689 0004 FC000000 		.4byte	.LFE3
+ 1690 0008 00000000 		.4byte	.LFB0
+ 1691 000c 74000000 		.4byte	.LFE0
+ 1692 0010 00000000 		.4byte	.LFB1
+ 1693 0014 14000000 		.4byte	.LFE1
+ 1694 0018 00000000 		.4byte	.LFB2
+ 1695 001c 14000000 		.4byte	.LFE2
+ 1696 0020 00000000 		.4byte	0
+ 1697 0024 00000000 		.4byte	0
+ 1698              		.section	.debug_line,"",%progbits
+ 1699              	.Ldebug_line0:
+ 1700 0000 AB020000 		.section	.debug_str,"MS",%progbits,1
+ 1700      02007901 
+ 1700      00000201 
+ 1700      FB0E0D00 
+ 1700      01010101 
+ 1701              	.LASF30:
+ 1702 0000 736B6970 		.ascii	"skip\000"
+ 1702      00
+ 1703              	.LASF2:
+ 1704 0005 73686F72 		.ascii	"short int\000"
+ 1704      7420696E 
+ 1704      7400
+ 1705              	.LASF47:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 37
+
+
+ 1706 000f 736C6176 		.ascii	"slaves_485_1\000"
+ 1706      65735F34 
+ 1706      38355F31 
+ 1706      00
+ 1707              	.LASF13:
+ 1708 001c 73697A65 		.ascii	"sizetype\000"
+ 1708      74797065 
+ 1708      00
+ 1709              	.LASF52:
+ 1710 0025 2E2E5C2E 		.ascii	"..\\..\\flexsea-comm\\src\\flexsea_comm.c\000"
+ 1710      2E5C666C 
+ 1710      65787365 
+ 1710      612D636F 
+ 1710      6D6D5C73 
+ 1711              	.LASF23:
+ 1712 004b 786D6974 		.ascii	"xmit\000"
+ 1712      00
+ 1713              	.LASF6:
+ 1714 0050 5F5F7569 		.ascii	"__uint32_t\000"
+ 1714      6E743332 
+ 1714      5F7400
+ 1715              	.LASF19:
+ 1716 005b 6D6F6465 		.ascii	"mode\000"
+ 1716      00
+ 1717              	.LASF43:
+ 1718 0060 636F6D6D 		.ascii	"comm_str_1\000"
+ 1718      5F737472 
+ 1718      5F3100
+ 1719              	.LASF45:
+ 1720 006b 636F6D6D 		.ascii	"comm_str_2\000"
+ 1720      5F737472 
+ 1720      5F3200
+ 1721              	.LASF53:
+ 1722 0076 433A5C46 		.ascii	"C:\\FlexSEA_alx87grd\\execute\\execute_1_0.cydsn\000"
+ 1722      6C657853 
+ 1722      45415F61 
+ 1722      6C783837 
+ 1722      6772645C 
+ 1723              	.LASF50:
+ 1724 00a4 636D645F 		.ascii	"cmd_bad_checksum\000"
+ 1724      6261645F 
+ 1724      63686563 
+ 1724      6B73756D 
+ 1724      00
+ 1725              	.LASF11:
+ 1726 00b5 75696E74 		.ascii	"uint8_t\000"
+ 1726      385F7400 
+ 1727              	.LASF40:
+ 1728 00bd 72785F62 		.ascii	"rx_buf_1\000"
+ 1728      75665F31 
+ 1728      00
+ 1729              	.LASF38:
+ 1730 00c6 756E7061 		.ascii	"unpack_payload_1\000"
+ 1730      636B5F70 
+ 1730      61796C6F 
+ 1730      61645F31 
+ 1730      00
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 38
+
+
+ 1731              	.LASF39:
+ 1732 00d7 756E7061 		.ascii	"unpack_payload_2\000"
+ 1732      636B5F70 
+ 1732      61796C6F 
+ 1732      61645F32 
+ 1732      00
+ 1733              	.LASF27:
+ 1734 00e8 706F7373 		.ascii	"possible_footer\000"
+ 1734      69626C65 
+ 1734      5F666F6F 
+ 1734      74657200 
+ 1735              	.LASF37:
+ 1736 00f8 636F6D6D 		.ascii	"comm_gen_str\000"
+ 1736      5F67656E 
+ 1736      5F737472 
+ 1736      00
+ 1737              	.LASF44:
+ 1738 0105 72785F63 		.ascii	"rx_command_1\000"
+ 1738      6F6D6D61 
+ 1738      6E645F31 
+ 1738      00
+ 1739              	.LASF8:
+ 1740 0112 6C6F6E67 		.ascii	"long long int\000"
+ 1740      206C6F6E 
+ 1740      6720696E 
+ 1740      7400
+ 1741              	.LASF22:
+ 1742 0120 636D645F 		.ascii	"cmd_ready\000"
+ 1742      72656164 
+ 1742      7900
+ 1743              	.LASF46:
+ 1744 012a 72785F63 		.ascii	"rx_command_2\000"
+ 1744      6F6D6D61 
+ 1744      6E645F32 
+ 1744      00
+ 1745              	.LASF32:
+ 1746 0137 72785F62 		.ascii	"rx_buf_tmp\000"
+ 1746      75665F74 
+ 1746      6D7000
+ 1747              	.LASF4:
+ 1748 0142 6C6F6E67 		.ascii	"long int\000"
+ 1748      20696E74 
+ 1748      00
+ 1749              	.LASF48:
+ 1750 014b 736C6176 		.ascii	"slaves_485_2\000"
+ 1750      65735F34 
+ 1750      38355F32 
+ 1750      00
+ 1751              	.LASF5:
+ 1752 0158 5F5F7569 		.ascii	"__uint8_t\000"
+ 1752      6E74385F 
+ 1752      7400
+ 1753              	.LASF18:
+ 1754 0162 736C6176 		.ascii	"slave_comm_s\000"
+ 1754      655F636F 
+ 1754      6D6D5F73 
+ 1754      00
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 39
+
+
+ 1755              	.LASF34:
+ 1756 016f 63737472 		.ascii	"cstr\000"
+ 1756      00
+ 1757              	.LASF15:
+ 1758 0174 6C656E67 		.ascii	"length\000"
+ 1758      746800
+ 1759              	.LASF1:
+ 1760 017b 756E7369 		.ascii	"unsigned char\000"
+ 1760      676E6564 
+ 1760      20636861 
+ 1760      7200
+ 1761              	.LASF0:
+ 1762 0189 7369676E 		.ascii	"signed char\000"
+ 1762      65642063 
+ 1762      68617200 
+ 1763              	.LASF9:
+ 1764 0195 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1764      206C6F6E 
+ 1764      6720756E 
+ 1764      7369676E 
+ 1764      65642069 
+ 1765              	.LASF12:
+ 1766 01ac 75696E74 		.ascii	"uint32_t\000"
+ 1766      33325F74 
+ 1766      00
+ 1767              	.LASF10:
+ 1768 01b5 756E7369 		.ascii	"unsigned int\000"
+ 1768      676E6564 
+ 1768      20696E74 
+ 1768      00
+ 1769              	.LASF54:
+ 1770 01c2 756E7061 		.ascii	"unpack_payload\000"
+ 1770      636B5F70 
+ 1770      61796C6F 
+ 1770      616400
+ 1771              	.LASF3:
+ 1772 01d1 73686F72 		.ascii	"short unsigned int\000"
+ 1772      7420756E 
+ 1772      7369676E 
+ 1772      65642069 
+ 1772      6E7400
+ 1773              	.LASF51:
+ 1774 01e4 474E5520 		.ascii	"GNU C 4.9.3 20150303 (release) [ARM/embedded-4_9-br"
+ 1774      4320342E 
+ 1774      392E3320 
+ 1774      32303135 
+ 1774      30333033 
+ 1775 0217 616E6368 		.ascii	"anch revision 221220] -mcpu=cortex-m3 -mthumb -g -O"
+ 1775      20726576 
+ 1775      6973696F 
+ 1775      6E203232 
+ 1775      31323230 
+ 1776 024a 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1776      66756E63 
+ 1776      74696F6E 
+ 1776      2D736563 
+ 1776      74696F6E 
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 40
+
+
+ 1777              	.LASF31:
+ 1778 0272 7061796C 		.ascii	"payload_strings\000"
+ 1778      6F61645F 
+ 1778      73747269 
+ 1778      6E677300 
+ 1779              	.LASF49:
+ 1780 0282 636D645F 		.ascii	"cmd_valid\000"
+ 1780      76616C69 
+ 1780      6400
+ 1781              	.LASF16:
+ 1782 028c 6C697374 		.ascii	"listen\000"
+ 1782      656E00
+ 1783              	.LASF36:
+ 1784 0293 746F7461 		.ascii	"total_bytes\000"
+ 1784      6C5F6279 
+ 1784      74657300 
+ 1785              	.LASF28:
+ 1786 029f 706F7373 		.ascii	"possible_footer_pos\000"
+ 1786      69626C65 
+ 1786      5F666F6F 
+ 1786      7465725F 
+ 1786      706F7300 
+ 1787              	.LASF24:
+ 1788 02b3 6175746F 		.ascii	"autosample\000"
+ 1788      73616D70 
+ 1788      6C6500
+ 1789              	.LASF20:
+ 1790 02be 706F7274 		.ascii	"port\000"
+ 1790      00
+ 1791              	.LASF7:
+ 1792 02c3 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1792      20756E73 
+ 1792      69676E65 
+ 1792      6420696E 
+ 1792      7400
+ 1793              	.LASF26:
+ 1794 02d5 62797465 		.ascii	"bytes\000"
+ 1794      7300
+ 1795              	.LASF41:
+ 1796 02db 72785F62 		.ascii	"rx_buf_2\000"
+ 1796      75665F32 
+ 1796      00
+ 1797              	.LASF25:
+ 1798 02e4 72785F63 		.ascii	"rx_cmd\000"
+ 1798      6D6400
+ 1799              	.LASF17:
+ 1800 02eb 73635F64 		.ascii	"sc_data_s\000"
+ 1800      6174615F 
+ 1800      7300
+ 1801              	.LASF35:
+ 1802 02f5 65736361 		.ascii	"escapes\000"
+ 1802      70657300 
+ 1803              	.LASF29:
+ 1804 02fd 63686563 		.ascii	"checksum\000"
+ 1804      6B73756D 
+ 1804      00
+ 1805              	.LASF42:
+ARM GAS  C:\Users\Alex\AppData\Local\Temp\ccmwqtvh.s 			page 41
+
+
+ 1806 0306 636F6D6D 		.ascii	"comm_str_tmp\000"
+ 1806      5F737472 
+ 1806      5F746D70 
+ 1806      00
+ 1807              	.LASF14:
+ 1808 0313 666C6167 		.ascii	"flag\000"
+ 1808      00
+ 1809              	.LASF33:
+ 1810 0318 7061796C 		.ascii	"payload\000"
+ 1810      6F616400 
+ 1811              	.LASF21:
+ 1812 0320 62797465 		.ascii	"bytes_ready\000"
+ 1812      735F7265 
+ 1812      61647900 
+ 1813              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150303 (release) [ARM/embedded-4_9-br
