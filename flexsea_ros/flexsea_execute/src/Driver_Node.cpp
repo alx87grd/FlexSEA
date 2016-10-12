@@ -528,7 +528,9 @@ void Driver_Node::request_new_ctrl_setpoint(){
         case 3: //Current
             valid = 1;
             val = ctrl_setpoint;
-            qDebug() << "ctl_setpoint_raw: " <<  val;
+            if (verbose){
+                qDebug() << "ctl_setpoint_raw: " <<  val;
+            }
             numb = tx_cmd_ctrl_i(active_slave_1, CMD_WRITE, payload_str, PAYLOAD_BUF_LEN, val, 0);
             break;
         case 4: //Impedance
