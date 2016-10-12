@@ -293,7 +293,11 @@ void Driver_Node::publish_sensor_msg(){
         int current_offset = 0;
         y_msg.current = (float) ( exec1.current - current_offset ) * 18.5;
 
-        qDebug() << "______________________current_actual_raw: " << (exec1.current);
+        if (verbose_current){
+            if ( active_slave_1 == slave_debug ){
+                qDebug() << "______________________current_actual_raw: " << (exec1.current);
+            }
+        }
 
         // Encoder
         y_msg.encoder = exec1.enc_display ;
@@ -334,6 +338,12 @@ void Driver_Node::publish_sensor_msg(){
         // Current
         int current_offset = 0;
         y_msg.current = (float) ( exec2.current - current_offset ) * 18.5;
+
+        if (verbose_current){
+            if ( active_slave_1 == slave_debug ){
+                qDebug() << "______________________current_actual_raw: " << (exec2.current);
+            }
+        }
 
         // Encoder
         y_msg.encoder = exec2.enc_display ;
@@ -528,8 +538,10 @@ void Driver_Node::request_new_ctrl_setpoint(){
         case 3: //Current
             valid = 1;
             val = ctrl_setpoint;
-            if ( active_slave_1 == 40 ){
-                qDebug() << "ctl_setpoint_raw: " <<  val;
+            if (verbose_current){
+                if ( active_slave_1 == slave_debug ){
+                    qDebug() << "ctl_setpoint_raw: " <<  val;
+                }
             }
             numb = tx_cmd_ctrl_i(active_slave_1, CMD_WRITE, payload_str, PAYLOAD_BUF_LEN, val, 0);
             break;

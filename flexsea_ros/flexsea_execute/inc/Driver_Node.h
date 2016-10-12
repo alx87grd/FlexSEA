@@ -50,7 +50,9 @@ private:
     int16_t     brake_pwm;
 
     // Debug params
-    bool verbose = false;
+    bool verbose         = false;
+    bool verbose_current = true;
+    int  slave_debug     = 40;
 	
 public:
 	// Functions
