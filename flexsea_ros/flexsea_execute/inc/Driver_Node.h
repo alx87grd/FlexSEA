@@ -51,6 +51,7 @@ private:
 
     // Debug params
     bool verbose = false;
+    bool verbose_current = false;
 	
 public:
 	// Functions
