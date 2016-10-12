@@ -13,7 +13,7 @@ class nav(object):
         
         self.verbose = False
         
-        self.pub_u        = rospy.Publisher("a0/u", inputs , queue_size=1      )
+        self.pub_u        = rospy.Publisher("m1/u", inputs , queue_size=1      )
         self.pub_timer    = rospy.Timer( rospy.Duration.from_sec(0.3),    self.timer_callback  )
         self.sub_joy      = rospy.Subscriber("joy", Joy , self.joy_callback , queue_size=1      )
         

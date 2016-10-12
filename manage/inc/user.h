@@ -27,12 +27,20 @@
 // Shared variable(s)
 //****************************************************************************
 
+//MIT Ankle 2-DoF:
+#if(ACTIVE_PROJECT == PROJECT_ANKLE_2DOF)
+
+extern struct ankle2dof_s ankle2dof_left, ankle2dof_right;
+
+#endif	//PROJECT_ANKLE_2DOF
+
 //****************************************************************************
 // Public Function Prototype(s):
 //****************************************************************************	
 
 void init_user(void);
-void user_fsm(void);
+void user_fsm_1(void);
+void user_fsm_2(void);
 
 //****************************************************************************
 // Definition(s):
@@ -56,8 +64,8 @@ void user_fsm(void);
 //Step 1) Select active project (from list):
 //==========================================
 
-#define ACTIVE_PROJECT			PROJECT_BAREBONE
-#define ACTIVE_SUBPROJECT		SUBPROJECT_A
+#define ACTIVE_PROJECT			PROJECT_ANKLE_2DOF
+#define ACTIVE_SUBPROJECT		SUBPROJECT_NONE
 
 //Step 2) Customize the enabled/disabled sub-modules:
 //===================================================
@@ -85,80 +93,12 @@ void user_fsm(void);
 
 //CSEA Knee
 #if(ACTIVE_PROJECT == PROJECT_CSEA_KNEE)
-	
-	//Enable/Disable sub-modules:
-	#define USE_RS485
-	#define USE_USB
-	#define USE_COMM			//Requires USE_RS485 and/or USE_USB
-	#define USE_QEI
-	#define USE_TRAPEZ
-	#define USE_I2C_0			//3V3, IMU & Expansion.
-	#define USE_I2C_1			//5V, Safety-CoP & strain gauge pot.
-	#define USE_IMU				//Requires USE_I2C_0
-	//#define USE_STRAIN		//Requires USE_I2C_1
-	
-	//Motor type & direction:
-	#define MOTOR_TYPE		MOTOR_BRUSHLESS
-	#define PWM_SIGN		1
-	
-	//Runtime finite state machine (FSM):
-	#define RUNTIME_FSM		ENABLED
-
-	//Encoders:
-	#define ENC_CONTROL		ENC_ANALOG
-	#define ENC_COMMUT		ENC_HALL
-	#define ENC_DISPLAY		ENC_CONTROL	
-	
-	//Project specific definitions:
-	#define CSEA_FULL_FLEX_RAW		580		//Raw value
-	#define CSEA_FULL_EXT_RAW		2840	//Raw value
-	#define CSEA_FULL_FLEX			2260
-	#define CSEA_FULL_EXT			0
-	#define CSEA_MARGIN				300
-	#define CSEA_MOTION_TIME		3500
-	
-	//Control encoder function:
-	#define CTRL_ENC_FCT(x) (-((int16)x - CSEA_FULL_EXT_RAW))
-	
+//...
 #endif	//PROJECT_CSEA_KNEE
 
 //RIC/NU Knee
 #if(ACTIVE_PROJECT == PROJECT_RICNU_KNEE)
-	
-	//Enable/Disable sub-modules:
-	#define USE_RS485
-	#define USE_USB
-	#define USE_COMM			//Requires USE_RS485 and/or USE_USB
-	//#define USE_QEI
-	#define USE_TRAPEZ
-	#define USE_I2C_0			//3V3, IMU & Expansion.
-	#define USE_I2C_1			//5V, Safety-CoP & strain gauge pot.
-	#define USE_IMU				//Requires USE_I2C_0
-	//#define USE_STRAIN		//Requires USE_I2C_1
-	#define USE_AS5047			//16-bit Position Sensor, SPI
-	#define USE_SPI_COMMUT		//
-	//#define USE_MINM_RGB		//External RGB LED. Requires USE_I2C_0.
-	#define USE_EXT_I2C_STRAIN	//External Strain Amplifier, on I2C0
-	#define USE_AS5048B			//14-bit Position Sensor, on I2C0
-	
-	//Motor type & direction:
-	#define MOTOR_TYPE		MOTOR_BRUSHLESS
-	#define PWM_SIGN		1
-	
-	//Runtime finite state machine (FSM):
-	#define RUNTIME_FSM		ENABLED
-
-	//Encoders:
-	#define ENC_CONTROL		ENC_AS5048B
-	#define ENC_COMMUT		ENC_AS5047
-	#define ENC_DISPLAY		ENC_CONTROL	
-	
-	//Control encoder function:
-	#define CTRL_ENC_FCT(x) (14000 - x)	//ToDo make better
-	
-	//Project specific definitions:
-	//...
-	
+//...
 #endif	//PROJECT_RICNU_KNEE
 
 //MIT 2-DoF Ankle
@@ -168,47 +108,14 @@ void user_fsm(void);
 	#define USE_RS485
 	#define USE_USB
 	#define USE_COMM			//Requires USE_RS485 and/or USE_USB
-	//#define USE_QEI
-	#define USE_TRAPEZ
-	#define USE_I2C_0			//3V3, IMU & Expansion.
-	#define USE_I2C_1			//5V, Safety-CoP & strain gauge pot.
-	#define USE_IMU				//Requires USE_I2C_0
-	//#define USE_STRAIN		//Requires USE_I2C_1
-	#define USE_AS5047			//16-bit Position Sensor, SPI
-	#define USE_SPI_COMMUT		//
-	
-	//Motor type:
-	#define MOTOR_TYPE		MOTOR_BRUSHLESS
+	//#define USE_TRAPEZ
+	//#define USE_I2C_0			//3V3, IMU & Expansion.
+	//#define USE_I2C_1			//5V, Safety-CoP & strain gauge pot.
+	//#define USE_IMU			//Requires USE_I2C_0
 	
 	//Runtime finite state machine (FSM):
-	#define RUNTIME_FSM		ENABLED
-
-	//Encoders:
-	#define ENC_CONTROL		ENC_AS5047
-	#define ENC_COMMUT		ENC_AS5047
-	#define ENC_DISPLAY		ENC_CONTROL	
-	
-	//Subproject A: Left actuator
-	#if(ACTIVE_SUBPROJECT == SUBPROJECT_A)
-		
-		//Control encoder function:
-		#define CTRL_ENC_FCT(x) (x)	//ToDo
-		#define PWM_SIGN		1
-		
-		//...
-		
-	#endif	//SUBPROJECT_A
-	
-	//Subproject B: Right actuator
-	#if(ACTIVE_SUBPROJECT == SUBPROJECT_B)
-		
-		//Control encoder function:
-		#define CTRL_ENC_FCT(x) (x)	//ToDo
-		#define PWM_SIGN		-1
-		
-		//...
-		
-	#endif	//SUBPROJECT_B
+	#define RUNTIME_FSM1		ENABLED
+	#define RUNTIME_FSM2		ENABLED
 	
 	//Project specific definitions:
 	//...
@@ -217,60 +124,22 @@ void user_fsm(void);
 
 //MIT d'Arbeloff Dual-Speed Dual-Motor
 #if(ACTIVE_PROJECT == PROJECT_DSDM)
-	
-	//Enable/Disable sub-modules:
-	#define USE_RS485
-	#define USE_USB
-	#define USE_COMM			//Requires USE_RS485 and/or USE_USB
-	#define USE_QEI
-	#define USE_TRAPEZ
-	#define USE_I2C_0			//3V3, IMU & Expansion.
-	#define USE_I2C_1			//5V, Safety-CoP & strain gauge pot.
-	#define USE_IMU				//Requires USE_I2C_0
-	//#define USE_STRAIN			//Requires USE_I2C_1
-	
-	//Motor type & direction:
-	#define MOTOR_TYPE		MOTOR_BRUSHED
-	
-	//Runtime finite state machine (FSM):
-	#define RUNTIME_FSM		DISABLED
-
-	//Encoders:
-	#define ENC_CONTROL		ENC_QUADRATURE
-	#define ENC_COMMUT		ENC_NONE		//Brushed, no encoder
-	#define ENC_DISPLAY		ENC_CONTROL
-	
-	//Subproject A: Fast actuator
-	#if(ACTIVE_SUBPROJECT == SUBPROJECT_A)
-		
-		//Control encoder function:
-		#define CTRL_ENC_FCT(x) (x)	//ToDo
-		#define PWM_SIGN		1
-		
-		//...
-		
-	#endif	//SUBPROJECT_A
-	
-	//Subproject B: Slow actuator
-	#if(ACTIVE_SUBPROJECT == SUBPROJECT_B)
-		
-		//Control encoder function:
-		#define CTRL_ENC_FCT(x) (x)	//ToDo
-		#define PWM_SIGN		1
-		
-		//...
-		
-	#endif	//SUBPROJECT_B	
-	
-	//Project specific definitions:
-	//...
-	
+//...
 #endif	//PROJECT_DSDM
 
 //****************************************************************************
 // Structure(s)
 //****************************************************************************	
 
+struct ankle2dof_s
+{
+	uint8_t r_w;					//Read/write values
+	uint8_t ctrl;					//Controller
+	uint8_t ctrl_change;			//KEEP or CHANGE
+	uint8_t ctrl_o;					//Open speed
+	uint8_t ctrl_i;					//Current
+	struct gains_s ctrl_i_gains;	//Current controller gains
+};
 	
 #endif	//INC_USER_H
 	

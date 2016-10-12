@@ -1,6 +1,6 @@
 //****************************************************************************
 // MIT Media Lab - Biomechatronics
-// Jean-François (Jeff) Duval
+// Jean-Francois (Jeff) Duval
 // jfduval@media.mit.edu
 // 03/2016
 //****************************************************************************
@@ -54,6 +54,7 @@ uint32_t tx_cmd_in_control(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uin
 //Data:
 uint32_t tx_cmd_data_acqui(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_t len, int16_t acqui);
 uint32_t tx_cmd_data_read_all(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_t len);
+uint32_t tx_cmd_data_user(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_t len, uint8_t select_w);
 uint32_t tx_cmd_data_read_all_ricnu(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_t len);
 
 //Application:
@@ -70,6 +71,8 @@ uint32_t tx_cmd_ctrl_special_4(uint8_t receiver, uint8_t cmd_type, uint8_t *buf,
 								int16_t current1, int16_t open_spd1, \
 								uint8_t controller_w2, uint8_t controller2, uint8_t encoder_w2, int32_t encoder2, \
 								int16_t current2, int16_t open_spd2);
+uint32_t tx_cmd_ctrl_special_5(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_t len, \
+								uint8_t slave, uint8_t controller, int16_t ctrl_i, int16_t ctrl_o);
 
 //Sensors:
 uint32_t tx_cmd_encoder(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_t len, int32_t enc);
@@ -98,6 +101,7 @@ uint32_t tx_cmd_strain(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_
 #define rx_cmd_data_acqui			flexsea_payload_21
 //#define rx_cmd_data_mem			flexsea_payload_20
 #define rx_cmd_data_read_all		flexsea_payload_22
+#define rx_cmd_data_user			flexsea_payload_23
 #define rx_cmd_data_read_all_ricnu	flexsea_payload_105
 
 //Application:
@@ -105,6 +109,7 @@ uint32_t tx_cmd_strain(uint8_t receiver, uint8_t cmd_type, uint8_t *buf, uint32_
 #define rx_cmd_special_2			flexsea_payload_101
 #define rx_cmd_special_3			flexsea_payload_102
 #define rx_cmd_special_4			flexsea_payload_120
+#define rx_cmd_special_5			flexsea_payload_121
 
 //Sensors:
 #define rx_cmd_encoder				flexsea_payload_43	
@@ -143,7 +148,7 @@ void flexsea_payload_19(uint8_t *buf);
 //void flexsea_payload_20(uint8_t *buf);	//CMD_MEM
 //void flexsea_payload_21(uint8_t *buf);	//CMD_ACQUI
 //void flexsea_payload_22(uint8_t *buf);	//CMD_READ_ALL
-void flexsea_payload_23(uint8_t *buf);
+//void flexsea_payload_23(uint8_t *buf);	//CMD_USER_DATA
 void flexsea_payload_24(uint8_t *buf);
 void flexsea_payload_25(uint8_t *buf);
 void flexsea_payload_26(uint8_t *buf);
@@ -261,7 +266,7 @@ void flexsea_payload_119(uint8_t *buf);
 
 //120-129: 
 //void flexsea_payload_120(uint8_t *buf);	//Dual ShuoBot
-void flexsea_payload_121(uint8_t *buf);
+//void flexsea_payload_121(uint8_t *buf);	//Special 5 (Ankle 2DoF)
 void flexsea_payload_122(uint8_t *buf);
 void flexsea_payload_123(uint8_t *buf);
 void flexsea_payload_124(uint8_t *buf);
@@ -291,6 +296,7 @@ void flexsea_payload_127(uint8_t *buf);
 #define CMD_MEM							20
 #define CMD_ACQUI						21
 #define CMD_READ_ALL					22
+#define CMD_USER_DATA					23
 
 //Sensor commands:
 
@@ -333,6 +339,7 @@ void flexsea_payload_127(uint8_t *buf);
 #define CMD_SPC3						102		//Current controller tuning
 #define CMD_READ_ALL_RICNU				105		//RIC/NU Knee, Read All function
 #define CMD_SPC4						120		//Dual ShuoBot
+#define CMD_SPC5						121		//Ankle 2-Dof Plan <> Manage
 
 //===================
 
@@ -507,6 +514,12 @@ struct ricnu_s
 	uint16_t ext_strain[6];	
 };
 
+struct user_data_s
+{
+	int32_t r[4];
+	int32_t w[4];
+};
+
 //****************************************************************************
 // Shared variable(s)
 //****************************************************************************
@@ -520,5 +533,13 @@ extern struct strain_s strain[6];
 extern struct in_control_s in_control_1;
 
 #endif	//defined(BOARD_TYPE_FLEXSEA_MANAGE) || defined(BOARD_TYPE_FLEXSEA_PLAN)
+
+#if defined(BOARD_TYPE_FLEXSEA_PLAN)
+extern struct user_data_s user_data_1;
+#endif  //defined(BOARD_TYPE_FLEXSEA_PLAN)
+
+#if defined(BOARD_TYPE_FLEXSEA_MANAGE)
+extern struct user_data_s user_data;
+#endif  //defined(BOARD_TYPE_FLEXSEA_MANAGE)
 
 #endif	//INC_FLEXSEA_SYSTEM_H

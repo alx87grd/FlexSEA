@@ -8,11 +8,11 @@ Driver_Node::Driver_Node(){
 	
 	// Initial Values
 	usb_is_open     = false;
-	serialport_name = "/dev/ttyACM0";
+    //serialport_name = "/dev/ttyACM0";  --> now loaded as ROS param
 
     // Flexsea-comm params
     active_slave_1_index = 0       ;
-    active_slave_1       = 40      ;
+    active_slave_1       = 40      ; // default value is for execute_1 --> change the config file
 
     // TODO load all from a config file of ROS params
 
@@ -20,7 +20,7 @@ Driver_Node::Driver_Node(){
     // Init Sub-pub-timers
     sub   = n.subscribe("u", 1000, &Driver_Node::input_callback, this );
     pub   = n.advertise<flexsea_execute::outputs>("y", 1000);
-    timer = n.createTimer( ros::Duration(0.02), &Driver_Node::timer_callback, this );
+    timer = n.createTimer( ros::Duration(0.002), &Driver_Node::timer_callback, this );
 	
 	// Load ROS params
 	load_ROS_param();
@@ -65,7 +65,9 @@ void Driver_Node::timer_callback(const ros::TimerEvent&){
 void Driver_Node::input_callback(const flexsea_execute::inputs u_msg){
 
     // Print received cmd
-    ROS_INFO("Driver Cmd: u=%d mode=%d", (int)u_msg.ctrl_setpoint, (int)u_msg.ctrl_mode);
+    if (verbose){
+        ROS_INFO("Driver Cmd: u=%d mode=%d", (int)u_msg.ctrl_setpoint, (int)u_msg.ctrl_mode);
+    }
 
     // Request new control mode & gains if changed
     update_ctrl_if_needed( u_msg );
@@ -76,26 +78,22 @@ void Driver_Node::input_callback(const flexsea_execute::inputs u_msg){
     // Publish new setpoint
     request_new_ctrl_setpoint();
 
-    /*
-    // Test new position ref
-    if ( u_msg.ctrl_mode == 2 ){
-        send_ref_position_ctl_test( u_msg.ctrl_setpoint );
-         ROS_INFO("Ctrl mode=%d : new set_point", (int)ctrl_mode);
-
-        }
-    */
 }
 
 
 void Driver_Node::load_ROS_param(){
 	
+    // Load USB port to use
 	std::string port_name_string;
 	n.param<std::string>("port_name", port_name_string , "defaut_port_name");
 	
 	// String to qtstring
 	serialport_name = QString::fromStdString( port_name_string );
-	
-	ROS_INFO("Loaded serial port name : %s", serialport_name.toStdString().c_str());
+
+    // Load ID number of the board
+    n.param("execute_ID", active_slave_1, 40);
+
+    ROS_INFO("Loaded serial port name : %s  and execute_ID: %i", serialport_name.toStdString().c_str() , active_slave_1 );
 	    
 }
 
@@ -267,42 +265,95 @@ void Driver_Node::publish_sensor_msg(){
     // Orientation
     y_msg.imu.orientation_covariance[0] = -1 ; // Convention for orientation not inlcuded in IMU msg
 
-    // Accel
-    float g2ms2 = 9.80665 ;
-    y_msg.imu.linear_acceleration.x = (double) exec1.accel.x /8192 * g2ms2 ;
-    y_msg.imu.linear_acceleration.y = (double) exec1.accel.y /8192 * g2ms2 ;
-    y_msg.imu.linear_acceleration.z = (double) exec1.accel.z /8192 * g2ms2 ;
 
-    // Velocity
-    float deg2rad = 0.01745329 ;
-    y_msg.imu.angular_velocity.x = (double) exec1.gyro.x /16.4 * deg2rad ;
-    y_msg.imu.angular_velocity.y = (double) exec1.gyro.y /16.4 * deg2rad ;
-    y_msg.imu.angular_velocity.z = (double) exec1.gyro.z /16.4 * deg2rad ;
+    // TODO change publishing for general case (now only works for ID 1 or 2)
+    // Board Execute ID #1
+    if ( active_slave_1 == 40 ){
 
-    // Strain sensor
-    y_msg.e = ( (double) ( exec1.strain-32768 ) / 32768 ) * 100 ; // Convertion to [%]
+        // Accel
+        float g2ms2 = 9.80665 ;
+        y_msg.imu.linear_acceleration.x = (double) exec1.accel.x /8192 * g2ms2 ;
+        y_msg.imu.linear_acceleration.y = (double) exec1.accel.y /8192 * g2ms2 ;
+        y_msg.imu.linear_acceleration.z = (double) exec1.accel.z /8192 * g2ms2 ;
 
-    // Analog inputs
-    y_msg.analog_0 = ((float)exec1.analog[0]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[0] ;
-    y_msg.analog_1 = ((float)exec1.analog[1]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[1] ;
+        // Velocity
+        float deg2rad = 0.01745329 ;
+        y_msg.imu.angular_velocity.x = (double) exec1.gyro.x /16.4 * deg2rad ;
+        y_msg.imu.angular_velocity.y = (double) exec1.gyro.y /16.4 * deg2rad ;
+        y_msg.imu.angular_velocity.z = (double) exec1.gyro.z /16.4 * deg2rad ;
 
-    // Current
-    int current_offset = 0;
-    y_msg.current = (float) ( exec1.current - current_offset ) * 18.5;
+        // Strain sensor
+        y_msg.e = ( (double) ( exec1.strain-32768 ) / 32768 ) * 100 ; // Convertion to [%]
 
-    // Encoder
-    y_msg.encoder = exec1.enc_display ;
+        // Analog inputs
+        y_msg.analog_0 = ((float)exec1.analog[0]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[0] ;
+        y_msg.analog_1 = ((float)exec1.analog[1]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[1] ;
 
-    // Supply tension
-    y_msg.vb = P4_ADC_SUPPLY*((16*(float)exec1.volt_batt/3 + 302 )/P4_ADC_MAX) / 0.0738 ; // exec1.volt_batt ;
-    y_msg.vg = P4_ADC_SUPPLY*((26*(float)exec1.volt_int/3 + 440 )/P4_ADC_MAX)  / 0.43   ;  // exec1.volt_int  ;
+        // Current
+        int current_offset = 0;
+        y_msg.current = (float) ( exec1.current - current_offset ) * 18.5;
 
-    // Temperature
-    y_msg.temp = ((((2.625*(float)exec1.temp + 41)/P4_ADC_MAX)*P4_ADC_SUPPLY) - P4_T0) / P4_TC ; // exec1.temp ;
+        qDebug() << "______________________current_actual_raw: " << (exec1.current);
 
-    // Status
-    y_msg.status_1 = exec1.status1 ;
-    y_msg.status_2 = exec1.status2 ;
+        // Encoder
+        y_msg.encoder = exec1.enc_display ;
+
+        // Supply tension
+        y_msg.vb = P4_ADC_SUPPLY*((16*(float)exec1.volt_batt/3 + 302 )/P4_ADC_MAX) / 0.0738 ; // exec1.volt_batt ;
+        y_msg.vg = P4_ADC_SUPPLY*((26*(float)exec1.volt_int/3 + 440 )/P4_ADC_MAX)  / 0.43   ;  // exec1.volt_int  ;
+
+        // Temperature
+        y_msg.temp = ((((2.625*(float)exec1.temp + 41)/P4_ADC_MAX)*P4_ADC_SUPPLY) - P4_T0) / P4_TC ; // exec1.temp ;
+
+        // Status
+        y_msg.status_1 = exec1.status1 ;
+        y_msg.status_2 = exec1.status2 ;
+
+    // Board Execute ID #2
+    } else if ( active_slave_1 == 41 ){
+
+        // Accel
+        float g2ms2 = 9.80665 ;
+        y_msg.imu.linear_acceleration.x = (double) exec2.accel.x /8192 * g2ms2 ;
+        y_msg.imu.linear_acceleration.y = (double) exec2.accel.y /8192 * g2ms2 ;
+        y_msg.imu.linear_acceleration.z = (double) exec2.accel.z /8192 * g2ms2 ;
+
+        // Velocity
+        float deg2rad = 0.01745329 ;
+        y_msg.imu.angular_velocity.x = (double) exec2.gyro.x /16.4 * deg2rad ;
+        y_msg.imu.angular_velocity.y = (double) exec2.gyro.y /16.4 * deg2rad ;
+        y_msg.imu.angular_velocity.z = (double) exec2.gyro.z /16.4 * deg2rad ;
+
+        // Strain sensor
+        y_msg.e = ( (double) ( exec2.strain-32768 ) / 32768 ) * 100 ; // Convertion to [%]
+
+        // Analog inputs
+        y_msg.analog_0 = ((float)exec2.analog[0]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[0] ;
+        y_msg.analog_1 = ((float)exec2.analog[1]/P5_ADC_MAX)*P5_ADC_SUPPLY ; //exec1.analog[1] ;
+
+        // Current
+        int current_offset = 0;
+        y_msg.current = (float) ( exec2.current - current_offset ) * 18.5;
+
+        // Encoder
+        y_msg.encoder = exec2.enc_display ;
+
+        // Supply tension
+        y_msg.vb = P4_ADC_SUPPLY*((16*(float)exec2.volt_batt/3 + 302 )/P4_ADC_MAX) / 0.0738 ; // exec1.volt_batt ;
+        y_msg.vg = P4_ADC_SUPPLY*((26*(float)exec2.volt_int/3 + 440 )/P4_ADC_MAX)  / 0.43   ;  // exec1.volt_int  ;
+
+        // Temperature
+        y_msg.temp = ((((2.625*(float)exec2.temp + 41)/P4_ADC_MAX)*P4_ADC_SUPPLY) - P4_T0) / P4_TC ; // exec1.temp ;
+
+        // Status
+        y_msg.status_1 = exec2.status1 ;
+        y_msg.status_2 = exec2.status2 ;
+
+
+    } else {
+
+        qDebug("Cannot read from this board ID : TODO ");
+    }
 
     std::stringstream ss;
     //ss << "Accel axis : x = " << exec1.accel.x << " y : " << exec1.accel.y << " z : " << exec1.accel.z << "  Encoder Display : " << exec1.enc_display;
@@ -438,6 +489,10 @@ void Driver_Node::request_new_ctrl_setpoint(){
 
     int trap_pos = 0, trap_posi = 0, trap_posf = 0, trap_spd = 0, trap_acc = 0;
 
+    int val = 0;
+
+
+
     // Optionnal trap mode
     if ( trap_mode ) {
         trap_pos  = trap_values[0];
@@ -452,6 +507,10 @@ void Driver_Node::request_new_ctrl_setpoint(){
         trap_spd  = 50000;
         trap_acc  = 50000;
     }
+
+    //uint8_t payload_str_test[PAYLOAD_BUF_LEN];
+
+    //qDebug() << "ctl_setpoint: " << ctrl_setpoint << " PAYLOAD_BUF_LEN: " << PAYLOAD_BUF_LEN << "payload_str: " << payload_str;
 
     switch( ctrl_mode )
     {
@@ -468,7 +527,9 @@ void Driver_Node::request_new_ctrl_setpoint(){
              break;
         case 3: //Current
             valid = 1;
-            numb = tx_cmd_ctrl_i(active_slave_1, CMD_WRITE, payload_str, PAYLOAD_BUF_LEN, ctrl_setpoint, 0);
+            val = ctrl_setpoint;
+            qDebug() << "ctl_setpoint_raw: " <<  val;
+            numb = tx_cmd_ctrl_i(active_slave_1, CMD_WRITE, payload_str, PAYLOAD_BUF_LEN, val, 0);
             break;
         case 4: //Impedance
             valid = 1;
@@ -491,7 +552,10 @@ void Driver_Node::request_new_ctrl_setpoint(){
         //read_USB_port( usb_rx );
         //decode_usb_rx( usb_rx );
 
-        ROS_INFO("New ctrl setpoint requested");
+        if (verbose){
+
+            ROS_INFO("New ctrl setpoint requested");
+        }
     }
 }
 
@@ -509,7 +573,7 @@ void Driver_Node::request_brake_pwm(){
     read_USB_port( usb_rx );
     decode_usb_rx( usb_rx );
 
-    ROS_INFO("Ctrl Mode %d requested", (int)ctrl_mode);
+    ROS_INFO("Brake state updated");
 
 }
 

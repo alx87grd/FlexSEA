@@ -16,6 +16,7 @@
 
 #include <QMainWindow>
 #include <QSerialPort>
+#include <QTextStream>
 #include "qcustomplot.h"
 
 //****************************************************************************
@@ -95,6 +96,14 @@ private:
     QStringList var_list_slaves, var_list_stream;
 
     int stream_status, stream_sa_status, stream_ricnu_status;
+    int log_status;
+
+    //Logging:
+    QString log_filename, filename_date, filename_time;
+    int log_num;
+    QTextStream logfile_stream;
+    QFile log_file;
+
     int fake_data;
 
     int plot_buf[PLOT_BUF_LEN]; //ToDo!
@@ -201,6 +210,8 @@ private slots:
 
     void stream_in_ctrl(void);
 
+    void stream_ankle_2dof(void);
+
     void on_StreamSelectComboBox_currentIndexChanged(int index);
 
     void on_streamON_master_button_clicked();
@@ -231,11 +242,13 @@ private slots:
 
     void init_tab_stream_ricnu_knee(void);
 
+    void init_tab_stream_ankle_2dof(void);
+
     void control_trapeze(void);
 
     void stream_status_disp(int status);
 
-    void status_byte_disp(uint8_t stat1, uint8_t stat2);
+    void status_byte_disp(uint8_t stat1, uint8_t stat2, uint8_t slave_ab);
 
     void on_pushButton_inctrl_w0_clicked();
 
@@ -246,6 +259,34 @@ private slots:
     void on_pushButton_inctrl_w3_clicked();
 
     void write_in_control_w(uint8_t var);
+
+    void disp_slave_a(bool enable);
+
+    void disp_slave_b(bool enable);
+
+    void disp_execute(struct execute_s *ex, uint8_t slave_ab);
+
+    void assign_execute_ptr(struct execute_s **ex_ptr, uint8_t slave);
+
+    void init_datalogger(void);
+
+    void timerLogEvent(void);
+
+    void log_execute(void);
+
+    uint8_t select_plot_slave(uint8_t index);
+
+    void on_pushButton_a2dof_w0_clicked();
+
+    void on_pushButton_a2dof_w1_clicked();
+
+    void on_pushButton_a2dof_w2_clicked();
+
+    void on_pushButton_a2dof_w3_clicked();
+
+    void on_pushButton_a2dof_refresh_clicked();
+
+    void a2dof_write_user_data(uint8_t sel_w);
 
 private:
     Ui::MainWindow *ui;
