@@ -293,6 +293,8 @@ void Driver_Node::publish_sensor_msg(){
         int current_offset = 0;
         y_msg.current = (float) ( exec1.current - current_offset ) * 18.5;
 
+        qDebug() << "______________________current_actual_raw: " << (exec1.current);
+
         // Encoder
         y_msg.encoder = exec1.enc_display ;
 
@@ -487,6 +489,10 @@ void Driver_Node::request_new_ctrl_setpoint(){
 
     int trap_pos = 0, trap_posi = 0, trap_posf = 0, trap_spd = 0, trap_acc = 0;
 
+    int val = 0;
+
+
+
     // Optionnal trap mode
     if ( trap_mode ) {
         trap_pos  = trap_values[0];
@@ -501,6 +507,10 @@ void Driver_Node::request_new_ctrl_setpoint(){
         trap_spd  = 50000;
         trap_acc  = 50000;
     }
+
+    //uint8_t payload_str_test[PAYLOAD_BUF_LEN];
+
+    //qDebug() << "ctl_setpoint: " << ctrl_setpoint << " PAYLOAD_BUF_LEN: " << PAYLOAD_BUF_LEN << "payload_str: " << payload_str;
 
     switch( ctrl_mode )
     {
@@ -517,7 +527,9 @@ void Driver_Node::request_new_ctrl_setpoint(){
              break;
         case 3: //Current
             valid = 1;
-            numb = tx_cmd_ctrl_i(active_slave_1, CMD_WRITE, payload_str, PAYLOAD_BUF_LEN, ctrl_setpoint, 0);
+            val = ctrl_setpoint;
+            qDebug() << "ctl_setpoint_raw: " <<  val;
+            numb = tx_cmd_ctrl_i(active_slave_1, CMD_WRITE, payload_str, PAYLOAD_BUF_LEN, val, 0);
             break;
         case 4: //Impedance
             valid = 1;

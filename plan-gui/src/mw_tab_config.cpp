@@ -56,6 +56,10 @@ void MainWindow::init_tab_config(void)
     stream_fct_ptr = &MainWindow::stream_execute;
     //No streaming before COM is open:
     ui->streamON_master_button->setDisabled(1);
+    ui->streamOFF_master_button->setDisabled(1);
+    //Only enable Slave A:
+    disp_slave_a(true);
+    disp_slave_b(false);
 
     //COM port:
     //=================
@@ -65,11 +69,9 @@ void MainWindow::init_tab_config(void)
 
     //Log, refresh rates:
     //======================
-    ui->logFileTxt->setText("Not programmed... do not use yet.");
     ui->streamRefreshTxt->setText(QString::number(STREAM_DEFAULT_FREQ));
     ui->streamRefreshStatusTxt->setText("Default setting.");
-    ui->logRefreshTxt->setText(QString::number(LOG_DEFAULT_FREQ));
-    ui->logRefreshStatusTxt->setText("Default setting.");
+    init_datalogger();
 
     //Stream status:
     //==============
@@ -115,6 +117,7 @@ void MainWindow::on_openComButton_clicked()
 
         //Activate Stream & Close COM buttons:
         ui->streamON_master_button->setEnabled(1);
+        ui->logON_master_button->setEnabled(1);
         ui->closeComButton->setEnabled(1);
     }
     else if(com_open == 1)
@@ -214,6 +217,10 @@ void MainWindow::on_StreamSelectComboBox_currentIndexChanged(int index)
     ui->tabWidget->setTabEnabled(3, false);
     ui->tabWidget->setTabEnabled(4, false);
     ui->tabWidget->setTabEnabled(8, false);
+    ui->tabWidget->setTabEnabled(9, false);
+
+    //By default, do not display Slave B:
+    disp_slave_b(false);
 
     //Based on the experiment we assign a "stream" function pointer.
     //It will them be used by the stream timer event.
@@ -240,6 +247,15 @@ void MainWindow::on_StreamSelectComboBox_currentIndexChanged(int index)
             break;
         case 5: //CSEA_KNEE
             //stream_fct_ptr = &MainWindow::stream_csea_knee;
+            stream_fct_ptr = &MainWindow::stream_execute;
+            qDebug() << "Not implemented yet! Streaming Execute instead.";
+            break;
+        case 6: //ANKLE_2DOF
+            stream_fct_ptr = &MainWindow::stream_ankle_2dof;
+            ui->tabWidget->setTabEnabled(1, true);  //Enable Execute tab
+            ui->tabWidget->setTabEnabled(9, true);  //Enable Ankle tab
+            disp_slave_b(true);
+            qDebug() << "Work In Progress...";
             break;
         //case 6: //ToDo add more experiments...
         //    ctrl = ;
@@ -254,6 +270,7 @@ void MainWindow::on_streamON_master_button_clicked()
 {
     ui->streamON_master_button->setDisabled(1);
     ui->streamOFF_master_button->setEnabled(1);
+    ui->logON_master_button->setDisabled(1);
 
     ui->streamON_master_button->repaint();
     ui->streamOFF_master_button->repaint();
@@ -265,6 +282,8 @@ void MainWindow::on_streamOFF_master_button_clicked()
 {
     ui->streamON_master_button->setEnabled(1);
     ui->streamOFF_master_button->setDisabled(1);
+    ui->logOFF_master_button->setDisabled(1);
+    ui->logON_master_button->setEnabled(1);
 
     ui->streamON_master_button->repaint();
     ui->streamOFF_master_button->repaint();
@@ -307,9 +326,9 @@ void MainWindow::timerStreamEvent(void)
             case 5: //CSEA_KNEE
                 //stream_fct_ptr = &MainWindow::stream_csea_knee;
                 break;
-            //case 6: //ToDo add more experiments...
-            //    ctrl = ;
-            //    break;
+            case 6: //ToDo add more experiments...
+                stream_ankle_2dof();
+                break;
             default:
                 //stream_execute();
                 break;
@@ -338,13 +357,25 @@ void MainWindow::stream_status_disp(int status)
     }
 }
 
-//ToDo:
-void MainWindow::on_logON_master_button_clicked()
+void MainWindow::assign_execute_ptr(struct execute_s **ex_ptr, uint8_t slave)
 {
-
-}
-
-void MainWindow::on_logOFF_master_button_clicked()
-{
-
+    //Based on selected slave, what structure do we use?
+    switch(slave)
+    {
+        case 0:
+            *ex_ptr = &exec1;
+            break;
+        case 1:
+            *ex_ptr = &exec2;
+            break;
+        case 2:
+            *ex_ptr = &exec3;
+            break;
+        case 3:
+            *ex_ptr = &exec4;
+            break;
+        default:
+            *ex_ptr = &exec1;
+            break;
+    }
 }
