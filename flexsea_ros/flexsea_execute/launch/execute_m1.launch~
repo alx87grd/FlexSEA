@@ -1,0 +1,7 @@
+<launch>
+ 	<group ns="a0">
+	<rosparam command="load" file="$(find flexsea_execute)/config/m1.yaml"/>
+        <node pkg="flexsea_execute" type="flexsea_execute_node" name="execute" output="screen">
+        </node>
+ 	</group>
+ </launch>

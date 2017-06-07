@@ -44,10 +44,15 @@ private:
     // Input msg data
     int16_t     ctrl_mode;
     int16_t     ctrl_gains[6] = {10,0,0,0,0,0};
-    int32_t     ctrl_setpoint;
+    int16_t     ctrl_setpoint;
     bool        trap_mode;
     int32_t     trap_values[6] = {0,0,0,50000,50000,0};
     int16_t     brake_pwm;
+
+    // Debug params
+    bool verbose         = false;
+    bool verbose_current = true;
+    int  slave_debug     = 40;
 	
 public:
 	// Functions

@@ -223,9 +223,9 @@ void console_reset(unsigned char slaveid)
 
 void reset_manage(void)
 {
-	pin_high(RESET_PORT, RESET_PIN);
+    //pin_high(RESET_PORT, RESET_PIN);
 	usleep(10000);
-	pin_low(RESET_PORT, RESET_PIN);
+    //pin_low(RESET_PORT, RESET_PIN);
 }
 
 #ifdef __cplusplus

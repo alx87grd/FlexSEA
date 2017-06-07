@@ -36,6 +36,36 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);    
 
+    /*
+    //Test code: TODO REMOVE
+    uint8_t test_buf1[10] = {1,2,3,4,HEADER,5,6,7,8,9};
+    uint8_t test_buf2[10] = {0,0,0,0,0,0,0,0,0,0};
+    qDebug() << "test_buf1:";
+    for(int i = 0; i < 10; i++)
+    {
+        qDebug() << test_buf1[i];
+    }
+
+    qDebug() << "test_buf2:";
+    for(int i = 0; i < 10; i++)
+    {
+        qDebug() << test_buf2[i];
+    }
+
+    unwrap_buffer(test_buf1, test_buf2, 10);
+    qDebug() << "test_buf1:";
+    for(int i = 0; i < 10; i++)
+    {
+        qDebug() << test_buf1[i];
+    }
+
+    qDebug() << "test_buf2:";
+    for(int i = 0; i < 10; i++)
+    {
+        qDebug() << test_buf2[i];
+    }
+    */
+
     //System:
     //=================
 
@@ -54,6 +84,7 @@ MainWindow::MainWindow(QWidget *parent) :
     init_tab_stream_execute();
     init_tab_stream_strain();
     init_tab_stream_ricnu_knee();
+    init_tab_stream_ankle_2dof();
 
     //=================
     //Timers:
@@ -64,6 +95,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(timer_stream, SIGNAL(timeout()), this, SLOT(timerStreamEvent()));
     timer_stream->start(TIM_FREQ_TO_P(STREAM_DEFAULT_FREQ));
 
+    //Log:
+    timer_log = new QTimer(this);
+    connect(timer_log, SIGNAL(timeout()), this, SLOT(timerLogEvent()));
+    timer_log->start(TIM_FREQ_TO_P(LOG_DEFAULT_FREQ));
 
     //Plot:
     timer_plot = new QTimer(this);
